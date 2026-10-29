@@ -248,6 +248,9 @@ uomp sessions
 # 查看审计日志
 uomp audit --limit 20
 
+# 只看最近 24 小时的拒绝
+uomp audit --since 24h --result deny
+
 # 撤销会话；默认 env 文件也会被删除
 uomp revoke <session-id>
 ```
@@ -293,7 +296,7 @@ uomp gateway status
 | `uomp serve` | 单独启动 Auth + Guard server |
 | `uomp mcp --session <id>` | 启动 stdio MCP server（实验） |
 | `uomp sessions` | 查看活跃会话 |
-| `uomp audit --limit 20` | 查看审计日志 |
+| `uomp audit --since 24h --result deny` | 过滤审计日志 |
 | `uomp revoke <id>` | 撤销会话并删除默认 env 文件 |
 
 高级命令默认从帮助中隐藏，但仍可调用：`memory`、`registry`、`discover`、`connect`、`agent`、`gateway`。

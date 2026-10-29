@@ -213,6 +213,9 @@ uomp sessions
 # Audit log
 uomp audit --limit 20
 
+# Only denied entries from the last 24 hours
+uomp audit --since 24h --result deny
+
 # Revoke; the default env file is removed too
 uomp revoke <session-id>
 ```
@@ -245,7 +248,7 @@ Core path:
 | `uomp serve` | Start Auth + Guard as a standalone process |
 | `uomp mcp --session <id>` | Start the stdio MCP server (experimental) |
 | `uomp sessions` | View active sessions |
-| `uomp audit --limit 20` | View audit logs |
+| `uomp audit --since 24h --result deny` | Filter audit logs |
 | `uomp revoke <id>` | Revoke a session and remove its default env file |
 
 Advanced commands are hidden from help but still callable: `memory`, `registry`, `discover`, `connect`, `agent`, `gateway`.
