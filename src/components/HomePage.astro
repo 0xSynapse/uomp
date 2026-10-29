@@ -14,9 +14,9 @@ const content = {
     h1b: '访问必须明确。',
     sub: 'UOMP 位于 Agent 和它想读的数据之间。每次读取都有范围、有时限、有记录。撤销在下一个请求生效，而不是第二天。',
     ctaPrimary: '看它怎么工作',
-    ctaSecondary: '阅读协议草案',
+    ctaSecondary: '阅读用户指南',
     meta: ['本地优先', '不上传数据', '开放协议', 'Apache 2.0'],
-    specHref: `${baseUrl}spec/`,
+    tutorialHref: `${baseUrl}tutorial/`,
     roadmapHref: `${baseUrl}roadmap/`,
     consent: {
       label: '授权请求',
@@ -145,9 +145,9 @@ const content = {
     h1b: 'Access is explicit.',
     sub: 'UOMP sits between an agent and the data it wants. Every read is scoped, time-limited, and logged. Revocation takes effect on the next request — not the next day.',
     ctaPrimary: 'See how it works',
-    ctaSecondary: 'Read the draft',
+    ctaSecondary: 'Read the user guide',
     meta: ['Local-first', 'No data upload', 'Open protocol', 'Apache 2.0'],
-    specHref: `${baseUrl}en/spec/`,
+    tutorialHref: `${baseUrl}en/tutorial/`,
     roadmapHref: `${baseUrl}en/roadmap/`,
     consent: {
       label: 'Authorization request',
@@ -284,7 +284,7 @@ const t = content[lang];
         <p class="hero-sub">{t.sub}</p>
         <div class="hero-actions">
           <a class="btn-solid" href="#how">{t.ctaPrimary}</a>
-          <a class="btn-line" href={t.specHref}>{t.ctaSecondary}</a>
+          <a class="btn-line" href={t.tutorialHref}>{t.ctaSecondary}</a>
           <a class="link-quiet" href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener">GitHub</a>
         </div>
         <div class="hero-meta">
