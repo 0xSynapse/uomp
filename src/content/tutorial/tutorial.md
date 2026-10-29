@@ -75,7 +75,7 @@ uomp --version
 uomp init
 ```
 
-这会创建 `~/.uomp`、数据库、Ed25519 密钥和 `sessions/` 目录。
+这会创建 `~/.uomp`、管理员令牌和 `sessions/` 目录。数据库和 Ed25519 密钥会在首次导入或授权时创建。
 
 ---
 

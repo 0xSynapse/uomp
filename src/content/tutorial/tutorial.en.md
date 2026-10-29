@@ -75,7 +75,7 @@ Initialize the local data directory:
 uomp init
 ```
 
-This creates `~/.uomp`, the databases, the Ed25519 key, and the `sessions/` directory.
+This creates `~/.uomp`, the admin token, and the `sessions/` directory. Databases and the Ed25519 key are created on the first import or authorization.
 
 ---
 
