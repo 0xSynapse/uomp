@@ -1,254 +1,381 @@
 ---
-title: 'UOMP SDK/CLI Tutorial'
-description: 'Complete guide from zero to deployed'
+title: 'UOMP User Guide'
+description: 'Install UOMP, import notes, authorize Claude Desktop / Cursor, audit reads, and revoke access'
 ---
 
-# UOMP SDK/CLI Tutorial
+# UOMP User Guide
 
-This tutorial starts with the local CLI + MCP loop: install, import Obsidian/Markdown, authorize, audit, and revoke, then connect Claude Desktop / Cursor. The SDK, remote Gateway, and DO cloud sections are advanced or preview material.
+This guide is for a first-time UOMP user. By the end, you will have a local note store, a revocable agent session, and an audit log you can inspect.
 
-## Prerequisites
+Time: **10–15 minutes**. Your notes and tokens stay on your machine.
 
-- Node.js >= 22
-- git
-- Optional: pnpm 9 (only for running from source)
+> **Tested on**: macOS and Linux terminals; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. Windows may work through WSL or Git Bash, but is not fully validated.
 
-## 1. Install & Initialize
+---
+
+## What you will do
+
+1. Install UOMP
+2. Import an Obsidian / Markdown vault
+3. Start the local Auth + Guard service
+4. Grant an MCP client a 30-minute, scoped session
+5. Read notes from Claude Desktop / Cursor / OpenCode
+6. Inspect the audit log and revoke
+
+---
+
+## 1. Prerequisites
+
+You need:
+
+- Node.js **22 or newer**
+- `git`
+- An MCP client: Claude Desktop, Cursor, or OpenCode
+- An Obsidian vault or a Markdown directory
+
+Check Node:
+
+```bash
+node --version
+```
+
+Upgrade Node.js if it is below v22.
+
+---
+
+## 2. Install
+
+In a terminal:
 
 ```bash
 curl -fsSL https://www.uomp.org/install.sh | bash
+```
+
+The installer:
+
+- clones UOMP into `~/.uomp/cli`
+- builds the CLI
+- links `uomp` into `~/.local/bin`
+
+If `uomp` is not on your `PATH`, the script prints the line to add, for example:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Open a new terminal and verify:
+
+```bash
+uomp --version
+```
+
+Initialize the local data directory:
+
+```bash
 uomp init
 ```
 
-The installer clones UOMP into `~/.uomp/cli`, builds the CLI, and links it to `~/.local/bin/uomp`.
+This creates `~/.uomp`, the databases, the Ed25519 key, and the `sessions/` directory.
 
-From a source checkout:
+---
 
-```bash
-git clone https://github.com/0xSynapse/uomp-core.git
-cd uomp-core
-pnpm install
-pnpm build
-pnpm cli init
-```
-
-Then replace `uomp` with `pnpm cli` throughout this tutorial.
-
-`uomp init` creates the Memory Store, Auth DB, Audit DB, Ed25519 key pair, and `sessions/` directory under `~/.uomp`.
-
-To see the full loop first, run:
+## 3. See the loop first (optional)
 
 ```bash
 uomp demo
 ```
 
-It uses a temporary data directory and does not touch your real `~/.uomp`. If installation or configuration is wrong, run `uomp doctor` to check Node, permissions, keys, databases, session files, and the port.
+It runs import → authorize → allowed read → denied read → audit → revoke in a temporary directory.
 
-## 2. Import Data
+**It does not touch your real `~/.uomp`.**
 
-Start with an Obsidian vault or a Markdown folder:
+If installation or configuration is wrong, run:
 
 ```bash
-# Recursive import; skips .obsidian and hidden directories
-uomp import ~/Obsidian/MyVault
+uomp doctor
+```
 
-# Preview without writing
+It checks Node, git, directory permissions, keys, databases, session files, and the local port.
+
+---
+
+## 4. Import notes
+
+Import an Obsidian vault or a Markdown directory:
+
+```bash
+uomp import ~/Obsidian/MyVault
+```
+
+Preview without writing:
+
+```bash
 uomp import ~/Obsidian/MyVault --dry-run
 ```
 
-Directory paths become scopes: `projects/uomp/plan.md` is tagged `notes`, `notes/projects`, and `notes/projects/uomp`. Re-importing upserts by key instead of duplicating items.
+Import rules:
 
-CSV and JSON are still supported:
+- recursively processes `.md` files
+- skips `.obsidian`, hidden directories, and `node_modules`
+- directory paths become scopes:
+  - `projects/uomp/plan.md` → `notes`, `notes/projects`, `notes/projects/uomp`
+- frontmatter `tags`, `title`, `description`, and `sensitivity` are preserved
+- re-importing updates existing notes instead of duplicating them
 
-```bash
-uomp import ./examples/stock-analyst/sample-risk.json --replace
+To sync later, run the same `uomp import` command again.
 
-uomp import ./examples/stock-analyst/sample-holdings.csv \
-  --tag portfolio:holdings \
-  --sensitivity high \
-  --replace
-```
+---
 
-## 3. Start Auth + Guard
+## 5. Start the local service
 
-The simplest path is to let `authorize` start the embedded server: keep that terminal open, then run the agent in another terminal.
-
-If you prefer a separate process:
+MCP clients need a local service that stays running. Open **Terminal 1**:
 
 ```bash
-# Terminal 1
 uomp serve
 ```
 
-The service listens on `http://127.0.0.1:9374`.
+It listens on:
 
-## 4. Authorize an Agent
-
-```bash
-uomp authorize ./examples/stock-analyst \
-  --scope portfolio:holdings profile:risk
+```text
+http://127.0.0.1:9374
 ```
 
-The CLI creates a session and writes the token to `~/.uomp/sessions/<sessionId>.env` with mode `0600`. Output looks like:
+Keep this terminal open. `Ctrl+C` stops the service, but **stopping the service does not revoke issued sessions**. Use `uomp revoke` for that.
+
+---
+
+## 6. Authorize an MCP client
+
+Open **Terminal 2**:
+
+```bash
+uomp authorize \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env \
+  --no-server
+```
+
+What this does:
+
+- `--scope notes/projects` allows only this scope; `notes/journal` and other scopes are denied
+- `--output` writes the token to a stable env file that can be overwritten on re-authorization
+- `--no-server` uses the service already running in Terminal 1
+- the JWT is not printed to the terminal by default
+- the session lasts 30 minutes by default; use `--duration 15` to change it
+
+On success, the CLI prints the session ID, scope, and env path:
 
 ```text
 Session granted: sess_...
-  Agent     Stock Analyst (stock-analyst)
-  Scope     portfolio:holdings, profile:risk
-  Expires   2026-10-29 10:30 (30 min)
+  Agent     MCP Client (mcp-client)
+  Scope     notes/projects
+  Expires   2026-10-29 15:30 (30 min)
 
 Env file
-  /home/me/.uomp/sessions/sess_....env
+  /home/me/.uomp/mcp-client.env
 
 Open a new terminal, then:
-  source '/home/me/.uomp/sessions/sess_....env'
-  node '/path/to/agent/index.js'
+  source '/home/me/.uomp/mcp-client.env'
 
 Revoke with: uomp revoke sess_...
 ```
 
-The full JWT is not printed by default. Use `--print-token` when you need to copy it, or `--output` to write the env file somewhere else.
+If you are authorizing a specific agent package, pass its path after `uomp authorize`. With no path, UOMP uses the built-in generic MCP client manifest.
 
-## 5. Write an Agent with the SDK
+---
 
-```ts
-import { UompClient } from '@uomp/sdk';
+## 7. Configure your MCP client
 
-// One line — auto-reads UOM_TOKEN + UOMP_BASE_URL from env
-const uomp = UompClient.fromEnv();
-
-const holdings = await uomp.memory.getByTag('portfolio:holdings');
-const risk = await uomp.memory.getByTag('profile:risk');
-
-const total = await uomp.aggregate.sum(
-  'portfolio:holdings',
-  'value.market_value'
-);
-
-const payloadId = await uomp.payload.upload(report);
-await uomp.session.submitDeletionProof();
-const logs = await uomp.audit.query({ limit: 10 });
-```
-
-## 6. Run the Agent
-
-In another terminal, source the env file printed by the CLI, then run the agent:
+### Claude Desktop
 
 ```bash
-source ~/.uomp/sessions/<sessionId>.env
-node ./examples/stock-analyst/index.js
-```
-
-## 7. Connect Claude Desktop / Cursor (Experimental)
-
-The CLI includes a stdio MCP server with `list_memory`, `search_memory`, and `read_memory`. List and search return keys and metadata only; `read_memory` returns content.
-
-The MCP server is only a stdio bridge; the UOMP HTTP server must run separately:
-
-```bash
-# Terminal 1: keep running
-uomp serve
-
-# Terminal 2: authorize and generate the client config
-uomp authorize ./examples/mcp-client \
-  --scope notes/projects \
-  --output ~/.uomp/mcp-client.env \
-  --no-server
-
 uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 ```
 
-Use `--client cursor` or `--client opencode` for those clients. Paste the output into your client config. It looks like:
+Paste the JSON from stdout into Claude Desktop's `claude_desktop_config.json`. The CLI prints the config path on stderr.
 
-```json
-{
-  "mcpServers": {
-    "uomp": {
-      "command": "/usr/local/bin/node",
-      "args": [
-        "/home/me/.uomp/cli/src/packages/cli/dist/cli.js",
-        "mcp",
-        "--session",
-        "/home/me/.uomp/mcp-client.env"
-      ]
-    }
-  }
-}
-```
-
-Restart the client, then ask it to list notes under `notes/projects` and read one. Keep the `uomp serve` terminal running; every call still goes through Memory Guard, and denied reads are returned to the client and written to the audit log.
-
-The MCP server re-reads the env file on startup and before every tool call. With a fixed `--output` path, re-run `uomp authorize` and the next call picks up the new token without restarting the client. If `--session` points at a session ID, restart the client.
-
-## 8. Remote Gateway Mode (Advanced / Preview)
-
-> Gateway is an advanced capability and is not on the core CLI path. The default local workflow does not need it.
-
-One command, no public IP needed:
+### Cursor
 
 ```bash
-uomp gateway start
-# ═══ Public Gateway URL ═══
-#   https://xxx.trycloudflare.com
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client cursor
 ```
 
-## 9. Use the DO Cloud Agent
+Paste the output into `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` globally.
+
+### OpenCode
 
 ```bash
-# Browser
-https://uomp-stock-analyst-mvblm.ondigitalocean.app
-
-# API
-curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
-  -H 'Content-Type: application/json' \
-  -d '{"token":"your_token","gateway_url":"your_gateway"}'
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client opencode
 ```
 
-## 10. Sessions & Audit
+Save the output as `opencode.json` in your project. The generated config already includes `codemode: false`, so the UOMP tools are exposed directly.
+
+Restart the client after saving. For OpenCode, wait until `opencode mcp list` shows `uomp connected`.
+
+> MCP support is experimental. OpenCode has been validated; if Claude Desktop or Cursor does not show the tools, see Troubleshooting below.
+
+---
+
+## 8. Verify inside the client
+
+In Claude Desktop / Cursor / OpenCode, ask:
+
+```text
+List the notes under notes/projects
+```
+
+Then:
+
+```text
+Search notes/projects for "Ship" and read the matching note
+```
+
+UOMP exposes three tools:
+
+- `list_memory`: keys and metadata, no note content
+- `search_memory`: search within an authorized tag, no note content
+- `read_memory`: read the content for one key
+
+Now try an unauthorized note:
+
+```text
+Read note.journal.private
+```
+
+You should get:
+
+```text
+ACCESS_DENIED: Key not in authorized scope
+```
+
+That proves scope enforcement works, and the denial is written to the audit log.
+
+---
+
+## 9. Inspect the audit log
+
+Back in the terminal:
 
 ```bash
-# Active sessions
 uomp sessions
-
-# Audit log
 uomp audit --limit 20
-
-# Only denied entries from the last 24 hours
-uomp audit --since 24h --result deny
-
-# Revoke; the default env file is removed too
-uomp revoke <session-id>
 ```
 
-## SDK Quick Reference
+Last 24 hours:
 
-| Client | Method | Description |
-|--------|--------|-------------|
-| `uomp.memory` | `get(key)` | Read single item by key |
-| `uomp.memory` | `getByTag(tag)` | Read all items by tag |
-| `uomp.memory` | `getByKeys(keys)` | Batch read by keys |
-| `uomp.aggregate` | `sum/avg/count/min/max` | Aggregate without raw data |
-| `uomp.payload` | `upload(data)` | Upload payload to Gateway |
-| `uomp.payload` | `download(id)` | Download payload |
-| `uomp.session` | `submitDeletionProof()` | Submit deletion proof |
-| `uomp.session` | `refresh(refreshToken)` | Refresh Token |
-| `uomp.audit` | `query({limit})` | Query audit logs |
+```bash
+uomp audit --since 24h
+```
 
-## CLI Quick Reference
+Denied entries only:
 
-Core path:
+```bash
+uomp audit --result deny
+```
 
-| Command | Description |
-|---------|-------------|
-| `uomp init` | Initialize the data directory |
-| `uomp demo` | Run the full loop in a temporary directory |
-| `uomp doctor` | Check installation, permissions, databases, and port |
-| `uomp import <path>` | Import a Markdown folder or CSV/JSON file |
-| `uomp authorize <agent>` | Create a session and write a 0600 env file |
-| `uomp serve` | Start Auth + Guard as a standalone process |
-| `uomp mcp --session <id>` | Start the stdio MCP server (experimental) |
-| `uomp sessions` | View active sessions |
-| `uomp audit --since 24h --result deny` | Filter audit logs |
-| `uomp revoke <id>` | Revoke a session and remove its default env file |
+Filter by key:
 
-Advanced commands are hidden from help but still callable: `memory`, `registry`, `discover`, `connect`, `agent`, `gateway`.
+```bash
+uomp audit --key note.projects.plan
+```
+
+For scripts or a future UI:
+
+```bash
+uomp audit --since 24h --result deny --json
+```
+
+Audit entries show time, result, action, agent, target, session, and reason.
+
+---
+
+## 10. Revoke
+
+```bash
+uomp revoke sess_...
+```
+
+After revocation:
+
+- the next request returns `403` immediately
+- the default env file is removed
+- a custom `--output` file is not removed automatically
+
+Stopping `uomp serve` does **not** revoke the token. Use `uomp revoke` to actually remove access.
+
+### After the session expires
+
+Run the same authorization command again:
+
+```bash
+uomp authorize \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env \
+  --no-server
+```
+
+The MCP server re-reads the env file before every tool call. With a fixed `--output` path, the next call picks up the new token **without restarting the client**.
+
+---
+
+## 11. Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
+| `uomp doctor` says the data directory is missing | Run `uomp init` |
+| Port 9374 is occupied | Stop the other process; or use `uomp serve --port 9380` and `uomp authorize --port 9380` |
+| The client does not show UOMP tools | Confirm `uomp serve` is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
+| `SESSION_NOT_ACTIVE` | The session expired or was revoked; re-authorize to the same env file |
+| `ACCESS_DENIED` | The key/tag is outside the granted scope; check `--scope` or `uomp audit` |
+| Env-file permission warning | `uomp doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
+| Reset all local data | Stop `uomp serve`, then remove `~/.uomp`; this deletes notes, keys, and audit data |
+
+### Where data lives
+
+```text
+~/.uomp/
+├── memory.db          # imported notes
+├── auth.db            # sessions
+├── audit.db           # audit log
+├── sessions/          # 0600 session env files
+└── .secrets/          # Ed25519 key + admin token
+```
+
+### Uninstall
+
+```bash
+pkill -f "uomp serve" || true
+rm -rf ~/.uomp
+rm -f ~/.local/bin/uomp
+```
+
+---
+
+## 12. Security boundaries
+
+UOMP provides:
+
+- local-first storage; notes stay on your machine by default
+- tag/key scope enforcement
+- session expiry and immediate revocation
+- an audit record for every allow/deny decision
+- tokens in `0600` files, with no JWT printed by default
+
+UOMP does not protect against:
+
+- a malicious process running as the same OS user that can read `~/.uomp`
+- root or a compromised machine
+- an authorized agent retaining content it has already read
+- backups or sync tools copying the env file elsewhere
+
+Do not commit `~/.uomp` to git, and do not share session env files publicly.
+
+---
+
+## 13. Advanced
+
+- Protocol and token format: [Draft-00 specification](/en/spec/)
+- Build your own agent: [README](https://github.com/0xSynapse/uomp-core#readme)
+- TypeScript SDK: [SDK design](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.en.md)
+- Remote agents / Gateway are advanced preview features, not required for the local workflow

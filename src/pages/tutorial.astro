@@ -8,12 +8,12 @@ const t = tutorials.find(t => t.slug === 'tutorial');
 const { Content } = t ? await t.render() : { Content: null };
 ---
 
-<Layout title="SDK/CLI 教程 - UOMP" description="从本地 CLI + MCP 闭环到进阶部署：安装、导入、授权、MCP、SDK、Gateway" switchHref={`${baseUrl}en/tutorial/`}>
+<Layout title="用户指南 - UOMP" description="从安装、导入笔记到在 Claude Desktop / Cursor 中授权读取、审计和撤销" switchHref={`${baseUrl}en/tutorial/`}>
   <section>
     <div class="container">
       <div class="sec-eyebrow">
-        <div class="sec-num">教程</div>
-        <span class="sec-tag">本地 CLI + MCP 优先</span>
+        <div class="sec-num">指南</div>
+        <span class="sec-tag">真实用户上手</span>
       </div>
       {Content && <Content />}
       <div class="hero-btns" style="margin-top: 2.5rem;">

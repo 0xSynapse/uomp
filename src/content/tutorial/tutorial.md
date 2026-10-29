@@ -1,302 +1,381 @@
 ---
-title: 'UOMP SDK/CLI 教程'
-description: '从零到部署的完整指南'
+title: 'UOMP 用户指南'
+description: '从安装、导入笔记到在 Claude Desktop / Cursor 中授权读取、审计和撤销'
 ---
 
-# UOMP SDK/CLI 教程
+# UOMP 用户指南
 
-本教程先走通本地 CLI + MCP 闭环：安装、导入 Obsidian/Markdown、授权、审计、撤销，再接 Claude Desktop / Cursor。后面的 SDK、远程 Gateway 和 DO 云服务属于进阶或预览内容。
+这份指南面向第一次使用 UOMP 的真实用户。完成后，你会有一个本地笔记库、一个可撤销的 Agent 会话，以及一份可查看的访问审计。
 
-## 前置条件
+预计时间：**10–15 分钟**。所有笔记和 Token 都留在你的电脑上。
 
-- Node.js >= 22
-- git
-- 可选：pnpm 9（从源码运行时需要）
+> **适用环境**：macOS 或 Linux 终端；Claude Desktop、Cursor 或 OpenCode；本地 Obsidian / Markdown 笔记库。Windows 可通过 WSL 或 Git Bash 使用，但尚未完整验证。
 
-## 1. 安装与初始化
+---
+
+## 你将完成什么
+
+1. 安装 UOMP
+2. 导入 Obsidian / Markdown 笔记
+3. 启动本地 Auth + Guard 服务
+4. 给 MCP 客户端一个 30 分钟、限定范围的授权
+5. 在 Claude Desktop / Cursor / OpenCode 里读取笔记
+6. 查看审计，然后撤销
+
+---
+
+## 1. 准备
+
+需要：
+
+- Node.js **22 或更高版本**
+- `git`
+- 一个 MCP 客户端：Claude Desktop、Cursor 或 OpenCode
+- 一个 Obsidian vault 或普通 Markdown 目录
+
+检查 Node：
+
+```bash
+node --version
+```
+
+如果低于 v22，先升级 Node.js。
+
+---
+
+## 2. 安装
+
+在终端运行：
 
 ```bash
 curl -fsSL https://www.uomp.org/install.sh | bash
+```
+
+安装脚本会：
+
+- 把 UOMP 克隆到 `~/.uomp/cli`
+- 构建 CLI
+- 把 `uomp` 链接到 `~/.local/bin`
+
+如果 `uomp` 不在 `PATH` 里，脚本会打印需要添加的那一行，例如：
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+重新打开终端，确认：
+
+```bash
+uomp --version
+```
+
+然后初始化本地数据目录：
+
+```bash
 uomp init
 ```
 
-安装脚本会把仓库克隆到 `~/.uomp/cli`，构建 CLI，并链接到 `~/.local/bin/uomp`。
+这会创建 `~/.uomp`、数据库、Ed25519 密钥和 `sessions/` 目录。
 
-从源码运行：
+---
 
-```bash
-git clone https://github.com/0xSynapse/uomp-core.git
-cd uomp-core
-pnpm install
-pnpm build
-pnpm cli init
-```
-
-之后把教程里的 `uomp` 换成 `pnpm cli`。
-
-`uomp init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB、Ed25519 密钥对和 `sessions/` 目录。
-
-想先看完整闭环，可以运行：
+## 3. 先看一遍完整闭环（可选）
 
 ```bash
 uomp demo
 ```
 
-它使用临时数据目录，不会碰真实的 `~/.uomp`。如果安装或配置有问题，运行 `uomp doctor` 检查 Node、权限、密钥、数据库、会话文件和端口。
+它会在临时目录里演示：导入 → 授权 → 允许读取 → 拒绝读取 → 审计 → 撤销。
 
-## 2. 导入私有数据
+**不会碰你真实的 `~/.uomp`。**
 
-推荐先导入一个 Obsidian 笔记库或 Markdown 目录：
+如果安装或环境有问题，运行：
 
 ```bash
-# 递归导入，跳过 .obsidian 和隐藏目录
-uomp import ~/Obsidian/MyVault
+uomp doctor
+```
 
-# 只看会导入什么，不写库
+它会检查 Node、git、目录权限、密钥、数据库、会话文件和端口。
+
+---
+
+## 4. 导入笔记
+
+把一个 Obsidian vault 或 Markdown 目录导入 UOMP：
+
+```bash
+uomp import ~/Obsidian/MyVault
+```
+
+先预览而不写入：
+
+```bash
 uomp import ~/Obsidian/MyVault --dry-run
 ```
 
-路径会变成授权范围：`projects/uomp/plan.md` 带有 `notes`、`notes/projects`、`notes/projects/uomp` 三个 tag。重新导入会按 key 更新，不会重复写入。
+导入规则：
 
-也支持 CSV 和 JSON：
+- 递归处理 `.md` 文件
+- 跳过 `.obsidian`、隐藏目录和 `node_modules`
+- 目录路径变成授权范围：
+  - `projects/uomp/plan.md` → `notes`、`notes/projects`、`notes/projects/uomp`
+- frontmatter 的 `tags`、`title`、`description`、`sensitivity` 会保留
+- 重复导入会更新已有笔记，不会重复创建
 
-```bash
-uomp import ./examples/stock-analyst/sample-risk.json --replace
+之后想同步最新修改，重新运行同一条 `uomp import` 即可。
 
-uomp import ./examples/stock-analyst/sample-holdings.csv \
-  --tag portfolio:holdings \
-  --sensitivity high \
-  --replace
-```
+---
 
-## 3. 启动 Auth + Guard
+## 5. 启动本地服务
 
-最简单的方式是让 `authorize` 启动内嵌 server：保持那个终端打开，然后在另一个终端运行 Agent。
-
-如果你想分开运行：
+MCP 客户端需要一个一直运行的本地服务。打开**终端 1**：
 
 ```bash
-# 终端 1
 uomp serve
 ```
 
-服务监听 `http://127.0.0.1:9374`。
+它会监听：
 
-## 4. 授权 Agent
-
-```bash
-uomp authorize ./examples/stock-analyst \
-  --scope portfolio:holdings profile:risk
+```text
+http://127.0.0.1:9374
 ```
 
-CLI 会创建会话，并把 token 写入 `~/.uomp/sessions/<sessionId>.env`（权限 `0600`）。输出类似：
+保持这个终端打开。按 `Ctrl+C` 可以停止服务，但**停止服务不会撤销已经发出的会话**；要立即失效请用 `uomp revoke`。
+
+---
+
+## 6. 授权一个 MCP 客户端
+
+打开**终端 2**：
+
+```bash
+uomp authorize \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env \
+  --no-server
+```
+
+说明：
+
+- `--scope notes/projects`：只允许读取这个范围；`notes/journal` 等未授权范围会被拒绝
+- `--output`：把 Token 写到固定路径，方便重复授权时覆盖
+- `--no-server`：服务已经在终端 1 运行
+- 默认不会把 JWT 打印到终端
+- 会话默认 30 分钟；可以用 `--duration 15` 调整
+
+成功后 CLI 会打印会话 ID、范围和 env 文件路径：
 
 ```text
 Session granted: sess_...
-  Agent     Stock Analyst (stock-analyst)
-  Scope     portfolio:holdings, profile:risk
-  Expires   2026-10-29 10:30 (30 min)
+  Agent     MCP Client (mcp-client)
+  Scope     notes/projects
+  Expires   2026-10-29 15:30 (30 min)
 
 Env file
-  /home/me/.uomp/sessions/sess_....env
+  /home/me/.uomp/mcp-client.env
 
 Open a new terminal, then:
-  source '/home/me/.uomp/sessions/sess_....env'
-  node '/path/to/agent/index.js'
+  source '/home/me/.uomp/mcp-client.env'
 
 Revoke with: uomp revoke sess_...
 ```
 
-默认不打印完整 JWT。需要手动复制 token 时加 `--print-token`；需要写到自定义路径时加 `--output`。
+如果你授权的是一个具体的 Agent 包，把 `uomp authorize` 后面的 `[agent]` 换成 Agent 路径即可；不传路径时使用的是内置的通用 MCP 客户端声明。
 
-## 5. 使用 SDK 编写 Agent
+---
 
-在新 SDK 中，`UompClient` 提供一站式访问：
+## 7. 配置你的 MCP 客户端
 
-```ts
-import { UompClient } from '@uomp/sdk';
-
-// 自动从环境变量 UOM_TOKEN + UOMP_BASE_URL 初始化
-const uomp = UompClient.fromEnv();
-
-// 读取记忆
-const holdings = await uomp.memory.getByTag('portfolio:holdings');
-const risk = await uomp.memory.getByTag('profile:risk');
-
-// 聚合查询（不暴露原始数据）
-const totalValue = await uomp.aggregate.sum(
-  'portfolio:holdings',
-  'value.market_value'
-);
-
-// 上传分析报告
-const payloadId = await uomp.payload.upload(report);
-
-// 提交删除证明
-await uomp.session.submitDeletionProof();
-
-// 查询审计日志
-const logs = await uomp.audit.query({ limit: 10 });
-```
-
-## 6. 运行 Agent
-
-在另一个终端 source CLI 打印的 env 文件，然后运行 Agent：
+### Claude Desktop
 
 ```bash
-source ~/.uomp/sessions/<sessionId>.env
-node ./examples/stock-analyst/index.js
-```
-
-输出：
-
-```
-Stock Analyst v1.0 启动
-持仓: 10 个标的
-收到 10/10 条行情
-报告: output/stock-analysis-xxx.(json|md|html)
-P&L: +72.94% | Sharpe: 1.24 | Signals: 8
-```
-
-## 7. 连接 Claude Desktop / Cursor（实验）
-
-CLI 内置一个 stdio MCP server，提供 `list_memory`、`search_memory` 和 `read_memory`。`list_memory` / `search_memory` 只返回 key 和元数据，`read_memory` 返回内容。
-
-MCP server 只是一个 stdio 桥接；UOMP HTTP server 需要独立运行：
-
-```bash
-# 终端 1：保持运行
-uomp serve
-
-# 终端 2：授权并生成客户端配置
-uomp authorize ./examples/mcp-client \
-  --scope notes/projects \
-  --output ~/.uomp/mcp-client.env \
-  --no-server
-
 uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 ```
 
-用 `--client cursor` 或 `--client opencode` 生成对应客户端配置。把输出粘贴到客户端配置里。它看起来像：
+把 stdout 里的 JSON 粘贴到 Claude Desktop 的 `claude_desktop_config.json`。CLI 会在 stderr 提示配置文件位置。
 
-```json
-{
-  "mcpServers": {
-    "uomp": {
-      "command": "/usr/local/bin/node",
-      "args": [
-        "/home/me/.uomp/cli/src/packages/cli/dist/cli.js",
-        "mcp",
-        "--session",
-        "/home/me/.uomp/mcp-client.env"
-      ]
-    }
-  }
-}
-```
-
-重启客户端，然后让它列出 `notes/projects` 下的笔记并读取一条。保持 `uomp serve` 终端运行；所有调用仍然经过 Memory Guard，越权读取会返回拒绝并写入审计。
-
-MCP server 在启动时和每次工具调用前都会重新读取 env 文件。使用固定的 `--output` 路径时，重新执行 `uomp authorize` 后下一次调用会自动使用新 token，不需要重启客户端；如果 `--session` 直接指向 session ID，则需要重启。
-
-## 8. 远程 Gateway 模式（高级 / 预览）
-
-> Gateway 是高级能力，不在 CLI 核心路径上。默认的本地流程不需要它。
-
-一条命令启动，无需公网 IP：
+### Cursor
 
 ```bash
-# 一条命令启动 Gateway + Cloudflare Tunnel
-uomp gateway start
-
-# 输出：
-# ═══ Public Gateway URL ═══
-#   https://xxx.trycloudflare.com
-# export UOMP_BASE_URL="https://xxx.trycloudflare.com"
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client cursor
 ```
 
-授权远程 Agent：
+把输出粘贴到项目里的 `.cursor/mcp.json`，或全局的 `~/.cursor/mcp.json`。
+
+### OpenCode
 
 ```bash
-# audience 指向 Gateway 的公网地址
-uomp authorize ./examples/stock-analyst \
-  --scope portfolio:holdings profile:risk \
-  --output /tmp/uomp-remote.env
-
-source /tmp/uomp-remote.env
-node ./examples/stock-analyst/index.js
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client opencode
 ```
 
-## 9. 使用 DO 云 Agent
+把输出保存到项目里的 `opencode.json`。生成的配置已经包含 `codemode: false`，会直接暴露 UOMP 工具。
 
-```bash
-# 浏览器访问
-https://uomp-stock-analyst-mvblm.ondigitalocean.app
+配置完成后**重启客户端**（OpenCode 可以运行一次 `opencode mcp list`，等它显示 `uomp connected`）。
 
-# 或 API 调用
-curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
-  -H 'Content-Type: application/json' \
-  -d '{"token":"你的UOM_TOKEN","gateway_url":"你的Gateway公网地址"}'
+> MCP 支持目前是实验能力。OpenCode 已经验证过；Claude Desktop / Cursor 如果看不到工具，按下面的常见问题排查。
+
+---
+
+## 8. 在客户端里验证
+
+在 Claude Desktop / Cursor / OpenCode 里直接说：
+
+```text
+列出 notes/projects 下的笔记
 ```
 
-## 10. 查看会话与审计
+然后：
+
+```text
+在 notes/projects 里搜索 "Ship"，然后读取匹配的那条笔记
+```
+
+UOMP 会提供三个工具：
+
+- `list_memory`：列出 key 和元数据，不返回正文
+- `search_memory`：在授权 tag 内搜索，不返回正文
+- `read_memory`：按 key 读取正文
+
+再试一条未授权的笔记：
+
+```text
+读取 note.journal.private
+```
+
+应该返回类似：
+
+```text
+ACCESS_DENIED: Key not in authorized scope
+```
+
+这说明范围控制生效了，拒绝也会写进审计。
+
+---
+
+## 9. 查看审计
+
+回到终端：
 
 ```bash
-# 查看活跃会话
 uomp sessions
-
-# 查看审计日志
 uomp audit --limit 20
-
-# 只看最近 24 小时的拒绝
-uomp audit --since 24h --result deny
-
-# 撤销会话；默认 env 文件也会被删除
-uomp revoke <session-id>
 ```
 
-## 11. Gateway 管理（高级 / 预览）
+只看最近 24 小时：
 
 ```bash
-# 启动 Gateway（含 Tunnel）
-uomp gateway start
-
-# 仅 Gateway，不暴露公网
-uomp gateway start --no-tunnel
-
-# 查看 Gateway 状态
-uomp gateway status
+uomp audit --since 24h
 ```
 
-## SDK 子客户端速查
+只看拒绝：
 
-| 子客户端 | 方法 | 说明 |
-|----------|------|------|
-| `uomp.memory` | `get(key)` | 按 Key 读取单条记忆 |
-| `uomp.memory` | `getByTag(tag)` | 按 Tag 读取所有记忆 |
-| `uomp.memory` | `getByKeys(keys)` | 批量按 Key 读取 |
-| `uomp.aggregate` | `sum/avg/count/min/max` | 聚合查询（不暴露原始数据） |
-| `uomp.payload` | `upload(data)` | 上传 Payload 到 Gateway |
-| `uomp.payload` | `download(id)` | 下载 Payload |
-| `uomp.session` | `submitDeletionProof()` | 提交数据删除证明 |
-| `uomp.session` | `refresh(refreshToken)` | 刷新 Token |
-| `uomp.audit` | `query({limit})` | 查询审计日志 |
+```bash
+uomp audit --result deny
+```
 
-## CLI 命令速查
+按 key 过滤：
 
-核心路径：
+```bash
+uomp audit --key note.projects.plan
+```
 
-| 命令 | 说明 |
-|------|------|
-| `uomp init` | 初始化 UOMP 数据目录 |
-| `uomp demo` | 在临时目录跑通完整闭环 |
-| `uomp doctor` | 检查安装、权限、数据库和端口 |
-| `uomp import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
-| `uomp authorize <agent>` | 创建会话，写入 0600 env 文件 |
-| `uomp serve` | 单独启动 Auth + Guard server |
-| `uomp mcp --session <id>` | 启动 stdio MCP server（实验） |
-| `uomp sessions` | 查看活跃会话 |
-| `uomp audit --since 24h --result deny` | 过滤审计日志 |
-| `uomp revoke <id>` | 撤销会话并删除默认 env 文件 |
+脚本或后续 UI 可以用 JSON：
 
-高级命令默认从帮助中隐藏，但仍可调用：`memory`、`registry`、`discover`、`connect`、`agent`、`gateway`。
+```bash
+uomp audit --since 24h --result deny --json
+```
+
+审计会显示时间、结果、操作、Agent、目标、会话和原因。
+
+---
+
+## 10. 撤销
+
+```bash
+uomp revoke sess_...
+```
+
+撤销后：
+
+- 下一个请求立即返回 `403`
+- 默认路径下的 env 文件会被删除
+- 自定义 `--output` 文件不会被自动删除，需要自己处理
+
+如果只是关闭 `uomp serve`，token 不会立刻失效；一定要用 `uomp revoke` 才能真正收回访问。
+
+### 会话过期后
+
+重新执行同一条授权命令即可：
+
+```bash
+uomp authorize \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env \
+  --no-server
+```
+
+MCP server 会在每次工具调用前重新读取 env 文件。使用固定 `--output` 路径时，重新授权后下一次调用会自动生效，**不需要重启客户端**。
+
+---
+
+## 11. 常见问题
+
+| 问题 | 处理 |
+|---|---|
+| `uomp: command not found` | 把 `~/.local/bin` 加到 `PATH`，或重新打开终端 |
+| `uomp doctor` 提示数据目录不存在 | 运行 `uomp init` |
+| 端口 9374 被占用 | 停止占用进程；或 `uomp serve --port 9380` + `uomp authorize --port 9380` |
+| 客户端看不到 UOMP 工具 | 确认 `uomp serve` 在运行；重启客户端；确认配置文件位置；OpenCode 等 `uomp connected` |
+| 工具报 `SESSION_NOT_ACTIVE` | 会话过期或被撤销；重新 `uomp authorize` 到同一个 env 文件 |
+| 工具报 `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 `--scope` 或查看 `uomp audit` |
+| 会话 env 权限告警 | `uomp doctor` 会提示；按建议 `chmod 600 ~/.uomp/sessions/*.env` |
+| 想清空所有本地数据 | 停止 `uomp serve`，删除 `~/.uomp`；这会删除笔记库、密钥和审计 |
+
+### 数据在哪里
+
+```text
+~/.uomp/
+├── memory.db          # 导入的笔记
+├── auth.db            # 会话
+├── audit.db           # 审计日志
+├── sessions/          # 0600 会话 env 文件
+└── .secrets/          # Ed25519 密钥 + 管理员令牌
+```
+
+### 如何彻底卸载
+
+```bash
+pkill -f "uomp serve" || true
+rm -rf ~/.uomp
+rm -f ~/.local/bin/uomp
+```
+
+---
+
+## 12. 安全边界
+
+UOMP 能做到：
+
+- 本地优先，笔记默认不离开你的机器
+- 按 tag/key 限定范围
+- 会话过期和立即撤销
+- 每一次允许/拒绝都有审计
+- Token 存在 `0600` 文件里，默认不打印 JWT
+
+UOMP 不能防止：
+
+- 同一个 OS 用户下的恶意进程读取 `~/.uomp`
+- root / 被攻陷的机器
+- 被授权的 Agent 保留它已经读到的内容
+- 备份或同步盘把 env 文件带到别处
+
+不要把 `~/.uomp` 提交到 git，也不要把会话 env 文件发到公开渠道。
+
+---
+
+## 13. 进阶
+
+- 想了解协议和 Token 格式：[规范 Draft-00](/spec/)
+- 想写自己的 Agent：[README](https://github.com/0xSynapse/uomp-core#readme)
+- 想用 TypeScript SDK：[SDK 设计](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.md)
+- 远程 Agent / Gateway 属于高级预览，不是本地流程的必需部分
