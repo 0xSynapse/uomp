@@ -5,10 +5,10 @@ description: 'User-Owned Memory Protocol 协议草案'
 
 # User-Owned Memory Protocol (UOMP)
 
-**版本**：Draft-00  
-**状态**：草案（Draft）  
-**发布日期**：2026-07-12  
-**最后更新**：2026-07-23  
+**版本**：Draft-00<br>
+**状态**：草案（Draft）<br>
+**发布日期**：2026-07-12<br>
+**最后更新**：2026-10-29<br>
 **目标**：作为公开 RFC 草案征求意见
 
 ### Version History
@@ -16,7 +16,8 @@ description: 'User-Owned Memory Protocol 协议草案'
 | Date | Change |
 |------|--------|
 | 2026-07-12 | Draft-00 initial release. |
-| 2026-07-23 | Added Browser Profile (§5.3), Cloud Relay (§15.7), Store abstraction (§0), Payload API (§15.6). Updated `uom.json` schema (§6.2-6.4) with `fields`, `purposes`, `external_data_sources`, `package`. Updated Architecture diagram to include Gateway, Relay, and Browser path. Added FHE to Future Work (§22). Marked on-chain audit as Phase 4.|
+| 2026-07-23 | Added Browser Profile (§5.3), Cloud Relay (§15.7), Store abstraction (§0), Payload API (§15.6). Updated `uom.json` schema (§6.2-6.4) with `fields`, `purposes`, `external_data_sources`, `package`. Updated Architecture diagram to include Gateway, Relay, and Browser path. Added FHE to Future Work (§22). Marked on-chain audit as Phase 4. |
+| 2026-10-29 | Local-first reference implementation: CLI + stdio MCP path, 0600 session env delivery, Auth + Guard combined service. Reworked §5 architecture and diagrams; Browser and Remote profiles are explicitly optional/preview. |
 
 ---
 
@@ -27,6 +28,8 @@ User-Owned Memory Protocol（UOMP）定义了一种用户主权型授权协议�
 ## 2. Status of This Memo
 
 本文档为 UOMP 协议草案（Draft-00），描述协议设计意图、数据格式、HTTP API 和安全要求。本文档旨在通过公开讨论后演进为正式标准。本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"MAY"、"OPTIONAL" 按照 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) 解释。
+
+> **参考实现状态（2026-10）：** 当前 `uomp` CLI 优先实现 Local Profile：`import`、`authorize`（写入 `0600` 会话 env 文件）、`serve`、`mcp`、`sessions`、`audit`、`revoke`。stdio MCP bridge 为实验能力。Browser Profile、Remote Profile 和 Cloud Relay 是可选/预览能力，不是通过一致性验证的必要条件。
 
 ## 3. Introduction
 
@@ -66,59 +69,71 @@ UOMP 的设计目标是：
 | **Session** | 一次 Agent 任务周期，拥有唯一 `session_id`。 |
 | **Capability Token** | 会话级授权凭证，标明 Agent 可访问的标签/键范围。 |
 | **Agent** | 通过 UOMP 访问用户记忆的程序，可运行在本机或远程。 |
+| **MCP bridge** | 可选的 stdio 适配器（`uomp mcp`），把 MCP 工具调用转换为 Guard HTTP 请求。 |
 | **uom.json** | Agent 声明文件，描述 Agent 身份和默认请求的记忆范围。 |
-| **Local Profile** | 本机部署模式，Memory Guard 监听 `127.0.0.1`。 |
-| **Remote Profile** | 远程部署模式，Memory Guard 通过 TLS + mTLS 暴露。 |
+| **Local Profile** | 本机部署模式，Memory Guard 监听 `127.0.0.1`；默认且当前实现。 |
+| **Remote Profile** | 远程部署模式，Agent 经 Gateway 访问 Guard；可选/高级。 |
+| **Browser Profile** | 浏览器/钱包部署模式；预览/非核心。 |
 
 ## 5. Protocol Overview
 
 ### 5.1 Architecture
 
-<img src="/diagrams/spec-architecture-browser-zh.svg" alt="浏览器路径：钱包 → Gateway → Guard → Store" class="diagram" />
-<img src="/diagrams/spec-architecture-local-zh.svg" alt="本地路径：CLI → Auth → Agent → Guard → Store" class="diagram" />
-<img src="/diagrams/spec-architecture-remote-zh.svg" alt="远程路径：Gateway + Tunnel → Cloud Relay → Remote Agent" class="diagram" />
+<img src="/diagrams/spec-architecture-local-zh.svg" alt="本地路径：CLI 授权 → 0600 env 文件 → Agent/MCP 客户端 → Auth + Guard → Store/Audit" class="diagram" />
+<img src="/diagrams/spec-architecture-mcp-zh.svg" alt="MCP 路径：MCP 客户端 → stdio bridge → Auth + Guard → Store/Audit" class="diagram" />
+<img src="/diagrams/spec-architecture-remote-zh.svg" alt="远程路径（可选）：Remote Agent → Gateway → Guard → Store" class="diagram" />
+<img src="/diagrams/spec-architecture-browser-zh.svg" alt="浏览器路径（预览）：钱包 → Gateway/Guard → Store" class="diagram" />
 
 UOMP 的完整架构包含以下组件：
 
 | 组件 | 位置 | 职责 |
 |------|------|------|
 | **Memory Store** | 用户本机 | 持久化存储记忆数据。支持可插拔后端（SQLite、加密对象/S3、IPFS），通过 `IMemoryStore` 接口抽象。 |
-| **Auth Service** | 用户本机 | 会话管理、Token 签发、身份验证。 |
+| **Auth Service** | 用户本机 | 会话管理、Token 签发、身份验证。参考实现中与 Memory Guard 组合为 `uomp serve`。 |
 | **Memory Guard** | 用户本机 | Token 校验、scope 过滤、聚合查询、审计日志记录。 |
-| **CLI / Browser UI** | 用户本机 | 用户交互界面：命令行或浏览器 Dashboard。 |
-| **Gateway** | 用户本机（可选） | mTLS 隧道 + Token 转发，将 Guard 暴露给远程 Agent。支持 Cloudflare Tunnel 零配置公网暴露。 |
-| **Cloud Relay** | 公共网络（可选） | 无状态公共中继，仅需 Guard 公钥即可验证 Token 并转发请求。提供 CORS + 限流。 |
+| **CLI** | 用户本机 | 用户交互：导入、授权、会话、审计、撤销。 |
+| **MCP bridge** | 用户本机（可选） | stdio MCP 适配器（`uomp mcp`）：Claude Desktop / Cursor / OpenCode → HTTP Guard。实验能力。 |
+| **Browser UI** | 浏览器（预览） | 钱包认证 + 加密存储；不属于当前核心路径。 |
+| **Gateway** | 用户本机（可选） | mTLS 隧道 + Token 转发，将 Guard 暴露给远程 Agent。支持 Cloudflare Tunnel。 |
+| **Cloud Relay** | 公共网络（设计/预览） | 无状态公共中继，仅需 Guard 公钥即可验证 Token 并转发请求。 |
 | **Agent** | 任意位置 | 独立进程，携带 Capability Token 通过 Guard 或 Gateway 读取数据。 |
 
-三种访问路径：
+四条访问路径：
 
-1. **本地**：Agent 进程直接访问 `127.0.0.1:9374` 上的 Guard。
-2. **远程**：Agent 通过 Gateway（mTLS + Tunnel）访问 Guard。
-3. **浏览器**：用户通过浏览器 Dashboard 连接钱包（MetaMask/Argent X），加密存储于 Dropbox，通过 Gateway 调用 Guard 和 Agent。
+1. **本地（默认）**：CLI 完成授权并把 Token 写入 `0600` 会话 env 文件；Agent 直接访问 `127.0.0.1:9374` 上的 Guard。
+2. **MCP（本地适配器，实验）**：MCP 客户端通过 stdio 启动 `uomp mcp`；bridge 读取同一个会话 env 文件，再以 HTTP + Token 访问 Guard。MCP bridge 不引入新的信任边界。
+3. **远程（可选/高级）**：Agent 通过 Gateway（mTLS + Tunnel）访问 Guard。
+4. **浏览器（预览）**：用户通过浏览器 Dashboard 连接钱包（MetaMask/Argent X），加密存储于 Dropbox，通过 Gateway 调用 Guard 和 Agent；不属于当前核心路径。
+
+Local Profile 和它的 MCP 适配器是当前参考实现的主路径；Remote Profile 与 Browser Profile 是可选扩展，不要求所有实现支持。
 
 ### 5.2 Flow
 
 1. Agent 作为独立进程运行，提供 `uom.json` 声明其身份和默认请求的记忆范围。
-2. 用户通过本机 UI/CLI 发现或连接 Agent，由 Auth Service 创建 Session（`created` 状态）。Auth Service 可以与 Memory Guard / Store 位于同一机器，也可以由用户选择的可信服务提供。
-3. 用户确认或调整授权范围后，Auth Service 签发 Capability Token。
-4. Session 进入 `active` 状态，Token 被交付给 Agent。
-5. Agent 通过 HTTP API 携带 Token 访问 Memory Guard。
+2. 用户通过本机 CLI 执行 `uomp authorize`（可选先 `discover` / `connect`），Auth Service 创建 Session（`created` 状态）。Auth Service 可以与 Memory Guard / Store 位于同一机器，也可以由用户选择的可信服务提供。
+3. 用户确认或调整授权范围后，Auth Service 签发 Capability Token，并将其写入 `0600` 会话 env 文件（`UOM_TOKEN` + `UOMP_BASE_URL`）。
+4. Session 进入 `active` 状态，Agent 或 MCP bridge 加载该 env 文件。
+5. Agent 或 MCP bridge 通过 HTTP API 携带 Token 访问 Memory Guard。
 6. Memory Guard 校验 Token，按 scope 过滤数据，返回结果并记录审计日志。
 7. Agent 任务完成、超时、或用户撤销时，Session 关闭，Token 失效。
 
 Agent 与 UI/CLI 是独立进程。UI/CLI 运行在 Memory Store / Guard 所在的用户本机，负责身份验证、授权决策和 Token 交付；Agent 只负责使用 Token 访问数据，不接触用户私钥。
 
+MCP bridge 遵循同样的步骤 4-6，只是把 Agent 侧传输从直接 HTTP 换成 stdio JSON-RPC。它不改变 Token、scope、撤销或审计语义。
+
 ### 5.3 Profiles
 
 UOMP 定义三种部署配置：
 
-| Profile | 默认端口 | 传输 | 认证 | 存储 |
-|---------|---------|------|------|------|
-| Local Profile | `127.0.0.1:9374` | HTTP | Capability Token | SQLite（本地） |
-| Remote Profile | 用户配置 | HTTPS | Capability Token + mTLS | 用户指定 |
-| Browser Profile | Gateway URL | HTTPS + CORS | Wallet签名（MetaMask/Argent X） + Capability Token | Dropbox（加密对象） |
+| Profile | 默认端口 | 传输 | 认证 | 存储 | 状态 |
+|---------|---------|------|------|------|------|
+| Local Profile | `127.0.0.1:9374` | HTTP | Capability Token | SQLite（本地） | 默认 / 当前实现 |
+| Remote Profile | 用户配置 | HTTPS | Capability Token + mTLS | 用户指定 | 可选 / 高级 |
+| Browser Profile | Gateway URL | HTTPS + CORS | 钱包签名（预览） + Capability Token | Dropbox（加密对象） | 预览 / 非核心 |
 
-Local Profile 为默认且 RECOMMENDED 配置。Remote Profile 必须显式开启。Browser Profile 适用于零安装场景，用户通过钱包签名派生加密密钥（PBKDF2），数据以密文形式存入 Dropbox，服务器端零知识。
+Local Profile 为默认且 RECOMMENDED 配置，也是参考实现的主路径。Remote Profile 必须显式开启。Browser Profile 适用于零安装场景，用户通过钱包签名派生加密密钥（PBKDF2），数据以密文形式存入 Dropbox，服务器端零知识；该配置目前是预览，不是一致性要求。
+
+MCP bridge 不是独立 Profile，而是 Local Profile 上的可选 stdio 适配器。
 
 ## 6. Agent Manifest: `uom.json`
 
@@ -708,7 +723,7 @@ UOMP 不仅定义了 Agent 如何访问 Memory，也定义了用户如何把外�
 ### 12.2 Design Goals
 
 - **通用性**：不绑定任何具体应用场景。
-- **简单性**：普通用户可以用 CSV/JSON 直接导入。
+- **简单性**：普通用户可以用 CSV/JSON/Markdown 直接导入。
 - **可扩展性**：允许实现者定义字段别名和映射规则。
 - **安全性**：导入时必须明确指定 tag 和 sensitivity。
 
@@ -716,6 +731,7 @@ UOMP 不仅定义了 Agent 如何访问 Memory，也定义了用户如何把外�
 
 - **CSV**：UTF-8 编码，第一行为表头，逗号分隔。
 - **JSON**：单个对象或对象数组。
+- **Markdown / Obsidian**：单个 `.md` 文件或目录；目录路径和 frontmatter 用于生成 tags，正文作为 value。
 
 ### 12.4 CSV Format Requirements
 
@@ -790,7 +806,20 @@ Before writing to Memory Store, the import tool MUST validate：
 4. `tags` is non-empty.
 5. `created_at` and `updated_at`, if present, are valid ISO8601 timestamps.
 
-### 12.10 Examples
+### 12.10 Markdown / Obsidian
+
+Markdown/Obsidian 导入面向本地知识库，SHOULD 遵循：
+
+1. 输入 MAY 是单个 `.md` 文件或目录；目录 MUST 递归处理。
+2. 参考实现 SHOULD 跳过隐藏目录（如 `.obsidian`）和 `node_modules`。
+3. 路径 SHOULD 生成稳定的 tag 层级：基础 tag（默认 `notes`）+ 每一级目录名。例如 `projects/uomp/plan.md` 生成 `notes`、`notes/projects`、`notes/projects/uomp`。
+4. YAML frontmatter 的 `tags` MUST 保留并合并；`title`、`description`、`sensitivity` SHOULD 映射到 Memory Item 元数据。
+5. key SHOULD 由相对路径稳定生成；参考实现使用 `note.<path-with-dots>`（如 `note.projects.uomp.plan`）。
+6. 正文 SHOULD 作为 `value.content`，并保留 `value.path` 与 `value.title`。
+7. 重复导入 MUST 按 key upsert，而不是重复插入。
+8. 实现 SHOULD 提供 dry-run 模式，只报告将新增/更新/跳过的条目，不写入 Store。
+
+### 12.11 示例
 
 #### CSV Example
 
@@ -866,22 +895,29 @@ Session 撤销后，对应 Token MUST 立即失效。Auth Service MUST 将 Token
 
 ### 14.2 Token Delivery
 
-在 Local Profile 中，Token 由用户本机的 Auth Service/CLI 签发，并通过环境变量注入 Agent 进程：
+在 Local Profile 中，Token 由用户本机的 Auth Service/CLI 签发。参考实现默认把 Token 写入权限为 `0600` 的会话 env 文件，再由 Agent/MCP bridge 读取：
 
 ```bash
-export UOM_TOKEN="<capability-token>"
-export UOMP_BASE_URL="http://127.0.0.1:9374"
+# ~/.uomp/sessions/<session_id>.env
+export UOM_TOKEN='<capability-token>'
+export UOMP_BASE_URL='http://127.0.0.1:9374'
+
+# Agent 终端
+source ~/.uomp/sessions/<session_id>.env
 uom-calendar-agent
 ```
 
 - `UOM_TOKEN`：Capability Token，Agent 凭此访问 Guard。
 - `UOMP_BASE_URL`：Guard 端点地址，Local Profile 下默认为 `http://127.0.0.1:9374`。
+- 参考 CLI 默认不把完整 JWT 打印到终端；需要显式复制时使用 `--print-token`。
 
-用户 UI（如 CLI）运行在 Memory Store / Guard 所在主机上，负责完成身份验证、授权、Token 签发，再把 Token 交给 Agent。Agent 本身不参与授权决策。
+用户 UI（如 CLI）运行在 Memory Store / Guard 所在主机上，负责完成身份验证、授权、Token 签发，再把 Token 交给 Agent。Agent 本身不参与授权决策。MCP bridge 读取同一个 env 文件，并在每次工具调用前重新读取，以支持重新授权后自动生效。
 
 ## 15. Remote Profile
 
 ### 15.1 Overview
+
+> Remote Profile 是 OPTIONAL / 高级能力，不是当前本地优先工作流的必要条件。
 
 Remote Profile 允许 Agent 不在用户本机运行时访问用户记忆。为了保护本地 Memory Guard，UOMP 引入 **UOMP Gateway** 作为受控入口：Memory Guard 不直接暴露到公网，所有远程访问 MUST 经过用户部署或信任的 Gateway。
 
@@ -905,7 +941,7 @@ Remote Profile 实现 MUST 满足：
 Remote Profile 默认采用 **用户自托管 Gateway**：
 
 - 用户在自己的 VPS、NAS、云服务器或家庭服务器上运行 Gateway；
-- **推荐：`uomp gateway start` 一键启动 Cloudflare Tunnel**，自动获取 `https://xxx.trycloudflare.com` 公网地址，无需公网 IP 或端口转发；
+- **推荐：`uomp gateway start`（高级命令）一键启动 Cloudflare Tunnel**，自动获取 `https://xxx.trycloudflare.com` 公网地址，无需公网 IP 或端口转发；
 - 也可以手动使用反向隧道（如 Cloudflare Tunnel、ngrok）暴露 Gateway；
 - Gateway 服务 MAY 由第三方商业化托管，但开源 core 实现 MUST 保留自托管路径作为默认选项。
 
@@ -993,6 +1029,8 @@ Agent 生成的报告、分析结果等 Payload 不应以明文形式留在远�
 
 ### 15.7 Cloud Relay
 
+> Cloud Relay 目前是设计/原型阶段，不属于当前核心路径。
+
 Cloud Relay 是无状态公共中继服务，允许 Agent 通过公共网络访问 Guard，无需用户配置 mTLS 证书或 Cloudflare Tunnel。
 
 **与 Gateway 的区别**：
@@ -1014,7 +1052,7 @@ Agent → POST /v1/memory/read → Cloud Relay
   → 转发到 Guard → 返回结果
 ```
 
-Relay 仅需 Guard 的 Ed25519 **公钥** 即可验证 Token，不持有私钥，无法签发 Token。CORS 已启用，支持浏览器端调用。每 session 默认限流 60 req/min。
+Relay 仅需 Guard 的 Ed25519 **公钥** 即可验证 Token，不持有私钥，无法签发 Token。设计上支持 CORS 与每 session 默认 60 req/min 的限流；参考实现仍为原型。
 
 **Gateway + Cloud Relay 组合模式**：
 

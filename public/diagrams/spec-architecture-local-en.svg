@@ -1,11 +1,12 @@
 <svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Local path">
+  <rect x="0" y="0" width="620" height="220" fill="#FFFFFF"/>
   <defs>
     <marker id="a" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0A0A0A"/></marker>
     <marker id="r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6B7280"/></marker>
   </defs>
 
-  <text x="310" y="24" text-anchor="middle" fill="#0A0A0A" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">Local Path</text>
-  <text x="310" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">CLI authorize → Token to Agent → Agent reads Guard → deletion proof to Auth</text>
+  <text x="310" y="24" text-anchor="middle" fill="#0A0A0A" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">Local path (default / current)</text>
+  <text x="310" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">CLI authorize → 0600 env file → Agent / MCP client → Guard filter &amp; audit → revoke</text>
 
   <rect x="20" y="65" width="100" height="52" rx="8" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="2"/>
   <text x="70" y="95" text-anchor="middle" fill="#0A0A0A" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">CLI</text>
@@ -15,8 +16,8 @@
   <text x="220" y="106" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">Service</text>
 
   <rect x="320" y="65" width="110" height="52" rx="8" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/>
-  <text x="375" y="88" text-anchor="middle" fill="#0891B2" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">Agent</text>
-  <text x="375" y="106" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">Process</text>
+  <text x="375" y="88" text-anchor="middle" fill="#0891B2" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">Agent / MCP</text>
+  <text x="375" y="106" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">process / stdio client</text>
 
   <rect x="480" y="65" width="120" height="52" rx="8" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="2"/>
   <text x="540" y="88" text-anchor="middle" fill="#0A0A0A" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">Guard</text>
@@ -29,7 +30,7 @@
   <text x="145" y="84" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">authorize</text>
 
   <line x1="250" y1="70" x2="320" y2="91" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#r)"/>
-  <text x="285" y="67" text-anchor="middle" fill="#6B7280" font-size="8.5" font-family="Inter, system-ui, sans-serif">UOM_TOKEN</text>
+  <text x="285" y="60" text-anchor="middle" fill="#6B7280" font-size="8.5" font-family="Inter, system-ui, sans-serif">env file</text>
 
   <line x1="430" y1="91" x2="480" y2="91" stroke="#0A0A0A" stroke-width="2" marker-end="url(#a)"/>
   <text x="455" y="84" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">HTTP</text>
@@ -40,7 +41,7 @@
   <text x="455" y="122" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">data</text>
 
   <line x1="320" y1="108" x2="270" y2="108" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#r)"/>
-  <text x="295" y="122" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">deletion proof</text>
+  <text x="295" y="122" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">proof</text>
 
-  <text x="310" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">CLI authorize → Auth issues Token → Agent carries Token to Guard → deletion proof to Auth</text>
+  <text x="310" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">CLI authorize → Auth issues Token → 0600 env file → Agent/MCP reads → Guard filter/audit → revoke</text>
 </svg>

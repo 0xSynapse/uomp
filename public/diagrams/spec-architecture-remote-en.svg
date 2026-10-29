@@ -1,12 +1,13 @@
 <svg viewBox="0 0 700 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Remote path">
+  <rect x="0" y="0" width="700" height="290" fill="#FFFFFF"/>
   <defs>
     <marker id="g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#B45309"/></marker>
     <marker id="r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0891B2"/></marker>
     <marker id="a" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0A0A0A"/></marker>
   </defs>
 
-  <text x="350" y="24" text-anchor="middle" fill="#B45309" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">Remote Path (Two Peer Entry Points)</text>
-  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">Gateway and Cloud Relay are peer entry points — Agent picks one</text>
+  <text x="350" y="24" text-anchor="middle" fill="#B45309" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">Remote path (optional / advanced)</text>
+  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">Gateway is the controlled remote entry; Cloud Relay is design/preview only</text>
 
   <rect x="15" y="55" width="220" height="180" rx="10" fill="#FAFAF8" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4 2"/>
   <text x="125" y="72" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">User's Machine</text>
@@ -40,8 +41,7 @@
 
   <line x1="275" y1="110" x2="215" y2="185" stroke="#0891B2" stroke-width="1.5" marker-end="url(#r)"/>
 
-  <line x1="115" y1="165" x2="480" y2="132" stroke="#0A0A0A" stroke-width="1" stroke-dasharray="3 3"/>
-  <text x="297" y="152" text-anchor="middle" fill="#6B7280" font-size="8" font-family="Inter, system-ui, sans-serif">UOM_TOKEN (carried by Agent, not through Gateway/Relay)</text>
+  <!-- Token delivery is out-of-band: the user hands the token to the Agent. -->
 
-  <text x="350" y="280" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">Auth issues Token → Agent carries Token, connects via Gateway or Relay → forwarded to Guard → Store</text>
+  <text x="350" y="280" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">Optional/advanced: Auth issues Token → user hands it to Agent → Agent uses Gateway (or designed Relay) → Guard → Store</text>
 </svg>

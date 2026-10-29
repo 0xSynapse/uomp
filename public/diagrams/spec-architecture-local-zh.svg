@@ -1,11 +1,12 @@
 <svg viewBox="0 0 620 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Local path">
+  <rect x="0" y="0" width="620" height="220" fill="#FFFFFF"/>
   <defs>
     <marker id="a" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0A0A0A"/></marker>
     <marker id="r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#6B7280"/></marker>
   </defs>
 
-  <text x="310" y="24" text-anchor="middle" fill="#0A0A0A" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">本地路径</text>
-  <text x="310" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">CLI 授权 → Token 交付 Agent → Agent 直接读 Guard → 删除证明走 Auth</text>
+  <text x="310" y="24" text-anchor="middle" fill="#0A0A0A" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">本地路径（默认 / 当前实现）</text>
+  <text x="310" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">CLI 授权 → 0600 env 文件 → Agent / MCP 客户端 → Guard 过滤与审计 → 撤销</text>
 
   <!-- CLI -->
   <rect x="20" y="65" width="100" height="52" rx="8" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="2"/>
@@ -18,8 +19,8 @@
 
   <!-- Agent -->
   <rect x="320" y="65" width="110" height="52" rx="8" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/>
-  <text x="375" y="88" text-anchor="middle" fill="#0891B2" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">Agent</text>
-  <text x="375" y="106" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">进程</text>
+  <text x="375" y="88" text-anchor="middle" fill="#0891B2" font-size="12" font-family="Inter, system-ui, sans-serif" font-weight="700">Agent / MCP</text>
+  <text x="375" y="106" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">进程 / stdio 客户端</text>
 
   <!-- Guard -->
   <rect x="480" y="65" width="120" height="52" rx="8" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="2"/>
@@ -36,7 +37,7 @@
 
   <!-- Auth → Agent (token) -->
   <line x1="250" y1="70" x2="320" y2="91" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#r)"/>
-  <text x="285" y="67" text-anchor="middle" fill="#6B7280" font-size="8.5" font-family="Inter, system-ui, sans-serif">UOM_TOKEN</text>
+  <text x="285" y="60" text-anchor="middle" fill="#6B7280" font-size="8.5" font-family="Inter, system-ui, sans-serif">0600 env 文件</text>
 
   <!-- Agent → Guard (read) -->
   <line x1="430" y1="91" x2="480" y2="91" stroke="#0A0A0A" stroke-width="2" marker-end="url(#a)"/>
@@ -53,5 +54,5 @@
   <line x1="320" y1="108" x2="270" y2="108" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#r)"/>
   <text x="295" y="122" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">删除证明</text>
 
-  <text x="310" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">CLI authorize → Auth 签发 Token → Agent 携带 Token 读 Guard → 删除证明 → Auth</text>
+  <text x="310" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">CLI authorize → Auth 签发 Token → 写入 0600 env 文件 → Agent/MCP 读取 → Guard 过滤/审计 → revoke</text>
 </svg>

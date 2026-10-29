@@ -1,11 +1,12 @@
 <svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="浏览器路径">
+  <rect x="0" y="0" width="700" height="220" fill="#FFFFFF"/>
   <defs>
     <marker id="a" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#7C3AED"/></marker>
     <marker id="g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#059669"/></marker>
   </defs>
 
-  <text x="350" y="24" text-anchor="middle" fill="#7C3AED" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">浏览器路径</text>
-  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">钱包认证 → 浏览器直接调用 Gateway/Guard → 无 Agent 中间层</text>
+  <text x="350" y="24" text-anchor="middle" fill="#7C3AED" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">浏览器路径（预览 / 非核心）</text>
+  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">钱包认证 → 加密存储（预览）→ Gateway/Guard；不属于当前核心路径</text>
 
   <!-- Browser -->
   <rect x="20" y="65" width="130" height="56" rx="8" fill="#F3F0FF" stroke="#7C3AED" stroke-width="2"/>
@@ -44,5 +45,5 @@
   <line x1="85" y1="121" x2="85" y2="145" stroke="#059669" stroke-width="1.5" marker-end="url(#g)"/>
   <text x="95" y="138" text-anchor="start" fill="#6B7280" font-size="8.5" font-family="Inter, system-ui, sans-serif">加密存储</text>
 
-  <text x="350" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">钱包签名 → 派生加密密钥 → BrowserSDK 直接 fetch() Gateway → Guard 过滤 → Store 返回</text>
+  <text x="350" y="205" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">预览：钱包签名 → 派生加密密钥 → BrowserSDK 调用 Gateway/Guard → Store；核心路径仍是 CLI + MCP</text>
 </svg>

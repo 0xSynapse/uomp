@@ -5,10 +5,10 @@ description: 'User-Owned Memory Protocol Specification Draft'
 
 # User-Owned Memory Protocol (UOMP)
 
-**Version**: Draft-00  
-**Status**: Draft  
-**Published**: 2026-07-12  
-**Last Updated**: 2026-07-23  
+**Version**: Draft-00<br>
+**Status**: Draft<br>
+**Published**: 2026-07-12<br>
+**Last Updated**: 2026-10-29<br>
 **Goal**: Public RFC draft for community review
 
 ### Version History
@@ -17,6 +17,7 @@ description: 'User-Owned Memory Protocol Specification Draft'
 |------|--------|
 | 2026-07-12 | Draft-00 initial release. |
 | 2026-07-23 | Added Browser Profile (§5.3), Cloud Relay (§15.7), Store abstraction (§0), Payload API (§15.6). Updated `uom.json` schema (§6.2-6.4) with `fields`, `purposes`, `external_data_sources`, `package`. Updated Architecture diagram to include Gateway, Relay, and Browser path. Added FHE to Future Work (§22). Marked on-chain audit as Phase 4. |
+| 2026-10-29 | Local-first reference implementation: CLI + stdio MCP path, 0600 session env delivery, Auth + Guard combined service. Reworked §5 architecture and diagrams; Browser and Remote profiles are explicitly optional/preview. |
 
 ---
 
@@ -27,6 +28,8 @@ The User-Owned Memory Protocol (UOMP) defines a user-sovereign authorization pro
 ## 2. Status of This Memo
 
 This document is the UOMP protocol draft (Draft-00). It describes the protocol design intent, data formats, HTTP API, and security requirements. It is intended to evolve into a formal standard through public discussion. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+
+> **Reference implementation status (2026-10):** the current `uomp` CLI implements the Local Profile first: `import`, `authorize` (writes a `0600` session env file), `serve`, `mcp`, `sessions`, `audit`, and `revoke`. The stdio MCP bridge is experimental. Browser Profile, Remote Profile, and Cloud Relay are optional/preview capabilities and are not required for conformance.
 
 ## 3. Introduction
 
@@ -66,59 +69,71 @@ UOMP's design goals are:
 | **Session** | A single Agent task cycle with a unique `session_id`. |
 | **Capability Token** | Session-level authorization credential specifying the Agent's accessible tag/key scope. |
 | **Agent** | A program that accesses user memory through UOMP, running locally or remotely. |
+| **MCP bridge** | Optional stdio adapter (`uomp mcp`) that translates MCP tool calls into Guard HTTP requests. |
 | **uom.json** | Agent manifest file describing the Agent's identity and default requested memory scope. |
-| **Local Profile** | Local deployment model where Memory Guard listens on `127.0.0.1`. |
-| **Remote Profile** | Remote deployment model where Memory Guard is exposed via TLS + mTLS. |
+| **Local Profile** | Local deployment model where Memory Guard listens on `127.0.0.1`; default and current implementation. |
+| **Remote Profile** | Remote deployment model where an Agent reaches Guard through Gateway; optional/advanced. |
+| **Browser Profile** | Browser/wallet deployment model; preview/non-core. |
 
 ## 5. Protocol Overview
 
 ### 5.1 Architecture
 
-<img src="/diagrams/spec-architecture-browser-en.svg" alt="Browser path: Wallet → Gateway → Guard → Store" class="diagram" />
-<img src="/diagrams/spec-architecture-local-en.svg" alt="Local path: CLI → Auth → Agent → Guard → Store" class="diagram" />
-<img src="/diagrams/spec-architecture-remote-en.svg" alt="Remote path: Gateway + Tunnel → Cloud Relay → Remote Agent" class="diagram" />
+<img src="/diagrams/spec-architecture-local-en.svg" alt="Local path: CLI authorize → 0600 env file → Agent/MCP client → Auth + Guard → Store/Audit" class="diagram" />
+<img src="/diagrams/spec-architecture-mcp-en.svg" alt="MCP path: MCP client → stdio bridge → Auth + Guard → Store/Audit" class="diagram" />
+<img src="/diagrams/spec-architecture-remote-en.svg" alt="Remote path (optional): Remote Agent → Gateway → Guard → Store" class="diagram" />
+<img src="/diagrams/spec-architecture-browser-en.svg" alt="Browser path (preview): Wallet → Gateway/Guard → Store" class="diagram" />
 
 UOMP's complete architecture includes the following components:
 
 | Component | Location | Responsibility |
 |-----------|----------|----------------|
 | **Memory Store** | User's machine | Persistent memory data storage. Supports pluggable backends (SQLite, encrypted object/S3, IPFS) via the `IMemoryStore` interface. |
-| **Auth Service** | User's machine | Session management, token issuance, identity verification. |
+| **Auth Service** | User's machine | Session management, token issuance, identity verification. Combined with Memory Guard as `uomp serve` in the reference implementation. |
 | **Memory Guard** | User's machine | Token validation, scope filtering, aggregate queries, audit logging. |
-| **CLI / Browser UI** | User's machine | User interface: command line or browser Dashboard. |
-| **Gateway** | User's machine (optional) | mTLS tunnel + Token forwarding, exposing Guard to remote Agents. Supports Cloudflare Tunnel for zero-config public exposure. |
-| **Cloud Relay** | Public network (optional) | Stateless public relay, validates Tokens with only the Guard public key and forwards requests. Provides CORS + rate limiting. |
+| **CLI** | User's machine | User interaction: import, authorize, sessions, audit, revoke. |
+| **MCP bridge** | User's machine (optional) | stdio MCP adapter (`uomp mcp`): Claude Desktop / Cursor / OpenCode → HTTP Guard. Experimental. |
+| **Browser UI** | Browser (preview) | Wallet auth + encrypted storage; not on the current core path. |
+| **Gateway** | User's machine (optional) | mTLS tunnel + token forwarding, exposing Guard to remote Agents. Supports Cloudflare Tunnel. |
+| **Cloud Relay** | Public network (design/preview) | Stateless public relay that validates Tokens with only the Guard public key and forwards requests. |
 | **Agent** | Anywhere | Independent process carrying a Capability Token to read data via Guard or Gateway. |
 
-Three access paths:
+Four access paths:
 
-1. **Local**: Agent process accesses Guard directly at `127.0.0.1:9374`.
-2. **Remote**: Agent accesses Guard through Gateway (mTLS + Tunnel).
-3. **Browser**: User connects wallet (MetaMask/Argent X) via browser Dashboard, encrypted storage in Dropbox, calls Guard and Agents through Gateway.
+1. **Local (default)**: the CLI authorizes and writes the token to a `0600` session env file; the Agent accesses Guard directly at `127.0.0.1:9374`.
+2. **MCP (local adapter, experimental)**: the MCP client starts `uomp mcp` over stdio; the bridge reads the same session env file and calls Guard over HTTP + Token. The MCP bridge does not add a new trust boundary.
+3. **Remote (optional/advanced)**: the Agent accesses Guard through Gateway (mTLS + Tunnel).
+4. **Browser (preview)**: the user connects a wallet (MetaMask/Argent X) through the browser Dashboard, stores encrypted data in Dropbox, and calls Guard and Agents through Gateway; not on the current core path.
+
+The Local Profile and its MCP adapter are the current reference implementation path. Remote and Browser profiles are optional extensions and are not required for all implementations.
 
 ### 5.2 Flow
 
 1. The Agent runs as an independent process and provides a `uom.json` declaring its identity and default requested memory scope.
-2. The user discovers or connects to the Agent through the local UI/CLI, and the Auth Service creates a Session in the `created` state. The Auth Service may run on the same machine as the Memory Guard / Store or may be provided by a trusted service chosen by the user.
-3. After the user confirms or adjusts the authorization scope, the Auth Service issues a Capability Token.
-4. The Session enters the `active` state, and the Token is delivered to the Agent.
-5. The Agent accesses Memory Guard via the HTTP API with the Token.
+2. The user runs `uomp authorize` from the local CLI (optionally after `discover` / `connect`), and the Auth Service creates a Session in the `created` state. The Auth Service may run on the same machine as the Memory Guard / Store or may be provided by a trusted service chosen by the user.
+3. After the user confirms or adjusts the authorization scope, the Auth Service issues a Capability Token and writes it to a `0600` session env file (`UOM_TOKEN` + `UOMP_BASE_URL`).
+4. The Session enters the `active` state, and the Agent or MCP bridge loads the env file.
+5. The Agent or MCP bridge calls Memory Guard via the HTTP API with the Token.
 6. Memory Guard validates the Token, filters data by scope, returns results, and records audit logs.
 7. When the Agent task completes, times out, or the user revokes, the Session closes and the Token becomes invalid.
 
 The Agent and UI/CLI are separate processes. The UI/CLI runs on the user's machine where the Memory Store / Guard lives, and is responsible for identity verification, authorization decisions, and Token delivery. The Agent only uses the Token to access data and never touches the user's private keys.
 
+The MCP bridge follows the same steps 4-6, replacing the Agent-side transport with stdio JSON-RPC. It does not change Token, scope, revocation, or audit semantics.
+
 ### 5.3 Profiles
 
 UOMP defines three deployment profiles:
 
-| Profile | Default Port | Transport | Authentication | Storage |
-|---------|--------------|-----------|----------------|---------|
-| Local Profile | `127.0.0.1:9374` | HTTP | Capability Token | SQLite (local) |
-| Remote Profile | User-configured | HTTPS | Capability Token + mTLS | User-specified |
-| Browser Profile | Gateway URL | HTTPS + CORS | Wallet sign (MetaMask/Argent X) + Capability Token | Dropbox (encrypted objects) |
+| Profile | Default Port | Transport | Authentication | Storage | Status |
+|---------|--------------|-----------|----------------|---------|--------|
+| Local Profile | `127.0.0.1:9374` | HTTP | Capability Token | SQLite (local) | Default / current implementation |
+| Remote Profile | User-configured | HTTPS | Capability Token + mTLS | User-specified | Optional / advanced |
+| Browser Profile | Gateway URL | HTTPS + CORS | Wallet signature (preview) + Capability Token | Dropbox (encrypted objects) | Preview / non-core |
 
-Local Profile is the default and RECOMMENDED configuration. Remote Profile MUST be explicitly enabled. Browser Profile is designed for zero-install scenarios: wallet signature derives encryption key (PBKDF2), data is stored as ciphertext in Dropbox, server-side zero-knowledge.
+Local Profile is the default and RECOMMENDED configuration, and the reference implementation's primary path. Remote Profile MUST be explicitly enabled. Browser Profile is designed for zero-install scenarios: wallet signature derives an encryption key (PBKDF2), data is stored as ciphertext in Dropbox, server-side zero-knowledge. It is currently a preview, not a conformance requirement.
+
+The MCP bridge is not a separate profile; it is an optional stdio adapter over the Local Profile.
 
 ## 6. Agent Manifest: `uom.json`
 
@@ -697,7 +712,7 @@ UOMP defines not only how Agents access Memory, but also how users populate the 
 ### 12.2 Design Goals
 
 - **Generality**: Not tied to any specific application domain.
-- **Simplicity**: Ordinary users can import using CSV or JSON directly.
+- **Simplicity**: Ordinary users can import using CSV, JSON, or Markdown directly.
 - **Extensibility**: Implementations may define field aliases and mapping rules.
 - **Security**: The tag and sensitivity of imported data must be explicit.
 
@@ -705,6 +720,7 @@ UOMP defines not only how Agents access Memory, but also how users populate the 
 
 - **CSV**: UTF-8 encoded, first row is a header, comma-separated.
 - **JSON**: A single object or an array of objects.
+- **Markdown / Obsidian**: A single `.md` file or a directory; directory paths and frontmatter generate tags, and the body becomes the value.
 
 ### 12.4 CSV Format Requirements
 
@@ -779,7 +795,20 @@ Before writing to the Memory Store, the import tool MUST validate:
 4. `tags` is non-empty.
 5. `created_at` and `updated_at`, if present, are valid ISO8601 timestamps.
 
-### 12.10 Examples
+### 12.10 Markdown / Obsidian
+
+Markdown/Obsidian import targets local knowledge bases and SHOULD follow these rules:
+
+1. Input MAY be a single `.md` file or a directory; directories MUST be processed recursively.
+2. The reference implementation SHOULD skip hidden directories (such as `.obsidian`) and `node_modules`.
+3. Paths SHOULD produce a stable tag hierarchy: a base tag (default `notes`) plus each directory segment. For example, `projects/uomp/plan.md` produces `notes`, `notes/projects`, and `notes/projects/uomp`.
+4. YAML frontmatter `tags` MUST be preserved and merged; `title`, `description`, and `sensitivity` SHOULD map to Memory Item metadata.
+5. Keys SHOULD be stable and derived from the relative path; the reference implementation uses `note.<path-with-dots>` (for example `note.projects.uomp.plan`).
+6. The body SHOULD become `value.content`, preserving `value.path` and `value.title`.
+7. Re-importing MUST upsert by key instead of inserting duplicates.
+8. Implementations SHOULD provide a dry-run mode that reports new/updated/skipped items without writing to the Store.
+
+### 12.11 Examples
 
 #### CSV Example
 
@@ -855,22 +884,29 @@ After a Session is revoked, the corresponding Token MUST become invalid immediat
 
 ### 14.2 Token Delivery
 
-In the Local Profile, the Token is issued by the Auth Service / CLI on the user's machine and injected into the Agent process via environment variables:
+In the Local Profile, the Token is issued by the Auth Service / CLI on the user's machine. The reference implementation writes it to a `0600` session env file, which the Agent or MCP bridge then reads:
 
 ```bash
-export UOM_TOKEN="<capability-token>"
-export UOMP_BASE_URL="http://127.0.0.1:9374"
+# ~/.uomp/sessions/<session_id>.env
+export UOM_TOKEN='<capability-token>'
+export UOMP_BASE_URL='http://127.0.0.1:9374'
+
+# Agent terminal
+source ~/.uomp/sessions/<session_id>.env
 uom-calendar-agent
 ```
 
 - `UOM_TOKEN`: The Capability Token the Agent uses to access Guard.
 - `UOMP_BASE_URL`: The Guard endpoint address, defaulting to `http://127.0.0.1:9374` in Local Profile.
+- The reference CLI does not print the full JWT by default; use `--print-token` when an explicit copy is needed.
 
-The user UI (e.g. CLI) runs on the same host as the Memory Store / Guard, performs identity verification and authorization, issues the Token, and only then hands the Token to the Agent. The Agent itself does not participate in authorization decisions.
+The user UI (e.g. CLI) runs on the same host as the Memory Store / Guard, performs identity verification and authorization, issues the Token, and only then hands the Token to the Agent. The Agent itself does not participate in authorization decisions. The MCP bridge reads the same env file and re-reads it before each tool call so re-authorization takes effect without a client restart.
 
 ## 15. Remote Profile
 
 ### 15.1 Overview
+
+> Remote Profile is OPTIONAL / advanced and is not required for the current local-first workflow.
 
 Remote Profile allows Agents not running on the user's machine to access user memory. To protect the local Memory Guard, UOMP introduces the **UOMP Gateway** as the controlled entry point: the Memory Guard MUST NOT be directly exposed to the public internet, and all remote access MUST go through a user-deployed or user-trusted Gateway.
 
@@ -894,7 +930,7 @@ Remote Profile implementations MUST satisfy:
 Remote Profile defaults to **user self-hosted Gateway**:
 
 - Users run Gateway on their own VPS, NAS, cloud server, or home server;
-- **Recommended: `uomp gateway start` launches with Cloudflare Tunnel**, automatically obtaining a `https://xxx.trycloudflare.com` public URL — no public IP or port forwarding needed;
+- **Recommended: `uomp gateway start` (advanced command) launches with Cloudflare Tunnel**, automatically obtaining a `https://xxx.trycloudflare.com` public URL — no public IP or port forwarding needed;
 - A reverse tunnel (Cloudflare Tunnel, ngrok) may also be used manually to expose the Gateway;
 - A third-party MAY offer managed Gateway services, but open-source core implementations MUST retain self-hosting as the default and trust root.
 
@@ -982,6 +1018,8 @@ The user's local private key SHOULD be protected by a keystore or system keychai
 
 ### 15.7 Cloud Relay
 
+> Cloud Relay is currently design/prototype only and is not on the core path.
+
 Cloud Relay is a stateless public relay service allowing Agents to access Guard over the public internet without user configuration of mTLS certificates or Cloudflare Tunnel.
 
 **Differences from Gateway**:
@@ -1003,7 +1041,7 @@ Agent → POST /v1/memory/read → Cloud Relay
   → Forward to Guard → Return result
 ```
 
-The Relay only requires Guard's Ed25519 **public key** to verify Tokens. It holds no private key and cannot issue Tokens. CORS is enabled for browser-based calls. Default rate limit: 60 req/min per session.
+The Relay only requires Guard's Ed25519 **public key** to verify Tokens. It holds no private key and cannot issue Tokens. The design supports CORS and a default rate limit of 60 req/min per session; the reference implementation remains a prototype.
 
 **Gateway + Cloud Relay combined mode**:
 

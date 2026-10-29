@@ -1,12 +1,13 @@
 <svg viewBox="0 0 700 290" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="远程路径">
+  <rect x="0" y="0" width="700" height="290" fill="#FFFFFF"/>
   <defs>
     <marker id="g" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#B45309"/></marker>
     <marker id="r" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0891B2"/></marker>
     <marker id="a" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#0A0A0A"/></marker>
   </defs>
 
-  <text x="350" y="24" text-anchor="middle" fill="#B45309" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">远程路径（两个平行入口）</text>
-  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">Gateway 和 Cloud Relay 是同级组件，Agent 任选其一</text>
+  <text x="350" y="24" text-anchor="middle" fill="#B45309" font-size="13" font-family="Inter, system-ui, sans-serif" font-weight="700">远程路径（可选 / 高级）</text>
+  <text x="350" y="42" text-anchor="middle" fill="#6B7280" font-size="10" font-family="Inter, system-ui, sans-serif">Gateway 是受控远程入口；Cloud Relay 仅设计/预览，不属于核心路径</text>
 
   <!-- Left side: User machine -->
   <rect x="15" y="55" width="220" height="180" rx="10" fill="#FAFAF8" stroke="#9CA3AF" stroke-width="1" stroke-dasharray="4 2"/>
@@ -51,9 +52,7 @@
   <!-- Path 2: Cloud Relay → Guard -->
   <line x1="275" y1="110" x2="215" y2="185" stroke="#0891B2" stroke-width="1.5" marker-end="url(#r)"/>
 
-  <!-- Auth → Agent (token delivery) -->
-  <line x1="115" y1="165" x2="480" y2="132" stroke="#0A0A0A" stroke-width="1" stroke-dasharray="3 3"/>
-  <text x="297" y="152" text-anchor="middle" fill="#6B7280" font-size="8" font-family="Inter, system-ui, sans-serif">UOM_TOKEN (Agent carries it, doesn't go through Gateway/Relay)</text>
+  <!-- Token delivery is out-of-band: the user hands the token to the Agent. -->
 
-  <text x="350" y="280" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">Auth 签发 Token → Agent 携带 Token 选择 Gateway 或 Relay → 转发到 Guard → Store</text>
+  <text x="350" y="280" text-anchor="middle" fill="#6B7280" font-size="9" font-family="Inter, system-ui, sans-serif">可选/高级：Auth 签发 Token → 用户交付给 Agent → Agent 经 Gateway（或设计中的 Relay）→ Guard → Store</text>
 </svg>
