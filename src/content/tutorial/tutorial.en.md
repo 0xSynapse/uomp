@@ -167,7 +167,7 @@ Paste the output into your client config. It looks like:
 
 Restart the client, then ask it to list notes under `notes/projects` and read one. Every call still goes through Memory Guard; denied reads are returned to the client and written to the audit log.
 
-The env file is read when the MCP server starts. After the session expires or is revoked, re-run `uomp authorize` and restart the MCP server.
+The MCP server re-reads the env file on startup and before every tool call. With a fixed `--output` path, re-run `uomp authorize` and the next call picks up the new token without restarting the client. If `--session` points at a session ID, restart the client.
 
 ## 8. Remote Gateway Mode (Advanced / Preview)
 

@@ -186,7 +186,7 @@ uomp mcp --session ~/.uomp/mcp-client.env --print-config
 
 重启客户端，然后让它列出 `notes/projects` 下的笔记并读取一条。所有调用仍然经过 Memory Guard；越权读取会返回拒绝并写入审计。
 
-env 文件在 MCP server 启动时读取。会话过期或被撤销后，重新执行 `uomp authorize` 并重启 MCP server。
+MCP server 在启动时和每次工具调用前都会重新读取 env 文件。使用固定的 `--output` 路径时，重新执行 `uomp authorize` 后下一次调用会自动使用新 token，不需要重启客户端；如果 `--session` 直接指向 session ID，则需要重启。
 
 ## 8. 远程 Gateway 模式（高级 / 预览）
 
