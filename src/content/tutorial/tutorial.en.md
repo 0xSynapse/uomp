@@ -16,7 +16,7 @@ Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 ## What you will do
 
 1. Install UOMP
-2. Use `uomp connect` to import notes, start the local service, grant a scoped session, and write the client config
+2. Use `uomp connect` to import notes, start the local service, authorize, and write the client config (or use on-demand consent)
 3. Read notes from Claude Desktop / Cursor / OpenCode
 4. Inspect the audit log and revoke
 
@@ -99,7 +99,7 @@ It checks Node, git, directory permissions, keys, databases, session files, and 
 
 ## 4. Import and connect an MCP client
 
-Import, authorize, and configure the client in one command:
+### 4.1 One-command setup
 
 ```bash
 uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
@@ -122,19 +122,76 @@ uomp connect cursor --vault ~/Obsidian/MyVault --scope notes/projects
 uomp connect opencode --vault ~/Obsidian/MyVault --scope notes/projects
 ```
 
-Notes:
+Common options:
 
 - `--scope notes/projects` allows only this scope; `notes/journal` and other scopes are denied
-- the session lasts 30 minutes by default; use `--duration 15` to change it
+- `--duration 15` changes the session length; the default is 30 minutes
 - `--print-config` prints the JSON without writing the client config
 - `--skip-config` grants the session without writing the client config
 - `--foreground` keeps the server in this terminal so you can see its logs
 
-High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default. In an interactive run, select the tag and then choose keys individually. In scripts, use `--allow-key <key...>` or `--allow-high <tag...>` explicitly.
+### 4.2 High-sensitivity data
 
-To request consent on demand, add `--on-demand`. The first tool call creates a pending request and opens a local approval page (Linux/macOS also show a desktop notification); approving it lets the same call continue. If the page does not open, run `uomp pending` and `uomp approve <request-id>`.
+High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default, and cannot be granted by tag alone.
 
-To sync later, run `uomp import ~/Obsidian/MyVault` again. Import rules:
+In an interactive run (without `--scope`), UOMP lists the tags and then the keys under each high-sensitivity tag. Using the stock-analyst example (import its sample data first):
+
+```bash
+uomp connect ./examples/stock-analyst
+```
+
+In scripts, grant individual keys explicitly:
+
+```bash
+uomp connect ./examples/stock-analyst \
+  --scope portfolio:holdings \
+  --allow-key AAPL MSFT
+```
+
+Or explicitly allow every key under a high-sensitivity tag (this prints an override warning):
+
+```bash
+uomp connect ./examples/stock-analyst \
+  --scope portfolio:holdings \
+  --allow-high portfolio:holdings
+```
+
+Prefer `--allow-key` over `--allow-high`, and prefer the interactive picker over both.
+
+### 4.3 On-demand consent (optional)
+
+To defer authorization until the first tool call, add `--on-demand`:
+
+```bash
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects --on-demand
+```
+
+No session is created immediately. The first tool call:
+
+1. creates a pending consent request
+2. opens a local approval page (Linux/macOS also show a desktop notification)
+3. continues the same tool call after you click Approve
+4. creates a new request on the next call after Deny
+
+If the page does not open, use the terminal fallback:
+
+```bash
+uomp pending
+uomp approve <request-id>
+uomp deny <request-id>
+```
+
+`--no-open` disables auto-open, `--no-notify` disables notifications, and `--consent-timeout 120` changes the wait time. When an on-demand token expires, the next tool call creates a new request.
+
+### 4.4 Sync notes later
+
+Run the import command again:
+
+```bash
+uomp import ~/Obsidian/MyVault
+```
+
+Import rules:
 
 - recursively processes `.md` files
 - skips `.obsidian`, hidden directories, and `node_modules`
@@ -159,6 +216,8 @@ To sync later, run `uomp import ~/Obsidian/MyVault` again. Import rules:
 ---
 
 ## 5. Verify inside the client
+
+If you used `--on-demand`, the first request opens the approval page; approve it to let the same request continue. If you deny it, the tool returns an approval-required message.
 
 In Claude Desktop / Cursor / OpenCode, ask:
 
@@ -199,6 +258,7 @@ That proves scope enforcement works, and the denial is written to the audit log.
 Back in the terminal:
 
 ```bash
+uomp status
 uomp sessions
 uomp audit --limit 20
 ```
@@ -254,6 +314,8 @@ uomp disconnect claude
 
 This removes the `uomp` entry from the Claude Desktop config, revokes the current session, and deletes the matching env file.
 
+An on-demand request has no active session until it is approved; after approval, use `uomp revoke` or `uomp disconnect` the same way.
+
 ### After the session expires
 
 Run the same connect command again:
@@ -272,12 +334,15 @@ The MCP server re-reads the env file before every tool call. Re-running `connect
 |---|---|
 | `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
 | `uomp doctor` says the data directory is missing | Run `uomp init` |
-| Port 9374 is occupied | Stop the other process; or use `uomp connect claude --port 9380 --scope notes/projects` |
+| Port 9374 is occupied | Run `uomp stop` first; or `uomp start --port 9380` + `uomp connect ... --port 9380 --no-server` |
 | The client does not show UOMP tools | Use `uomp status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
-| `SESSION_NOT_ACTIVE` | The session expired or was revoked; run `uomp connect claude --scope notes/projects` again |
+| The tool says `UOMP approval required` | Open the approval page from the message, or run `uomp pending` / `uomp approve <request-id>` |
+| `SESSION_NOT_ACTIVE` | The session expired or was revoked; run `uomp connect claude --scope notes/projects` again; on-demand mode creates a new request |
 | `ACCESS_DENIED` | The key/tag is outside the granted scope; check `--scope` or `uomp audit` |
+| High-sensitivity data is unreadable | High-sensitivity keys must be granted explicitly; use the interactive picker or `--allow-key` / `--allow-high` |
 | Env-file permission warning | `uomp doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
-| Reset all local data | Stop `uomp connect` / `uomp serve`, then remove `~/.uomp`; this deletes notes, keys, and audit data |
+| Reset all local data | Run `uomp stop`, then remove `~/.uomp`; use `pkill -f "uomp serve"` if needed. This deletes notes, keys, and audit data |
+| Running on Windows | Windows is not supported; use macOS or Linux |
 
 ### Where data lives
 
@@ -309,6 +374,8 @@ UOMP provides:
 
 - local-first storage; notes stay on your machine by default
 - tag/key scope enforcement
+- high-sensitivity tags are off by default; high-sensitivity items require explicit keys
+- on-demand approval links carry a one-time secret and stay on loopback
 - session expiry and immediate revocation
 - an audit record for every allow/deny decision
 - tokens in `0600` files, with no JWT printed by default
