@@ -3,13 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import { baseUrl } from '../utils/base.ts';
 ---
 
-<Layout title="试用 - UOMP" description="今天可以用 CLI 跑通 UOMP 的授权闭环；MCP 客户端和浏览器授权界面是下一个里程碑。" switchHref={`${baseUrl}en/try/`}>
+<Layout title="试用 - UOMP" description="今天可以用 CLI 跑通 UOMP 的授权闭环；MCP 客户端已可实验接入，浏览器授权界面是下一个里程碑。" switchHref={`${baseUrl}en/try/`}>
   <section>
     <div class="container">
       <h1 style="margin-bottom:.25rem">试用 UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
         今天，授权闭环通过 CLI 跑通：导入 Markdown 笔记、授权一个有范围限制的会话、审计并撤销。
-        MCP 客户端和浏览器授权界面是下一个里程碑。
+        MCP 客户端已可通过 stdio 实验接入；浏览器授权界面是下一个里程碑。
         两者共享 <code style="font-size:.88rem">@uomp/sdk</code>、Token 体系、Guard 鉴权和审计日志。
       </p>
     </div>
@@ -78,7 +78,7 @@ uomp revoke &lt;id&gt;</code></pre>
       <div class="card" style="max-width:760px">
         <h2 style="font-size:1.15rem;margin-bottom:.75rem">共享基础设施</h2>
         <p style="color:var(--mid);font-size:.88rem;line-height:1.7">
-          CLI 和 MCP 是 <strong>同一套实现的两种交互界面</strong>。底层共享 <code>@uomp/sdk</code>、<code>@uomp/core</code>、Capability Token 体系、Guard 鉴权和审计日志。区别仅在于：今天在终端里用 CLI 驱动 Agent；下一步，MCP 客户端无需定制代码即可接入。
+          CLI 和 MCP 是 <strong>同一套实现的两种交互界面</strong>。底层共享 <code>@uomp/sdk</code>、<code>@uomp/core</code>、Capability Token 体系、Guard 鉴权和审计日志。今天 CLI 驱动 Agent，也可以让 MCP 客户端实验接入；下一步是更多客户端验证和浏览器授权。
         </p>
       </div>
     </div>

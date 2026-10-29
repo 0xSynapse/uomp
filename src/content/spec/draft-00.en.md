@@ -1349,35 +1349,32 @@ Deletion proofs can be recorded on-chain via the `AuditAnchor` contract (§18.4)
 
 ## Appendix A: Minimal Interaction Example
 
+> Current local flow for the reference CLI. `discover` / `connect` / `registry` are advanced commands hidden from default help and are not on the core path.
+
 ```bash
-# 1. Discover an Agent (via ERC8004 Registry or local path)
-pnpm cli discover ./examples/calendar-agent
+# Terminal 1: start local Auth + Guard
+uomp serve
 
-# 2. Verify identity and cache manifest
-pnpm cli connect ./examples/calendar-agent
-
-# 3. Authorize: CLI shows manifest, user confirms scope, Token issued
-pnpm cli authorize ./examples/calendar-agent \
+# Terminal 2: import, authorize, and load the session
+uomp import ~/Obsidian/MyVault
+uomp authorize ./examples/calendar-agent \
   --scope preference \
-  --output /tmp/uomp.env
+  --output ~/.uomp/calendar.env \
+  --no-server
+source ~/.uomp/calendar.env
 
-# 4. Load Token into environment (or export UOM_TOKEN manually)
-source /tmp/uomp.env
+# Run the Agent as an independent process with the Token
+node ./examples/calendar-agent/index.js
 
-# 5. Run Agent as independent process with Token
-pnpm cli agent run ./examples/calendar-agent
+# Optional: generate an MCP config for Claude Desktop / Cursor
+uomp mcp --session ~/.uomp/calendar.env --print-config
 
-# 6. Agent reads memory via SDK
-# import { UompClient } from '@uomp/sdk';
-# const uomp = UompClient.fromEnv();
-# const theme = await uomp.memory.get('preference.theme');
+# View sessions and audit
+uomp sessions
+uomp audit --limit 20
 
-# 7. View sessions and audit
-pnpm cli sessions -a
-pnpm cli audit --limit 20
-
-# 8. Revoke session
-pnpm cli revoke <session-id>
+# Revoke the session
+uomp revoke <session-id>
 ```
 
 ---

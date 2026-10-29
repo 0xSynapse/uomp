@@ -5,7 +5,7 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Try - UOMP"
-  description="Try UOMP's authorization loop today with the CLI. The MCP client and browser consent UI are the next milestone."
+  description="Try UOMP's authorization loop today with the CLI. MCP clients are available experimentally; the browser consent UI is the next milestone."
   lang="en"
   switchHref={`${baseUrl}try/`}
 >
@@ -14,7 +14,7 @@ import { baseUrl } from '../../utils/base.ts';
       <h1 style="margin-bottom:.25rem">Try UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
         Today the authorization loop runs through the CLI: import Markdown notes, grant a scoped session, audit it, and revoke it.
-        The MCP client and browser consent UI are the next milestone.
+        MCP clients can connect experimentally over stdio; the browser consent UI is the next milestone.
         Both share <code style="font-size:.88rem">@uomp/sdk</code>, the Token system, Guard auth, and audit logs.
       </p>
     </div>
@@ -83,7 +83,7 @@ uomp revoke &lt;id&gt;</code></pre>
       <div class="card" style="max-width:760px">
         <h2 style="font-size:1.15rem;margin-bottom:.75rem">Shared Infrastructure</h2>
         <p style="color:var(--mid);font-size:.88rem;line-height:1.7">
-          CLI and MCP are <strong>two interfaces to the same implementation</strong>. Both share <code>@uomp/sdk</code>, <code>@uomp/core</code>, the Capability Token system, Guard auth, and audit logs. The difference: today the CLI drives agents from a terminal; next, an MCP client can connect without custom code.
+          CLI and MCP are <strong>two interfaces to the same implementation</strong>. Both share <code>@uomp/sdk</code>, <code>@uomp/core</code>, the Capability Token system, Guard auth, and audit logs. Today the CLI drives agents and MCP clients can connect experimentally; next comes broader client validation and a browser consent UI.
         </p>
       </div>
     </div>

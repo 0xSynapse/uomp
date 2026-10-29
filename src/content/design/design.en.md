@@ -5,6 +5,8 @@ description: 'Architecture and implementation notes for the uomp-mvp reference i
 
 # UOMP Implementation Design
 
+> **Implementation status (2026-10):** the current focus is the local CLI + MCP loop. Remote Gateway, browser/wallet, Cloud Relay, S3/IPFS, and on-chain sections are research or preview capabilities, not shipped product. For the current workflow, see the [README](https://github.com/0xSynapse/uomp-core#quick-start) and [tutorial](/en/tutorial/). The rest of this document preserves the original implementation design.
+
 This document explains how the UOMP **reference implementation** [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) turns the [protocol specification](/en/spec/) into runnable code.
 
 ---
@@ -20,12 +22,13 @@ This document explains how the UOMP **reference implementation** [`uomp-mvp`](ht
 | `packages/token` | — | EdDSA JWT issuance and verification |
 | `packages/auth` | Auth Service | Session create/grant/close/revoke |
 | `packages/guard` | Memory Guard | Token validation, scope filtering, audit logging |
-| `packages/identity` | Identity Verification | Wallet auth (MetaMask / Argent X / Braavos) + seed phrase |
+| `packages/identity` | Identity Verification | DID/GPG verification framework |
 | `packages/sdk` | Agent SDK | `UompClient`, dual-build for Node.js + browser |
-| `packages/cli` | User UI | User CLI: data import, authorization, session/store/gateway management |
+| `packages/cli` | User UI | User CLI: import, authorize, `serve`, `mcp`, sessions/audit, Gateway/Store management |
 | `apps/server` | — | Combined Auth + Guard HTTP service (`127.0.0.1:9374`) |
 | `apps/gateway` | — | Self-hosted Gateway: mTLS + token forwarding + Cloudflare Tunnel |
 | `apps/relay` | Cloud Relay | Stateless public Relay (design phase): pubkey verification + ciphertext forwarding |
+| `uomp.org/dashboard/` | Browser UI (preview) | Browser preview: wallet auth + encrypted storage + portfolio management + agent analysis |
 
 ---
 
@@ -44,12 +47,18 @@ Default, zero-config. Agent connects directly to Memory Guard at `http://127.0.0
 ```
 
 ```bash
-pnpm --filter @uomp/server start
-pnpm cli authorize ./my-agent --no-server
-source /tmp/uomp.env && node index.js
+# Terminal 1
+uomp serve
+
+# Terminal 2
+uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
+source ~/.uomp/my-agent.env && node index.js
+
+# MCP client config (optional)
+uomp mcp --session ~/.uomp/my-agent.env --print-config
 ```
 
-> `pnpm cli agent run ./my-agent` bundles auth + guard + agent launch — dev shortcut only.
+> `uomp agent run ./my-agent` is a hidden local debugging shortcut. It is for development only.
 
 ### 2.2 Remote Mode (Agent external, via Gateway)
 
@@ -69,7 +78,7 @@ uomp gateway start
 #   https://xxx.trycloudflare.com
 ```
 
-### 2.3 Browser Mode (wallet auth + S3 direct + Cloud Relay)
+### 2.3 Browser Mode (preview: wallet auth + S3 direct + Cloud Relay)
 
 Web Apps use `@uomp/sdk/browser`. **Reads require zero server dependencies** (S3 direct + in-browser decryption). Writes go through Cloud Relay.
 
@@ -234,8 +243,8 @@ Agents declare `requested_scopes`, `data_retention_policy`, `external_data_sourc
 `examples/stock-analyst/` is the full acceptance example:
 
 1. `uomp import` holdings CSV + risk profile
-2. `uomp discover` / `uomp connect` verify the Agent
-3. `uomp authorize` issues the Token
+2. (Optional) use the advanced `uomp discover` / `uomp connect` commands to inspect and verify the Agent
+3. `uomp authorize` creates a session and writes the env file
 4. Agent reads data → fetches quotes → analyzes (P&L, Sharpe, Beta, RSI, scenarios)
 5. Generates bilingual reports (JSON + Markdown + HTML)
 6. `uomp sessions` / `uomp audit` for auditing
@@ -249,14 +258,14 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 
 ```
 ~/.uomp/
-├── config.json           # Service port, store backend config
-├── user.json             # User identity (wallet address, masterKey hash)
+├── agents/               # Installed agents
+├── registry/             # Local registry
+├── sessions/             # 0600 session env files
 ├── memory.db             # Memory Store (SQLite)
 ├── auth.db               # Sessions and denylist
 ├── audit.db              # Audit logs
-├── remote-profile.json   # Gateway config (endpoint, allowlist)
-├── .secrets/             # Ed25519 keypair
-└── .gateway-certs/       # Gateway mTLS certs (CA + server + client)
+├── .secrets/             # Ed25519 keypair + admin token
+└── .gateway-certs/       # Only when the Gateway is enabled
 ```
 
 ---
@@ -267,14 +276,17 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 |------------|--------|-------|
 | Agent read | ✅ | Authorized by tag/key/field |
 | Agent write | ❌ | Guard returns `503 WRITE_NOT_AVAILABLE` |
-| Remote Gateway | ✅ | mTLS + Cloudflare Tunnel + browser CORS |
+| Local CLI | ✅ | import / authorize / serve / mcp / sessions / audit / revoke |
+| Markdown import | ✅ | Obsidian/Markdown folders with path-derived scopes |
+| MCP | ✅ Experimental | stdio `list_memory` / `search_memory` / `read_memory` |
+| Remote Gateway | ⚠️ Advanced/preview | mTLS + Cloudflare Tunnel + browser CORS |
 | Aggregation | ✅ | sum/avg/count/min/max, paired with `aggregation_only` |
 | Deletion proof | ✅ | Agent submits signed proof, session auto-closes |
 | Field filtering | ✅ | Token specifies `allowed_fields`, Guard filters |
-| Browser SDK | ✅ | Wallet auth + S3 direct read + Cloud Relay write |
-| Store abstraction | ⚠️ Designed | SQLite / S3 / IPFS pluggable, Phase 2 implementation pending |
-| Cloud Relay | ⚠️ Designed | Public Gateway implementation, Phase 3.5 pending |
-| Wallet auth | ⚠️ Designed | MetaMask / Argent X / Braavos, Phase 2 implementation pending |
+| Browser SDK | ⚠️ Designed | Wallet auth + S3 direct read + Cloud Relay write |
+| Store abstraction | ⚠️ Partial | `IMemoryStore` + SQLite; S3/IPFS still designed |
+| Cloud Relay | ⚠️ Designed | `apps/relay/` prototype, not on the core path |
+| Wallet auth | ⚠️ Designed | MetaMask / Argent X / Braavos proposal |
 | Identity verification | ⚠️ | DID/GPG framework present, verification to be strengthened |
 
 ---

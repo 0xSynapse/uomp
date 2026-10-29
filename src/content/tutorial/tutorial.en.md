@@ -5,7 +5,7 @@ description: 'Complete guide from zero to deployed'
 
 # UOMP SDK/CLI Tutorial
 
-A complete walkthrough: install CLI, import data, authorize Agents, write Agents with the SDK, deploy remote mode, and connect to cloud services.
+This tutorial starts with the local CLI + MCP loop: install, import Obsidian/Markdown, authorize, audit, and revoke, then connect Claude Desktop / Cursor. The SDK, remote Gateway, and DO cloud sections are advanced or preview material.
 
 ## Prerequisites
 
@@ -133,17 +133,20 @@ node ./examples/stock-analyst/index.js
 
 ## 7. Connect Claude Desktop / Cursor (Experimental)
 
-The CLI includes a stdio MCP server with `list_memory`, `search_memory`, and `read_memory`. List and search return keys and metadata only; `read_memory` returns content. Create a dedicated session env file:
+The CLI includes a stdio MCP server with `list_memory`, `search_memory`, and `read_memory`. List and search return keys and metadata only; `read_memory` returns content.
+
+The MCP server is only a stdio bridge; the UOMP HTTP server must run separately:
 
 ```bash
+# Terminal 1: keep running
+uomp serve
+
+# Terminal 2: authorize and generate the client config
 uomp authorize ./examples/mcp-client \
   --scope notes/projects \
-  --output ~/.uomp/mcp-client.env
-```
+  --output ~/.uomp/mcp-client.env \
+  --no-server
 
-Generate the client config:
-
-```bash
 uomp mcp --session ~/.uomp/mcp-client.env --print-config
 ```
 
@@ -165,7 +168,7 @@ Paste the output into your client config. It looks like:
 }
 ```
 
-Restart the client, then ask it to list notes under `notes/projects` and read one. Every call still goes through Memory Guard; denied reads are returned to the client and written to the audit log.
+Restart the client, then ask it to list notes under `notes/projects` and read one. Keep the `uomp serve` terminal running; every call still goes through Memory Guard, and denied reads are returned to the client and written to the audit log.
 
 The MCP server re-reads the env file on startup and before every tool call. With a fixed `--output` path, re-run `uomp authorize` and the next call picks up the new token without restarting the client. If `--session` points at a session ID, restart the client.
 

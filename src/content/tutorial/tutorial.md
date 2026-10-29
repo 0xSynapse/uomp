@@ -5,7 +5,7 @@ description: '从零到部署的完整指南'
 
 # UOMP SDK/CLI 教程
 
-本教程带你走完 UOMP 的完整流程：从安装 CLI、导入数据、授权 Agent，到使用 SDK 编写 Agent、部署远程模式、连接 DO 云服务。
+本教程先走通本地 CLI + MCP 闭环：安装、导入 Obsidian/Markdown、授权、审计、撤销，再接 Claude Desktop / Cursor。后面的 SDK、远程 Gateway 和 DO 云服务属于进阶或预览内容。
 
 ## 前置条件
 
@@ -152,17 +152,20 @@ P&L: +72.94% | Sharpe: 1.24 | Signals: 8
 
 ## 7. 连接 Claude Desktop / Cursor（实验）
 
-CLI 内置一个 stdio MCP server，提供 `list_memory`、`search_memory` 和 `read_memory`。`list_memory` / `search_memory` 只返回 key 和元数据，`read_memory` 返回内容。先生成一个专用会话 env 文件：
+CLI 内置一个 stdio MCP server，提供 `list_memory`、`search_memory` 和 `read_memory`。`list_memory` / `search_memory` 只返回 key 和元数据，`read_memory` 返回内容。
+
+MCP server 只是一个 stdio 桥接；UOMP HTTP server 需要独立运行：
 
 ```bash
+# 终端 1：保持运行
+uomp serve
+
+# 终端 2：授权并生成客户端配置
 uomp authorize ./examples/mcp-client \
   --scope notes/projects \
-  --output ~/.uomp/mcp-client.env
-```
+  --output ~/.uomp/mcp-client.env \
+  --no-server
 
-生成客户端配置：
-
-```bash
 uomp mcp --session ~/.uomp/mcp-client.env --print-config
 ```
 
@@ -184,7 +187,7 @@ uomp mcp --session ~/.uomp/mcp-client.env --print-config
 }
 ```
 
-重启客户端，然后让它列出 `notes/projects` 下的笔记并读取一条。所有调用仍然经过 Memory Guard；越权读取会返回拒绝并写入审计。
+重启客户端，然后让它列出 `notes/projects` 下的笔记并读取一条。保持 `uomp serve` 终端运行；所有调用仍然经过 Memory Guard，越权读取会返回拒绝并写入审计。
 
 MCP server 在启动时和每次工具调用前都会重新读取 env 文件。使用固定的 `--output` 路径时，重新执行 `uomp authorize` 后下一次调用会自动使用新 token，不需要重启客户端；如果 `--session` 直接指向 session ID，则需要重启。
 

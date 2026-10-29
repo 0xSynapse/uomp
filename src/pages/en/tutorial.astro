@@ -10,7 +10,7 @@ const { Content } = t ? await t.render() : { Content: null };
 
 <Layout
   title="SDK/CLI Tutorial - UOMP"
-  description="Complete guide from zero to deployed"
+  description="From the local CLI + MCP loop to advanced deployment: install, import, authorize, MCP, SDK, Gateway"
   lang="en"
   switchHref={`${baseUrl}tutorial/`}
 >
@@ -18,7 +18,7 @@ const { Content } = t ? await t.render() : { Content: null };
     <div class="container">
       <div class="sec-eyebrow">
         <div class="sec-num">Tutorial</div>
-        <span class="sec-tag">From zero to deployed</span>
+        <span class="sec-tag">Local CLI + MCP first</span>
       </div>
       {Content && <Content />}
       <div class="hero-btns" style="margin-top: 2.5rem;">

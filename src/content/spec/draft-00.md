@@ -1360,35 +1360,32 @@ Auth Service 或 Gateway 收到后：
 
 ## 附录 A: 最小交互示例
 
+> 参考 CLI 的当前本地流程。`discover` / `connect` / `registry` 是默认隐藏的高级命令，不在核心路径上。
+
 ```bash
-# 1. 用户发现 Agent（通过 ERC8004 Registry 或本地路径）
-pnpm cli discover ./examples/calendar-agent
+# 终端 1：启动本地 Auth + Guard
+uomp serve
 
-# 2. 验证 Agent 身份并缓存 manifest
-pnpm cli connect ./examples/calendar-agent
-
-# 3. 授权：CLI 展示 manifest，用户确认 scope 后签发 Token
-pnpm cli authorize ./examples/calendar-agent \
+# 终端 2：导入、授权并加载会话
+uomp import ~/Obsidian/MyVault
+uomp authorize ./examples/calendar-agent \
   --scope preference \
-  --output /tmp/uomp.env
+  --output ~/.uomp/calendar.env \
+  --no-server
+source ~/.uomp/calendar.env
 
-# 4. 加载 Token 到环境（也可手动 export UOM_TOKEN）
-source /tmp/uomp.env
+# 运行 Agent（独立进程，携带 Token）
+node ./examples/calendar-agent/index.js
 
-# 5. Agent 运行（独立进程，携带 Token）
-pnpm cli agent run ./examples/calendar-agent
+# 可选：为 Claude Desktop / Cursor 生成 MCP 配置
+uomp mcp --session ~/.uomp/calendar.env --print-config
 
-# 6. Agent 内部使用 SDK 读取记忆
-# import { UompClient } from '@uomp/sdk';
-# const uomp = UompClient.fromEnv();
-# const theme = await uomp.memory.get('preference.theme');
+# 查看会话与审计
+uomp sessions
+uomp audit --limit 20
 
-# 7. 查看会话与审计
-pnpm cli sessions -a
-pnpm cli audit --limit 20
-
-# 8. 撤销会话
-pnpm cli revoke <session-id>
+# 撤销会话
+uomp revoke <session-id>
 ```
 
 ---
