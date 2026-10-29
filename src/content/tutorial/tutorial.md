@@ -9,7 +9,7 @@ description: '从零到部署的完整指南'
 
 ## 前置条件
 
-- Node.js >= 20
+- Node.js >= 22
 - pnpm 9（`corepack enable` 或 `npm install -g pnpm@9`）
 - 已克隆 [uomp-core](https://github.com/0xSynapse/uomp-core) 仓库
 
@@ -21,58 +21,72 @@ pnpm build
 pnpm cli init
 ```
 
-`pnpm cli init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB 和 Ed25519 密钥对。
+`pnpm cli init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB、Ed25519 密钥对和 `sessions/` 目录。
 
 ## 2. 导入私有数据
 
-UOMP 支持 CSV 和 JSON 格式的数据导入：
+推荐先导入一个 Obsidian 笔记库或 Markdown 目录：
 
 ```bash
-# 导入风险偏好（JSON 格式）
+# 递归导入，跳过 .obsidian 和隐藏目录
+pnpm cli import ~/Obsidian/MyVault
+
+# 只看会导入什么，不写库
+pnpm cli import ~/Obsidian/MyVault --dry-run
+```
+
+路径会变成授权范围：`projects/uomp/plan.md` 带有 `notes`、`notes/projects`、`notes/projects/uomp` 三个 tag。重新导入会按 key 更新，不会重复写入。
+
+也支持 CSV 和 JSON：
+
+```bash
 pnpm cli import ./examples/stock-analyst/sample-risk.json --replace
 
-# 导入持仓数据（CSV 格式，标记为高敏感）
 pnpm cli import ./examples/stock-analyst/sample-holdings.csv \
   --tag portfolio:holdings \
   --sensitivity high \
   --replace
 ```
 
-## 3. 启动 Auth + Guard 服务
+## 3. 启动 Auth + Guard
 
-在**终端 1**启动本地服务：
+最简单的方式是让 `authorize` 启动内嵌 server：保持那个终端打开，然后在另一个终端运行 Agent。
+
+如果你想分开运行：
 
 ```bash
-pnpm --filter @uomp/server start
+# 终端 1
+pnpm cli serve
 ```
 
 服务监听 `http://127.0.0.1:9374`。
 
-## 4. 发现并授权 Agent
+## 4. 授权 Agent
 
 ```bash
-# 查看 Agent 声明
-pnpm cli discover ./examples/stock-analyst
-
-# 验证身份并缓存 manifest
-pnpm cli connect ./examples/stock-analyst
-
-# 交互式授权（推荐）
-pnpm cli authorize ./examples/stock-analyst
-
-# 脚本化授权（非交互）
 pnpm cli authorize ./examples/stock-analyst \
-  --scope portfolio:holdings profile:risk \
-  --output /tmp/uomp.env \
-  --no-server
+  --scope portfolio:holdings profile:risk
 ```
 
-授权后 CLI 输出：
+CLI 会创建会话，并把 token 写入 `~/.uomp/sessions/<sessionId>.env`（权限 `0600`）。输出类似：
 
-```bash
-export UOM_TOKEN="eyJhbG..."
-export UOMP_BASE_URL="http://127.0.0.1:9374"
+```text
+Session granted: sess_...
+  Agent     Stock Analyst (stock-analyst)
+  Scope     portfolio:holdings, profile:risk
+  Expires   2026-10-29 10:30 (30 min)
+
+Env file
+  /home/me/.uomp/sessions/sess_....env
+
+Open a new terminal, then:
+  source '/home/me/.uomp/sessions/sess_....env'
+  node '/path/to/agent/index.js'
+
+Revoke with: uomp revoke sess_...
 ```
+
+默认不打印完整 JWT。需要手动复制 token 时加 `--print-token`；需要写到自定义路径时加 `--output`。
 
 ## 5. 使用 SDK 编写 Agent
 
@@ -106,8 +120,10 @@ const logs = await uomp.audit.query({ limit: 10 });
 
 ## 6. 运行 Agent
 
+在另一个终端 source CLI 打印的 env 文件，然后运行 Agent：
+
 ```bash
-source /tmp/uomp.env
+source ~/.uomp/sessions/<sessionId>.env
 node ./examples/stock-analyst/index.js
 ```
 
@@ -121,7 +137,9 @@ Stock Analyst v1.0 启动
 P&L: +72.94% | Sharpe: 1.24 | Signals: 8
 ```
 
-## 7. 远程 Gateway 模式
+## 7. 远程 Gateway 模式（高级 / 预览）
+
+> Gateway 是高级能力，不在 CLI 核心路径上。默认的本地流程不需要它。
 
 一条命令启动，无需公网 IP：
 
@@ -162,17 +180,17 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
 ## 9. 查看会话与审计
 
 ```bash
-# 查看所有会话
-pnpm cli sessions -a
+# 查看活跃会话
+pnpm cli sessions
 
 # 查看审计日志
 pnpm cli audit --limit 20
 
-# 撤销会话
+# 撤销会话；默认 env 文件也会被删除
 pnpm cli revoke <session-id>
 ```
 
-## 10. Gateway 管理
+## 10. Gateway 管理（高级 / 预览）
 
 ```bash
 # 启动 Gateway（含 Tunnel）
@@ -201,15 +219,16 @@ uomp gateway status
 
 ## CLI 命令速查
 
+核心路径：
+
 | 命令 | 说明 |
 |------|------|
 | `pnpm cli init` | 初始化 UOMP 数据目录 |
-| `pnpm cli import <file>` | 导入 CSV/JSON 数据 |
-| `pnpm cli discover <agent>` | 查看 Agent 声明 |
-| `pnpm cli connect <agent>` | 验证并缓存 Agent |
-| `pnpm cli authorize <agent>` | 授权并签发 Token |
-| `pnpm cli sessions -a` | 查看所有会话 |
+| `pnpm cli import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
+| `pnpm cli authorize <agent>` | 创建会话，写入 0600 env 文件 |
+| `pnpm cli serve` | 单独启动 Auth + Guard server |
+| `pnpm cli sessions` | 查看活跃会话 |
 | `pnpm cli audit --limit 20` | 查看审计日志 |
-| `pnpm cli revoke <id>` | 撤销会话 |
-| `uomp gateway start` | 启动 Gateway + Cloudflare Tunnel |
-| `uomp gateway status` | 查看 Gateway 状态 |
+| `pnpm cli revoke <id>` | 撤销会话并删除默认 env 文件 |
+
+高级命令默认从帮助中隐藏，但仍可调用：`memory`、`registry`、`discover`、`connect`、`agent`、`gateway`。

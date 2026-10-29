@@ -5,7 +5,7 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Roadmap - UOMP"
-  description="What UOMP is building next: an MCP server and consent UI for local knowledge bases. Progress is measured by retained users, not shipped features."
+  description="What UOMP is building next: make the CLI consent loop usable first, then add MCP clients and a browser consent UI. Progress is measured by retained users, not shipped features."
   lang="en"
   switchHref={`${baseUrl}roadmap/`}
 >
@@ -16,7 +16,7 @@ import { baseUrl } from '../../utils/base.ts';
 
       <div class="roadmap">
         <div class="note">
-          <strong>Current focus:</strong> make one workflow real — Claude Desktop or Cursor reading an Obsidian vault for 30 minutes, with approval, audit, and instant revocation.
+          <strong>Current focus:</strong> make the CLI loop usable — import Obsidian/Markdown, grant for 30 minutes, audit, revoke. MCP clients and the browser consent UI come next.
         </div>
 
         <h2>Milestone 1: The authorization loop <span class="status status-done">Done</span></h2>
@@ -29,7 +29,9 @@ import { baseUrl } from '../../utils/base.ts';
           <li><span class="status status-done">Done</span>Admin token required for session create, grant, and revoke</li>
           <li><span class="status status-done">Done</span><code>revoke</code> and <code>close</code> enforced on the next request</li>
           <li><span class="status status-done">Done</span>Audit log for every access decision</li>
-          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>authorize</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>authorize</code> / <code>serve</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">Done</span>Markdown / Obsidian folder import with path-derived scopes and <code>--dry-run</code></li>
+          <li><span class="status status-done">Done</span><code>authorize</code> writes a 0600 session env file and does not print the JWT by default</li>
           <li><span class="status status-done">Done</span>TypeScript SDK (<code>UompClient</code>)</li>
           <li><span class="status status-done">Done</span>Example agents: calendar and stock analyst</li>
         </ul>
@@ -37,10 +39,9 @@ import { baseUrl } from '../../utils/base.ts';
         <h2>Milestone 2: The first real-user workflow <span class="status status-current">In progress</span></h2>
         <ul class="roadmap-list">
           <li><span class="status status-next">Next</span>MCP server for Claude Desktop, Cursor, and other MCP clients</li>
-          <li><span class="status status-next">Next</span>Obsidian / Markdown connector</li>
+          <li><span class="status status-next">Next</span>One-command CLI install — no repo clone required</li>
           <li><span class="status status-next">Next</span>Browser consent UI: scope preview, plain-language grant, 30-minute default</li>
           <li><span class="status status-next">Next</span>Audit timeline: agent, scope, time, allowed or denied</li>
-          <li><span class="status status-next">Next</span>One-command install — no wallet, no cloud account</li>
           <li><span class="status status-next">Next</span>Python SDK</li>
           <li><span class="status status-next">Next</span>10 design partners using their own data</li>
           <li><span class="status status-next">Next</span>Target: first authorized read under 5 minutes</li>

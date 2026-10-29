@@ -9,7 +9,7 @@ A complete walkthrough: install CLI, import data, authorize Agents, write Agents
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 22
 - pnpm 9 (`corepack enable` or `npm install -g pnpm@9`)
 - Clone [uomp-core](https://github.com/0xSynapse/uomp-core)
 
@@ -21,9 +21,23 @@ pnpm build
 pnpm cli init
 ```
 
-`pnpm cli init` creates Memory Store, Auth DB, Audit DB, and Ed25519 key pair under `~/.uomp`.
+`pnpm cli init` creates the Memory Store, Auth DB, Audit DB, Ed25519 key pair, and `sessions/` directory under `~/.uomp`.
 
 ## 2. Import Data
+
+Start with an Obsidian vault or a Markdown folder:
+
+```bash
+# Recursive import; skips .obsidian and hidden directories
+pnpm cli import ~/Obsidian/MyVault
+
+# Preview without writing
+pnpm cli import ~/Obsidian/MyVault --dry-run
+```
+
+Directory paths become scopes: `projects/uomp/plan.md` is tagged `notes`, `notes/projects`, and `notes/projects/uomp`. Re-importing upserts by key instead of duplicating items.
+
+CSV and JSON are still supported:
 
 ```bash
 pnpm cli import ./examples/stock-analyst/sample-risk.json --replace
@@ -36,24 +50,43 @@ pnpm cli import ./examples/stock-analyst/sample-holdings.csv \
 
 ## 3. Start Auth + Guard
 
-In **Terminal 1**:
+The simplest path is to let `authorize` start the embedded server: keep that terminal open, then run the agent in another terminal.
+
+If you prefer a separate process:
 
 ```bash
-pnpm --filter @uomp/server start
+# Terminal 1
+pnpm cli serve
 ```
 
-Service listens on `http://127.0.0.1:9374`.
+The service listens on `http://127.0.0.1:9374`.
 
-## 4. Discover & Authorize
+## 4. Authorize an Agent
 
 ```bash
-pnpm cli discover ./examples/stock-analyst
-pnpm cli connect ./examples/stock-analyst
 pnpm cli authorize ./examples/stock-analyst \
-  --scope portfolio:holdings profile:risk \
-  --output /tmp/uomp.env \
-  --no-server
+  --scope portfolio:holdings profile:risk
 ```
+
+The CLI creates a session and writes the token to `~/.uomp/sessions/<sessionId>.env` with mode `0600`. Output looks like:
+
+```text
+Session granted: sess_...
+  Agent     Stock Analyst (stock-analyst)
+  Scope     portfolio:holdings, profile:risk
+  Expires   2026-10-29 10:30 (30 min)
+
+Env file
+  /home/me/.uomp/sessions/sess_....env
+
+Open a new terminal, then:
+  source '/home/me/.uomp/sessions/sess_....env'
+  node '/path/to/agent/index.js'
+
+Revoke with: uomp revoke sess_...
+```
+
+The full JWT is not printed by default. Use `--print-token` when you need to copy it, or `--output` to write the env file somewhere else.
 
 ## 5. Write an Agent with the SDK
 
@@ -78,12 +111,16 @@ const logs = await uomp.audit.query({ limit: 10 });
 
 ## 6. Run the Agent
 
+In another terminal, source the env file printed by the CLI, then run the agent:
+
 ```bash
-source /tmp/uomp.env
+source ~/.uomp/sessions/<sessionId>.env
 node ./examples/stock-analyst/index.js
 ```
 
-## 7. Remote Gateway Mode
+## 7. Remote Gateway Mode (Advanced / Preview)
+
+> Gateway is an advanced capability and is not on the core CLI path. The default local workflow does not need it.
 
 One command, no public IP needed:
 
@@ -108,8 +145,13 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
 ## 9. Sessions & Audit
 
 ```bash
-pnpm cli sessions -a
+# Active sessions
+pnpm cli sessions
+
+# Audit log
 pnpm cli audit --limit 20
+
+# Revoke; the default env file is removed too
 pnpm cli revoke <session-id>
 ```
 
@@ -129,15 +171,16 @@ pnpm cli revoke <session-id>
 
 ## CLI Quick Reference
 
+Core path:
+
 | Command | Description |
 |---------|-------------|
-| `pnpm cli init` | Initialize data directory |
-| `pnpm cli import <file>` | Import CSV/JSON data |
-| `pnpm cli discover <agent>` | View agent manifest |
-| `pnpm cli connect <agent>` | Verify and cache agent |
-| `pnpm cli authorize <agent>` | Authorize and issue Token |
-| `pnpm cli sessions -a` | View all sessions |
+| `pnpm cli init` | Initialize the data directory |
+| `pnpm cli import <path>` | Import a Markdown folder or CSV/JSON file |
+| `pnpm cli authorize <agent>` | Create a session and write a 0600 env file |
+| `pnpm cli serve` | Start Auth + Guard as a standalone process |
+| `pnpm cli sessions` | View active sessions |
 | `pnpm cli audit --limit 20` | View audit logs |
-| `pnpm cli revoke <id>` | Revoke a session |
-| `uomp gateway start` | Start Gateway + Cloudflare Tunnel |
-| `uomp gateway status` | View Gateway status |
+| `pnpm cli revoke <id>` | Revoke a session and remove its default env file |
+
+Advanced commands are hidden from help but still callable: `memory`, `registry`, `discover`, `connect`, `agent`, `gateway`.

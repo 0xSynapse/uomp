@@ -13,7 +13,8 @@ import { baseUrl } from '../../utils/base.ts';
     <div class="container">
       <h1 style="margin-bottom:.25rem">Try UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
-        Today the authorization loop runs through the CLI. The MCP client and browser consent UI are the next milestone.
+        Today the authorization loop runs through the CLI: import Markdown notes, grant a scoped session, audit it, and revoke it.
+        The MCP client and browser consent UI are the next milestone.
         Both share <code style="font-size:.88rem">@uomp/sdk</code>, the Token system, Guard auth, and audit logs.
       </p>
     </div>
@@ -22,7 +23,7 @@ import { baseUrl } from '../../utils/base.ts';
       <div style="display:flex;gap:2rem;flex-wrap:wrap">
 
         <!-- MCP Card -->
-        <div class="card" style="flex:1;min-width:320px;border-color:var(--violet);border-width:2px">
+        <div class="card" style="flex:1;min-width:320px;order:2">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
             <span style="font-size:2rem">🔌</span>
             <h2 style="margin:0;font-size:1.35rem">MCP Client</h2>
@@ -49,22 +50,26 @@ import { baseUrl } from '../../utils/base.ts';
         </div>
 
         <!-- CLI Card -->
-        <div class="card" style="flex:1;min-width:320px">
+        <div class="card" style="flex:1;min-width:320px;order:1;border-color:var(--violet);border-width:2px">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
             <span style="font-size:2rem">⌨️</span>
             <h2 style="margin:0;font-size:1.35rem">Try with CLI</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:1.25rem;max-width:400px">
-            Works today. Install the CLI, import data, and issue a Capability Token to a local agent.
+            Works today. Import Obsidian/Markdown notes and grant a local agent a time-limited, revocable session.
           </p>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:.75rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Quick commands</div>
-            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>pnpm cli init                  # Initialize
-pnpm cli import data.json      # Import data
-pnpm cli authorize ./agent     # Issue Token
-pnpm cli sessions -a           # List sessions
-pnpm cli revoke &lt;id&gt;          # Revoke</code></pre>
+            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>pnpm cli init
+pnpm cli import ~/Obsidian/MyVault
+pnpm cli authorize ./agent --scope notes/projects
+pnpm cli sessions
+pnpm cli revoke &lt;id&gt;</code></pre>
           </div>
+          <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
+            <code>authorize</code> writes the token to <code>~/.uomp/sessions/&lt;id&gt;.env</code> (0600) and does not print the JWT by default.
+            <code>source</code> it in a second terminal before running the agent.
+          </p>
           <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#2563EB;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
             CLI Tutorial →
           </a>

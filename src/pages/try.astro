@@ -8,7 +8,8 @@ import { baseUrl } from '../utils/base.ts';
     <div class="container">
       <h1 style="margin-bottom:.25rem">试用 UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
-        今天，授权闭环通过 CLI 跑通。MCP 客户端和浏览器授权界面是下一个里程碑。
+        今天，授权闭环通过 CLI 跑通：导入 Markdown 笔记、授权一个有范围限制的会话、审计并撤销。
+        MCP 客户端和浏览器授权界面是下一个里程碑。
         两者共享 <code style="font-size:.88rem">@uomp/sdk</code>、Token 体系、Guard 鉴权和审计日志。
       </p>
     </div>
@@ -17,7 +18,7 @@ import { baseUrl } from '../utils/base.ts';
       <div style="display:flex;gap:2rem;flex-wrap:wrap">
 
         <!-- MCP Card -->
-        <div class="card" style="flex:1;min-width:320px;border-color:var(--violet);border-width:2px">
+        <div class="card" style="flex:1;min-width:320px;order:2">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
             <span style="font-size:2rem">🔌</span>
             <h2 style="margin:0;font-size:1.35rem">MCP 客户端</h2>
@@ -44,22 +45,26 @@ import { baseUrl } from '../utils/base.ts';
         </div>
 
         <!-- CLI Card -->
-        <div class="card" style="flex:1;min-width:320px">
+        <div class="card" style="flex:1;min-width:320px;order:1;border-color:var(--violet);border-width:2px">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
             <span style="font-size:2rem">⌨️</span>
             <h2 style="margin:0;font-size:1.35rem">通过 CLI 试用</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:1.25rem;max-width:400px">
-            今天就能用。安装 CLI，导入数据，给本地 Agent 签发一个 Capability Token。
+            今天就能用。导入 Obsidian/Markdown 笔记，给本地 Agent 签发一个有时限、可撤销的会话。
           </p>
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:.75rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">命令速览</div>
-            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>pnpm cli init                  # 初始化
-pnpm cli import data.json     # 导入数据
-pnpm cli authorize ./agent    # 签发 Token
-pnpm cli sessions -a          # 查看会话
-pnpm cli revoke &lt;id&gt;          # 撤销</code></pre>
+            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>pnpm cli init
+pnpm cli import ~/Obsidian/MyVault
+pnpm cli authorize ./agent --scope notes/projects
+pnpm cli sessions
+pnpm cli revoke &lt;id&gt;</code></pre>
           </div>
+          <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
+            <code>authorize</code> 会把 token 写入 <code>~/.uomp/sessions/&lt;id&gt;.env</code>（0600），
+            默认不打印 JWT。在另一个终端 <code>source</code> 后运行 Agent。
+          </p>
           <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#2563EB;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
             CLI 教程 →
           </a>

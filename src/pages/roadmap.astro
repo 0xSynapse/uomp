@@ -5,7 +5,7 @@ import { baseUrl } from '../utils/base.ts';
 
 <Layout
   title="路线图 - UOMP"
-  description="UOMP 接下来要做什么：面向本地知识库的 MCP server 和授权界面。进度以留存用户衡量，不以功能数量衡量。"
+  description="UOMP 接下来要做什么：先把 CLI 授权闭环做顺，再接入 MCP 客户端和浏览器授权界面。进度以留存用户衡量，不以功能数量衡量。"
   switchHref={`${baseUrl}en/roadmap/`}
 >
   <section>
@@ -15,7 +15,7 @@ import { baseUrl } from '../utils/base.ts';
 
       <div class="roadmap">
         <div class="note">
-          <strong>当前焦点：</strong>先让一个工作流真正成立——Claude Desktop 或 Cursor 读取 Obsidian 笔记库 30 分钟，有授权、有审计、能立即撤销。
+          <strong>当前焦点：</strong>先把 CLI 闭环做顺——导入 Obsidian/Markdown → 授权 30 分钟 → 审计 → 撤销。MCP 客户端和浏览器授权界面随后接入。
         </div>
 
         <h2>里程碑 1：授权闭环 <span class="status status-done">已完成</span></h2>
@@ -28,7 +28,9 @@ import { baseUrl } from '../utils/base.ts';
           <li><span class="status status-done">已完成</span>create / grant / revoke 需要管理员令牌</li>
           <li><span class="status status-done">已完成</span><code>revoke</code> / <code>close</code> 在下一个请求立即生效</li>
           <li><span class="status status-done">已完成</span>每次访问决策都有审计日志</li>
-          <li><span class="status status-done">已完成</span>CLI：<code>import</code> / <code>authorize</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">已完成</span>CLI：<code>import</code> / <code>authorize</code> / <code>serve</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">已完成</span>Markdown / Obsidian 目录导入，按路径生成范围，支持 <code>--dry-run</code></li>
+          <li><span class="status status-done">已完成</span><code>authorize</code> 写入 0600 会话 env 文件，默认不打印 JWT</li>
           <li><span class="status status-done">已完成</span>TypeScript SDK（<code>UompClient</code>）</li>
           <li><span class="status status-done">已完成</span>示例 Agent：Calendar 和 Stock Analyst</li>
         </ul>
@@ -36,10 +38,9 @@ import { baseUrl } from '../utils/base.ts';
         <h2>里程碑 2：第一个真实用户工作流 <span class="status status-current">进行中</span></h2>
         <ul class="roadmap-list">
           <li><span class="status status-next">下一步</span>面向 Claude Desktop、Cursor 等客户端的 MCP server</li>
-          <li><span class="status status-next">下一步</span>Obsidian / Markdown 连接器</li>
+          <li><span class="status status-next">下一步</span>一条命令安装 CLI——不需要 clone 仓库</li>
           <li><span class="status status-next">下一步</span>浏览器授权界面：范围预览、直白授权、默认 30 分钟</li>
           <li><span class="status status-next">下一步</span>审计时间线：哪个 Agent、什么范围、什么时候、允许还是拒绝</li>
-          <li><span class="status status-next">下一步</span>一条命令安装——不需要钱包，不需要云账号</li>
           <li><span class="status status-next">下一步</span>Python SDK</li>
           <li><span class="status status-next">下一步</span>10 个用自己的数据使用 UOMP 的设计伙伴</li>
           <li><span class="status status-next">下一步</span>目标：首次授权读取在 5 分钟内完成</li>
