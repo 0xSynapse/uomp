@@ -9,7 +9,7 @@ This guide is for a first-time UOMP user. By the end, you will have a local note
 
 Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 
-> **Tested on**: macOS and Linux terminals; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. Windows may work through WSL or Git Bash, but is not fully validated.
+> **Tested on**: macOS and Linux terminals; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. **Windows is not supported.**
 
 ---
 

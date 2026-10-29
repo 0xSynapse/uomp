@@ -9,7 +9,7 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 
 预计时间：**5–10 分钟**。所有笔记和 Token 都留在你的电脑上。
 
-> **适用环境**：macOS 或 Linux 终端；Claude Desktop、Cursor 或 OpenCode；本地 Obsidian / Markdown 笔记库。Windows 可通过 WSL 或 Git Bash 使用，但尚未完整验证。
+> **适用环境**：macOS 或 Linux 终端；Claude Desktop、Cursor 或 OpenCode；本地 Obsidian / Markdown 笔记库。**不支持 Windows。**
 
 ---
 

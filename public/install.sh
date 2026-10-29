@@ -11,6 +11,11 @@ BIN_PATH="$BIN_DIR/uomp"
 info() { printf '%s\n' "$*"; }
 fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
+case "$(uname -s)" in
+  Darwin|Linux) ;;
+  *) fail "UOMP supports macOS and Linux only. Windows is not supported." ;;
+esac
+
 command -v git >/dev/null 2>&1 || fail "git is required. Install git and try again."
 command -v node >/dev/null 2>&1 || fail "Node.js >= 22 is required. Install Node.js and try again."
 
