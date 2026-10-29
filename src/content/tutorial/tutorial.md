@@ -132,7 +132,7 @@ uomp connect opencode --vault ~/Obsidian/MyVault --scope notes/projects
 
 高敏 tag（例如 `portfolio:holdings`，或以 `sensitivity: high` 导入的数据）默认不会被选中。交互运行时先选 tag，再逐个选择 key；脚本里用 `--allow-key <key...>` 或 `--allow-high <tag...>` 显式授权。
 
-如果不想预先授权，可以加 `--on-demand`。第一次工具调用会创建待审批请求，然后在终端运行 `uomp pending` 和 `uomp approve <request-id>`；下一次调用就会拿到 token。
+如果不想预先授权，可以加 `--on-demand`。第一次工具调用会创建待审批请求并打开本地审批页面；在页面点 Approve 后，当前调用会继续。页面没有打开时，用 `uomp pending` 和 `uomp approve <request-id>`。
 
 之后想同步最新修改，重新运行 `uomp import ~/Obsidian/MyVault`。导入规则：
 

@@ -132,7 +132,7 @@ Notes:
 
 High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default. In an interactive run, select the tag and then choose keys individually. In scripts, use `--allow-key <key...>` or `--allow-high <tag...>` explicitly.
 
-To request consent on demand, add `--on-demand`. The first tool call creates a pending request; run `uomp pending` and `uomp approve <request-id>` in a terminal, then the next call picks up the token.
+To request consent on demand, add `--on-demand`. The first tool call creates a pending request and opens a local approval page; approving it lets the same call continue. If the page does not open, run `uomp pending` and `uomp approve <request-id>`.
 
 To sync later, run `uomp import ~/Obsidian/MyVault` again. Import rules:
 
