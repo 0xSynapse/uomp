@@ -24,6 +24,8 @@ if command -v pnpm >/dev/null 2>&1; then
 elif command -v corepack >/dev/null 2>&1; then
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
   PNPM=(corepack pnpm)
+elif command -v npm >/dev/null 2>&1; then
+  PNPM=(npx --yes pnpm@9)
 else
   fail "pnpm 9 is required. Install pnpm or enable corepack and try again."
 fi
