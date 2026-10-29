@@ -36,6 +36,14 @@ pnpm cli init
 
 `uomp init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB、Ed25519 密钥对和 `sessions/` 目录。
 
+想先看完整闭环，可以运行：
+
+```bash
+uomp demo
+```
+
+它使用临时数据目录，不会碰真实的 `~/.uomp`。如果安装或配置有问题，运行 `uomp doctor` 检查 Node、权限、密钥、数据库、会话文件和端口。
+
 ## 2. 导入私有数据
 
 推荐先导入一个 Obsidian 笔记库或 Markdown 目录：
@@ -278,6 +286,8 @@ uomp gateway status
 | 命令 | 说明 |
 |------|------|
 | `uomp init` | 初始化 UOMP 数据目录 |
+| `uomp demo` | 在临时目录跑通完整闭环 |
+| `uomp doctor` | 检查安装、权限、数据库和端口 |
 | `uomp import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
 | `uomp authorize <agent>` | 创建会话，写入 0600 env 文件 |
 | `uomp serve` | 单独启动 Auth + Guard server |

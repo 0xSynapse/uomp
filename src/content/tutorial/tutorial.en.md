@@ -36,6 +36,14 @@ Then replace `uomp` with `pnpm cli` throughout this tutorial.
 
 `uomp init` creates the Memory Store, Auth DB, Audit DB, Ed25519 key pair, and `sessions/` directory under `~/.uomp`.
 
+To see the full loop first, run:
+
+```bash
+uomp demo
+```
+
+It uses a temporary data directory and does not touch your real `~/.uomp`. If installation or configuration is wrong, run `uomp doctor` to check Node, permissions, keys, databases, session files, and the port.
+
 ## 2. Import Data
 
 Start with an Obsidian vault or a Markdown folder:
@@ -230,6 +238,8 @@ Core path:
 | Command | Description |
 |---------|-------------|
 | `uomp init` | Initialize the data directory |
+| `uomp demo` | Run the full loop in a temporary directory |
+| `uomp doctor` | Check installation, permissions, databases, and port |
 | `uomp import <path>` | Import a Markdown folder or CSV/JSON file |
 | `uomp authorize <agent>` | Create a session and write a 0600 env file |
 | `uomp serve` | Start Auth + Guard as a standalone process |

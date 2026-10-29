@@ -69,6 +69,8 @@ esac
 
 info ""
 info "Next:"
+info "  uomp demo"
 info "  uomp init"
 info "  uomp import ~/Obsidian/MyVault"
 info "  uomp authorize ./path/to/agent --scope notes/projects"
+info "  uomp doctor"
