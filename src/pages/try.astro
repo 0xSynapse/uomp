@@ -24,23 +24,23 @@ import { baseUrl } from '../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP 客户端</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            下一个里程碑。Claude Desktop、Cursor 或任何 MCP 客户端请求访问本地目录的一个范围，你在浏览器里批准。
+            实验可用。Claude Desktop、Cursor 或任何 MCP 客户端通过 stdio 连接，读取权限仍由 CLI 会话控制。
           </p>
           <div style="background:var(--violet-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--violet)">
-            <strong>开发中。</strong>尚未可用——关注路线图，等待第一个设计伙伴版本。
+            <strong>实验功能。</strong>已可用：<code>uomp mcp --session &lt;env&gt;</code>。原生客户端验证还在进行。
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">目标流程</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
               1. 把 UOMP 指向一个 Obsidian 笔记库或 Markdown 目录<br/>
               2. Agent 请求读取 <code>notes/projects/**</code>，30 分钟<br/>
-              3. 你在浏览器里批准范围和时长<br/>
+              3. 你在 CLI 里批准范围和时长<br/>
               4. 每次读取都被检查和记录<br/>
               5. 撤销——下一个请求返回 <code>403</code>
             </div>
           </div>
-          <a href={`${baseUrl}roadmap/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#7C3AED;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
-            查看路线图 →
+          <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#7C3AED;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
+            MCP 配置 →
           </a>
         </div>
 

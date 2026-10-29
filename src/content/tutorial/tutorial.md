@@ -150,7 +150,34 @@ Stock Analyst v1.0 启动
 P&L: +72.94% | Sharpe: 1.24 | Signals: 8
 ```
 
-## 7. 远程 Gateway 模式（高级 / 预览）
+## 7. 连接 Claude Desktop / Cursor（实验）
+
+CLI 内置一个 stdio MCP server，提供 `list_memory` 和 `read_memory`。先生成一个专用会话 env 文件：
+
+```bash
+uomp authorize ./examples/mcp-client \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env
+```
+
+把 server 加进客户端配置（`command` 用 `uomp` 的绝对路径）：
+
+```json
+{
+  "mcpServers": {
+    "uomp-notes": {
+      "command": "/Users/me/.local/bin/uomp",
+      "args": ["mcp", "--session", "/Users/me/.uomp/mcp-client.env"]
+    }
+  }
+}
+```
+
+重启客户端，然后让它列出 `notes/projects` 下的笔记并读取一条。所有调用仍然经过 Memory Guard；越权读取会返回拒绝并写入审计。
+
+env 文件在 MCP server 启动时读取。会话过期或被撤销后，重新执行 `uomp authorize` 并重启 MCP server。
+
+## 8. 远程 Gateway 模式（高级 / 预览）
 
 > Gateway 是高级能力，不在 CLI 核心路径上。默认的本地流程不需要它。
 
@@ -178,7 +205,7 @@ source /tmp/uomp-remote.env
 node ./examples/stock-analyst/index.js
 ```
 
-## 8. 使用 DO 云 Agent
+## 9. 使用 DO 云 Agent
 
 ```bash
 # 浏览器访问
@@ -190,7 +217,7 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
   -d '{"token":"你的UOM_TOKEN","gateway_url":"你的Gateway公网地址"}'
 ```
 
-## 9. 查看会话与审计
+## 10. 查看会话与审计
 
 ```bash
 # 查看活跃会话
@@ -203,7 +230,7 @@ uomp audit --limit 20
 uomp revoke <session-id>
 ```
 
-## 10. Gateway 管理（高级 / 预览）
+## 11. Gateway 管理（高级 / 预览）
 
 ```bash
 # 启动 Gateway（含 Tunnel）
@@ -240,6 +267,7 @@ uomp gateway status
 | `uomp import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
 | `uomp authorize <agent>` | 创建会话，写入 0600 env 文件 |
 | `uomp serve` | 单独启动 Auth + Guard server |
+| `uomp mcp --session <id>` | 启动 stdio MCP server（实验） |
 | `uomp sessions` | 查看活跃会话 |
 | `uomp audit --limit 20` | 查看审计日志 |
 | `uomp revoke <id>` | 撤销会话并删除默认 env 文件 |

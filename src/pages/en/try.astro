@@ -29,23 +29,23 @@ import { baseUrl } from '../../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP Client</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Next milestone. Claude Desktop, Cursor, or any MCP client requests scoped access to a local folder — and you approve it in the browser.
+            Experimental. Claude Desktop, Cursor, or any MCP client connects over stdio, while read access stays bound to the CLI session.
           </p>
           <div style="background:var(--violet-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--violet)">
-            <strong>In development.</strong> Not available yet — follow the roadmap for the first design-partner build.
+            <strong>Experimental.</strong> Available now: <code>uomp mcp --session &lt;env&gt;</code>. Native client validation is still in progress.
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Intended workflow</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
               1. Point UOMP at an Obsidian vault or Markdown folder<br/>
               2. Agent requests <code>notes/projects/**</code> for 30 minutes<br/>
-              3. You approve scope and duration in the browser<br/>
+              3. You approve scope and duration in the CLI<br/>
               4. Every read is checked and logged<br/>
               5. Revoke — the next request returns <code>403</code>
             </div>
           </div>
-          <a href={`${baseUrl}en/roadmap/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#7C3AED;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
-            Roadmap →
+          <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#7C3AED;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
+            MCP setup →
           </a>
         </div>
 

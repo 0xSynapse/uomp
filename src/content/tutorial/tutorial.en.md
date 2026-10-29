@@ -131,7 +131,34 @@ source ~/.uomp/sessions/<sessionId>.env
 node ./examples/stock-analyst/index.js
 ```
 
-## 7. Remote Gateway Mode (Advanced / Preview)
+## 7. Connect Claude Desktop / Cursor (Experimental)
+
+The CLI includes a stdio MCP server with `list_memory` and `read_memory`. Create a dedicated session env file:
+
+```bash
+uomp authorize ./examples/mcp-client \
+  --scope notes/projects \
+  --output ~/.uomp/mcp-client.env
+```
+
+Add the server to your client config, using the absolute path to `uomp`:
+
+```json
+{
+  "mcpServers": {
+    "uomp-notes": {
+      "command": "/Users/me/.local/bin/uomp",
+      "args": ["mcp", "--session", "/Users/me/.uomp/mcp-client.env"]
+    }
+  }
+}
+```
+
+Restart the client, then ask it to list notes under `notes/projects` and read one. Every call still goes through Memory Guard; denied reads are returned to the client and written to the audit log.
+
+The env file is read when the MCP server starts. After the session expires or is revoked, re-run `uomp authorize` and restart the MCP server.
+
+## 8. Remote Gateway Mode (Advanced / Preview)
 
 > Gateway is an advanced capability and is not on the core CLI path. The default local workflow does not need it.
 
@@ -143,7 +170,7 @@ uomp gateway start
 #   https://xxx.trycloudflare.com
 ```
 
-## 8. Use the DO Cloud Agent
+## 9. Use the DO Cloud Agent
 
 ```bash
 # Browser
@@ -155,7 +182,7 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
   -d '{"token":"your_token","gateway_url":"your_gateway"}'
 ```
 
-## 9. Sessions & Audit
+## 10. Sessions & Audit
 
 ```bash
 # Active sessions
@@ -192,6 +219,7 @@ Core path:
 | `uomp import <path>` | Import a Markdown folder or CSV/JSON file |
 | `uomp authorize <agent>` | Create a session and write a 0600 env file |
 | `uomp serve` | Start Auth + Guard as a standalone process |
+| `uomp mcp --session <id>` | Start the stdio MCP server (experimental) |
 | `uomp sessions` | View active sessions |
 | `uomp audit --limit 20` | View audit logs |
 | `uomp revoke <id>` | Revoke a session and remove its default env file |
