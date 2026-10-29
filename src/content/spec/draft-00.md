@@ -29,7 +29,7 @@ User-Owned Memory Protocol（UOMP）定义了一种用户主权型授权协议�
 
 本文档为 UOMP 协议草案（Draft-00），描述协议设计意图、数据格式、HTTP API 和安全要求。本文档旨在通过公开讨论后演进为正式标准。本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"MAY"、"OPTIONAL" 按照 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) 解释。
 
-> **参考实现状态（2026-10）：** 当前 `uomp` CLI 优先实现 Local Profile：`import`、`authorize`（写入 `0600` 会话 env 文件）、`serve`、`mcp`、`sessions`、`audit`、`revoke`。stdio MCP bridge 为实验能力。Remote Profile 和 Cloud Relay 是可选/预览能力，不是通过一致性验证的必要条件。
+> **参考实现状态（2026-10）：** 当前 `uomp` CLI 优先实现 Local Profile：`connect --vault` 完成导入、授权、客户端配置和后台服务；`status`、`stop`、`disconnect` 管理生命周期；`pending` / `approve` / `deny` 支持按需浏览器审批。`import`、`authorize`、`serve`、`mcp` 保留为手动/脚本路径。stdio MCP bridge 为实验能力。Remote Profile 和 Cloud Relay 是可选/预览能力，不是通过一致性验证的必要条件。
 
 ## 3. Introduction
 

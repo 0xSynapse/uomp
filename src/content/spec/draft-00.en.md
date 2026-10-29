@@ -29,7 +29,7 @@ The User-Owned Memory Protocol (UOMP) defines a user-sovereign authorization pro
 
 This document is the UOMP protocol draft (Draft-00). It describes the protocol design intent, data formats, HTTP API, and security requirements. It is intended to evolve into a formal standard through public discussion. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-> **Reference implementation status (2026-10):** the current `uomp` CLI implements the Local Profile first: `import`, `authorize` (writes a `0600` session env file), `serve`, `mcp`, `sessions`, `audit`, and `revoke`. The stdio MCP bridge is experimental. Remote Profile and Cloud Relay are optional/preview capabilities and are not required for conformance.
+> **Reference implementation status (2026-10):** the current `uomp` CLI implements the Local Profile first: `connect --vault` imports notes, authorizes access, writes the client config, and starts the background server; `status`, `stop`, and `disconnect` manage the lifecycle; `pending` / `approve` / `deny` support on-demand browser consent. `import`, `authorize`, `serve`, and `mcp` remain the manual/script paths. The stdio MCP bridge is experimental. Remote Profile and Cloud Relay are optional/preview capabilities and are not required for conformance.
 
 ## 3. Introduction
 

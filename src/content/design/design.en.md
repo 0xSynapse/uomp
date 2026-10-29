@@ -232,7 +232,7 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 |------------|--------|-------|
 | Agent read | ✅ | Authorized by tag/key/field |
 | Agent write | ❌ | Guard returns `503 WRITE_NOT_AVAILABLE` |
-| Local CLI | ✅ | import / connect / authorize / serve / mcp / sessions / audit / revoke |
+| Local CLI | ✅ | import / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
 | Markdown import | ✅ | Obsidian/Markdown folders with path-derived scopes |
 | MCP | ✅ Experimental | stdio `list_memory` / `search_memory` / `read_memory` |
 | Remote Gateway | ⚠️ Advanced/preview | mTLS + Cloudflare Tunnel |

@@ -2,8 +2,8 @@
 export interface Props { lang?: 'zh' | 'en' }
 const { lang = 'zh' } = Astro.props;
 const stats = lang === 'zh'
-  ? [{ v: '本地优先', l: '数据留在原地' },{ v: '最小范围', l: 'tag / key / field' },{ v: '即时撤销', l: '下一个请求 403' },{ v: '可审计', l: '每次决策都有日志' },{ v: 'MCP', l: 'stdio 实验可用' }]
-  : [{ v: 'Local-first', l: 'Data stays where it is' },{ v: 'Scoped', l: 'tag / key / field' },{ v: 'Revocable', l: '403 on the next request' },{ v: 'Auditable', l: 'Every decision logged' },{ v: 'MCP', l: 'Experimental stdio' }];
+  ? [{ v: '本地优先', l: '数据留在原地' },{ v: '最小范围', l: 'tag / key / field' },{ v: '即时撤销', l: '下一个请求 403' },{ v: '可审计', l: '每次决策都有日志' },{ v: 'MCP', l: 'connect + 按需审批' }]
+  : [{ v: 'Local-first', l: 'Data stays where it is' },{ v: 'Scoped', l: 'tag / key / field' },{ v: 'Revocable', l: '403 on the next request' },{ v: 'Auditable', l: 'Every decision logged' },{ v: 'MCP', l: 'connect + on-demand consent' }];
 ---
 <div class="window-wrap">
   <div class="window">

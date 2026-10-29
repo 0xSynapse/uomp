@@ -243,7 +243,7 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 |------|------|------|
 | Agent 读取 | ✅ | 按 tag/key/field 授权 |
 | Agent 写入 | ❌ | Guard 返回 `503 WRITE_NOT_AVAILABLE` |
-| 本地 CLI | ✅ | import / connect / authorize / serve / mcp / sessions / audit / revoke |
+| 本地 CLI | ✅ | import / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
 | Markdown 导入 | ✅ | Obsidian/Markdown 目录，路径生成范围 |
 | MCP | ✅ 实验 | stdio `list_memory` / `search_memory` / `read_memory` |
 | 远程 Gateway | ⚠️ 高级/预览 | mTLS + Cloudflare Tunnel |
