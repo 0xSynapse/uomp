@@ -77,11 +77,12 @@ const content = {
           body: '你只授权一个会话，范围明确、时间有限。默认 30 分钟。',
           codeLabel: 'terminal',
           code: [
-            '$ uomp authorize ./agent \\',
+            '$ uomp connect ./agent \\',
+            '    --vault ~/Obsidian/MyVault \\',
             '    --scope notes/projects \\',
             '    --duration 30',
             '',
-            '✓ session 7f3a · env file written',
+            '✓ 128 items · session 7f3a · env file written',
           ].join('\n'),
         },
         {
@@ -208,11 +209,12 @@ const content = {
           body: 'You grant one session with an explicit scope and a time limit. The default is 30 minutes.',
           codeLabel: 'terminal',
           code: [
-            '$ uomp authorize ./agent \\',
+            '$ uomp connect ./agent \\',
+            '    --vault ~/Obsidian/MyVault \\',
             '    --scope notes/projects \\',
             '    --duration 30',
             '',
-            '✓ session 7f3a · env file written',
+            '✓ 128 items · session 7f3a · env file written',
           ].join('\n'),
         },
         {

@@ -58,14 +58,12 @@ import { baseUrl } from '../utils/base.ts';
             <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>curl -fsSL https://www.uomp.org/install.sh | bash
 uomp demo
 uomp init
-uomp import ~/Obsidian/MyVault
-uomp authorize ./agent --scope notes/projects
-uomp sessions
+uomp connect ./agent --vault ~/Obsidian/MyVault --scope notes/projects
+uomp status
 uomp revoke &lt;id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
-            <code>authorize</code> 会把 token 写入 <code>~/.uomp/sessions/&lt;id&gt;.env</code>（0600），
-            默认不打印 JWT。在另一个终端 <code>source</code> 后运行 Agent。
+            <code>connect</code> 会先导入 <code>--vault</code> 指定的笔记，再在后台启动本地服务；MCP 客户端会同时写入客户端配置，Agent 包会把 token 写入 <code>~/.uomp/sessions/&lt;id&gt;.env</code>（0600），默认不打印 JWT。用 <code>status</code> / <code>stop</code> 管理后台服务。
           </p>
           <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#2563EB;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
             CLI 教程 →

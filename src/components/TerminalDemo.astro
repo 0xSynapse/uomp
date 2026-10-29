@@ -25,8 +25,7 @@ const stats = lang === 'zh'
   const C = { g: '#9CA3AF', w: '#F9FAFB', gn: '#34D399', dim: '#6B7280' };
   const zh = el.dataset.lang === 'zh';
   const frames = [
-    `<span style="color:${C.g}">$</span> <span style="color:${C.w}">uomp import ~/Obsidian/MyVault</span><br><span style="color:${C.gn}">\u2713 ${zh ? '128 条' : '128 items'}</span><br>`,
-    `<span style="color:${C.g}">$</span> <span style="color:${C.w}">uomp authorize ./my-agent --scope notes/projects --duration 30</span><br><span style="color:${C.gn}">\u2713 ${zh ? '会话 · env 文件已写入' : 'session \u00b7 env file written'}</span><br>`,
+    `<span style="color:${C.g}">$</span> <span style="color:${C.w}">uomp connect ./my-agent --vault ~/Obsidian/MyVault --scope notes/projects</span><br><span style="color:${C.gn}">\u2713 ${zh ? '128 条 · 会话 · env 文件已写入' : '128 items \u00b7 session \u00b7 env file written'}</span><br>`,
     `<span style="color:${C.g}">$</span> <span style="color:${C.w}">node my-agent.js</span><br><span style="color:${C.g}">${zh ? '12 次读取 \u00b7 3 次被范围拦截' : '12 reads \u00b7 3 blocked by scope'}</span><br><span style="color:${C.gn}">\u2713 ${zh ? '每次读取都有日志' : 'every read logged'}</span><br>`,
     `<span style="color:${C.g}">$</span> <span style="color:${C.w}">uomp revoke 7f3a</span><br><span style="color:${C.gn}">\u2713 ${zh ? '下一个请求' : 'next request'} \u2192 403</span><br>`,
   ];

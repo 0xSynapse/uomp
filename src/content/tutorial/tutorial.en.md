@@ -1,13 +1,13 @@
 ---
 title: 'UOMP User Guide'
-description: 'Install UOMP, import notes, authorize Claude Desktop / Cursor, audit reads, and revoke access'
+description: 'Install UOMP, import notes, connect Claude Desktop / Cursor, audit reads, and revoke access'
 ---
 
 # UOMP User Guide
 
 This guide is for a first-time UOMP user. By the end, you will have a local note store, a revocable agent session, and an audit log you can inspect.
 
-Time: **10–15 minutes**. Your notes and tokens stay on your machine.
+Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 
 > **Tested on**: macOS and Linux terminals; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. Windows may work through WSL or Git Bash, but is not fully validated.
 
@@ -16,11 +16,9 @@ Time: **10–15 minutes**. Your notes and tokens stay on your machine.
 ## What you will do
 
 1. Install UOMP
-2. Import an Obsidian / Markdown vault
-3. Start the local Auth + Guard service
-4. Grant an MCP client a 30-minute, scoped session
-5. Read notes from Claude Desktop / Cursor / OpenCode
-6. Inspect the audit log and revoke
+2. Use `uomp connect` to import notes, start the local service, grant a scoped session, and write the client config
+3. Read notes from Claude Desktop / Cursor / OpenCode
+4. Inspect the audit log and revoke
 
 ---
 
@@ -99,21 +97,42 @@ It checks Node, git, directory permissions, keys, databases, session files, and 
 
 ---
 
-## 4. Import notes
+## 4. Import and connect an MCP client
 
-Import an Obsidian vault or a Markdown directory:
-
-```bash
-uomp import ~/Obsidian/MyVault
-```
-
-Preview without writing:
+Import, authorize, and configure the client in one command:
 
 ```bash
-uomp import ~/Obsidian/MyVault --dry-run
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
 ```
 
-Import rules:
+This command:
+
+- imports the Markdown vault (base tag `notes`; change it with `--vault-tag`)
+- starts the local Auth + Guard service in the background (`http://127.0.0.1:9374`)
+- creates a 30-minute session and writes the token to `~/.uomp/sessions/claude.env` (`0600`)
+- merges the UOMP entry into the Claude Desktop config (an existing file is backed up)
+- prints the expiry, renew command, and revoke command
+
+The command exits and leaves the service running in the background. Use `uomp status` to inspect the server and active sessions, and `uomp stop` to stop it. Then **restart Claude Desktop** so it loads the new MCP config.
+
+Cursor and OpenCode use the same command:
+
+```bash
+uomp connect cursor --vault ~/Obsidian/MyVault --scope notes/projects
+uomp connect opencode --vault ~/Obsidian/MyVault --scope notes/projects
+```
+
+Notes:
+
+- `--scope notes/projects` allows only this scope; `notes/journal` and other scopes are denied
+- the session lasts 30 minutes by default; use `--duration 15` to change it
+- `--print-config` prints the JSON without writing the client config
+- `--skip-config` grants the session without writing the client config
+- `--foreground` keeps the server in this terminal so you can see its logs
+
+High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default. In an interactive run, select the tag and then choose keys individually. In scripts, use `--allow-key <key...>` or `--allow-high <tag...>` explicitly.
+
+To sync later, run `uomp import ~/Obsidian/MyVault` again. Import rules:
 
 - recursively processes `.md` files
 - skips `.obsidian`, hidden directories, and `node_modules`
@@ -122,101 +141,22 @@ Import rules:
 - frontmatter `tags`, `title`, `description`, and `sensitivity` are preserved
 - re-importing updates existing notes instead of duplicating them
 
-To sync later, run the same `uomp import` command again.
+> To run the server separately, or for an unsupported client, use the manual flow:
+>
+> ```bash
+> # Terminal 1
+> uomp serve
+>
+> # Terminal 2
+> uomp authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
+> uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
+> ```
+>
+> Paste the JSON into the client config. `connect` supports Claude Desktop, Cursor, and OpenCode; other clients can use `--print-config`.
 
 ---
 
-## 5. Start the local service
-
-MCP clients need a local service that stays running. Open **Terminal 1**:
-
-```bash
-uomp serve
-```
-
-It listens on:
-
-```text
-http://127.0.0.1:9374
-```
-
-Keep this terminal open. `Ctrl+C` stops the service, but **stopping the service does not revoke issued sessions**. Use `uomp revoke` for that.
-
----
-
-## 6. Authorize an MCP client
-
-Open **Terminal 2**:
-
-```bash
-uomp authorize \
-  --scope notes/projects \
-  --output ~/.uomp/mcp-client.env \
-  --no-server
-```
-
-What this does:
-
-- `--scope notes/projects` allows only this scope; `notes/journal` and other scopes are denied
-- `--output` writes the token to a stable env file that can be overwritten on re-authorization
-- `--no-server` uses the service already running in Terminal 1
-- the JWT is not printed to the terminal by default
-- the session lasts 30 minutes by default; use `--duration 15` to change it
-
-On success, the CLI prints the session ID, scope, and env path:
-
-```text
-Session granted: sess_...
-  Agent     MCP Client (mcp-client)
-  Scope     notes/projects
-  Expires   2026-10-29 15:30 (30 min)
-
-Env file
-  /home/me/.uomp/mcp-client.env
-
-Open a new terminal, then:
-  source '/home/me/.uomp/mcp-client.env'
-
-Revoke with: uomp revoke sess_...
-```
-
-If you are authorizing a specific agent package, pass its path after `uomp authorize`. With no path, UOMP uses the built-in generic MCP client manifest.
-
----
-
-## 7. Configure your MCP client
-
-### Claude Desktop
-
-```bash
-uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
-```
-
-Paste the JSON from stdout into Claude Desktop's `claude_desktop_config.json`. The CLI prints the config path on stderr.
-
-### Cursor
-
-```bash
-uomp mcp --session ~/.uomp/mcp-client.env --print-config --client cursor
-```
-
-Paste the output into `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` globally.
-
-### OpenCode
-
-```bash
-uomp mcp --session ~/.uomp/mcp-client.env --print-config --client opencode
-```
-
-Save the output as `opencode.json` in your project. The generated config already includes `codemode: false`, so the UOMP tools are exposed directly.
-
-Restart the client after saving. For OpenCode, wait until `opencode mcp list` shows `uomp connected`.
-
-> MCP support is experimental. OpenCode has been validated; if Claude Desktop or Cursor does not show the tools, see Troubleshooting below.
-
----
-
-## 8. Verify inside the client
+## 5. Verify inside the client
 
 In Claude Desktop / Cursor / OpenCode, ask:
 
@@ -252,7 +192,7 @@ That proves scope enforcement works, and the denial is written to the audit log.
 
 ---
 
-## 9. Inspect the audit log
+## 6. Inspect the audit log
 
 Back in the terminal:
 
@@ -289,7 +229,7 @@ Audit entries show time, result, action, agent, target, session, and reason.
 
 ---
 
-## 10. Revoke
+## 7. Revoke
 
 ```bash
 uomp revoke sess_...
@@ -298,38 +238,44 @@ uomp revoke sess_...
 After revocation:
 
 - the next request returns `403` immediately
-- the default env file is removed
-- a custom `--output` file is not removed automatically
+- the session's env files are removed (including the `claude.env` written by `connect`)
+- the `uomp` entry in the client config remains; re-run `connect` to authorize again, or remove it manually
+- a custom `--output` file outside `~/.uomp/sessions` is not removed automatically
 
-Stopping `uomp serve` does **not** revoke the token. Use `uomp revoke` to actually remove access.
+Stopping `uomp connect` / `uomp serve` / `uomp stop` does **not** revoke the token. Use `uomp revoke` to actually remove access.
+
+To remove the client config as well:
+
+```bash
+uomp disconnect claude
+```
+
+This removes the `uomp` entry from the Claude Desktop config, revokes the current session, and deletes the matching env file.
 
 ### After the session expires
 
-Run the same authorization command again:
+Run the same connect command again:
 
 ```bash
-uomp authorize \
-  --scope notes/projects \
-  --output ~/.uomp/mcp-client.env \
-  --no-server
+uomp connect claude --scope notes/projects
 ```
 
-The MCP server re-reads the env file before every tool call. With a fixed `--output` path, the next call picks up the new token **without restarting the client**.
+The MCP server re-reads the env file before every tool call. Re-running `connect` revokes the previous session for the same env file, writes a new token, and the next call picks it up **without restarting the client**.
 
 ---
 
-## 11. Troubleshooting
+## 8. Troubleshooting
 
 | Problem | Fix |
 |---|---|
 | `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
 | `uomp doctor` says the data directory is missing | Run `uomp init` |
-| Port 9374 is occupied | Stop the other process; or use `uomp serve --port 9380` and `uomp authorize --port 9380` |
-| The client does not show UOMP tools | Confirm `uomp serve` is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
-| `SESSION_NOT_ACTIVE` | The session expired or was revoked; re-authorize to the same env file |
+| Port 9374 is occupied | Stop the other process; or use `uomp connect claude --port 9380 --scope notes/projects` |
+| The client does not show UOMP tools | Use `uomp status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
+| `SESSION_NOT_ACTIVE` | The session expired or was revoked; run `uomp connect claude --scope notes/projects` again |
 | `ACCESS_DENIED` | The key/tag is outside the granted scope; check `--scope` or `uomp audit` |
 | Env-file permission warning | `uomp doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
-| Reset all local data | Stop `uomp serve`, then remove `~/.uomp`; this deletes notes, keys, and audit data |
+| Reset all local data | Stop `uomp connect` / `uomp serve`, then remove `~/.uomp`; this deletes notes, keys, and audit data |
 
 ### Where data lives
 
@@ -339,12 +285,15 @@ The MCP server re-reads the env file before every tool call. With a fixed `--out
 ├── auth.db            # sessions
 ├── audit.db           # audit log
 ├── sessions/          # 0600 session env files
+├── server.json        # background server state
+├── server.log         # background server log
 └── .secrets/          # Ed25519 key + admin token
 ```
 
 ### Uninstall
 
 ```bash
+uomp stop || true
 pkill -f "uomp serve" || true
 rm -rf ~/.uomp
 rm -f ~/.local/bin/uomp
@@ -352,7 +301,7 @@ rm -f ~/.local/bin/uomp
 
 ---
 
-## 12. Security boundaries
+## 9. Security boundaries
 
 UOMP provides:
 
@@ -373,7 +322,7 @@ Do not commit `~/.uomp` to git, and do not share session env files publicly.
 
 ---
 
-## 13. Advanced
+## 10. Advanced
 
 - Protocol and token format: [Draft-00 specification](/en/spec/)
 - Build your own agent: [README](https://github.com/0xSynapse/uomp-core#readme)

@@ -46,14 +46,21 @@ Default, zero-config. Agent connects directly to Memory Guard at `http://127.0.0
 ```
 
 ```bash
-# Terminal 1
-uomp serve
+# MCP client (recommended): authorize + write client config + start the local server in the background
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+uomp status
+uomp start
+uomp stop
+uomp disconnect claude
 
-# Terminal 2
-uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
+# Agent package: authorize + write the env file
+uomp connect ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env
 source ~/.uomp/my-agent.env && node index.js
 
-# MCP client config (optional)
+# Manual / unsupported clients
+uomp serve
+uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
+source ~/.uomp/my-agent.env && node index.js
 uomp mcp --session ~/.uomp/my-agent.env --print-config
 ```
 
@@ -190,8 +197,8 @@ Agents declare `requested_scopes`, `data_retention_policy`, `external_data_sourc
 `examples/stock-analyst/` is the full acceptance example:
 
 1. `uomp import` holdings CSV + risk profile
-2. (Optional) use the advanced `uomp discover` / `uomp connect` commands to inspect and verify the Agent
-3. `uomp authorize` creates a session and writes the env file
+2. (Optional) use the advanced `uomp discover` / `uomp inspect` commands to inspect and verify the Agent
+3. `uomp connect` creates a session and writes the env file (MCP clients also get a client config)
 4. Agent reads data → fetches quotes → analyzes (P&L, Sharpe, Beta, RSI, scenarios)
 5. Generates bilingual reports (JSON + Markdown + HTML)
 6. `uomp sessions` / `uomp audit` for auditing
@@ -208,6 +215,8 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 ├── agents/               # Installed agents
 ├── registry/             # Local registry
 ├── sessions/             # 0600 session env files
+├── server.json           # Background server state
+├── server.log            # Background server log
 ├── memory.db             # Memory Store (SQLite)
 ├── auth.db               # Sessions and denylist
 ├── audit.db              # Audit logs
@@ -223,7 +232,7 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 |------------|--------|-------|
 | Agent read | ✅ | Authorized by tag/key/field |
 | Agent write | ❌ | Guard returns `503 WRITE_NOT_AVAILABLE` |
-| Local CLI | ✅ | import / authorize / serve / mcp / sessions / audit / revoke |
+| Local CLI | ✅ | import / connect / authorize / serve / mcp / sessions / audit / revoke |
 | Markdown import | ✅ | Obsidian/Markdown folders with path-derived scopes |
 | MCP | ✅ Experimental | stdio `list_memory` / `search_memory` / `read_memory` |
 | Remote Gateway | ⚠️ Advanced/preview | mTLS + Cloudflare Tunnel |

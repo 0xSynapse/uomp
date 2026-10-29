@@ -48,14 +48,21 @@ UOMP 支持三种部署模式，按用户负担从低到高排列：
 启动方式：
 
 ```bash
-# 终端 1
-uomp serve
+# MCP 客户端（推荐）：授权 + 写客户端配置 + 后台启动本地服务
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+uomp status
+uomp start
+uomp stop
+uomp disconnect claude
 
-# 终端 2
-uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
+# Agent 包：授权 + 写 env 文件
+uomp connect ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env
 source ~/.uomp/my-agent.env && node index.js
 
-# MCP 客户端配置（可选）
+# 手动 / 不支持的客户端
+uomp serve
+uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
+source ~/.uomp/my-agent.env && node index.js
 uomp mcp --session ~/.uomp/my-agent.env --print-config
 ```
 
@@ -201,8 +208,8 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 `examples/stock-analyst/` 是完整的验收示例：
 
 1. `uomp import` 导入持仓 CSV + 风险偏好
-2. （可选）用高级命令 `uomp discover` / `uomp connect` 查看并验证 Agent
-3. `uomp authorize` 创建会话并写入 env 文件
+2. （可选）用高级命令 `uomp discover` / `uomp inspect` 查看并验证 Agent
+3. `uomp connect` 创建会话并写入 env 文件（MCP 客户端会同时写客户端配置）
 4. Agent 读取数据 → 拉取行情 → 分析（P&L、Sharpe、Beta、RSI、情景分析）
 5. 生成双语报告（JSON + Markdown + HTML）
 6. `uomp sessions` / `uomp audit` 审计
@@ -219,6 +226,8 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 ├── agents/               # 已安装的 Agent
 ├── registry/             # 本地 Registry
 ├── sessions/             # 0600 会话 env 文件
+├── server.json           # 后台服务状态
+├── server.log            # 后台服务日志
 ├── memory.db             # Memory Store（SQLite）
 ├── auth.db               # Session 与黑名单
 ├── audit.db              # 审计日志
@@ -234,7 +243,7 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 |------|------|------|
 | Agent 读取 | ✅ | 按 tag/key/field 授权 |
 | Agent 写入 | ❌ | Guard 返回 `503 WRITE_NOT_AVAILABLE` |
-| 本地 CLI | ✅ | import / authorize / serve / mcp / sessions / audit / revoke |
+| 本地 CLI | ✅ | import / connect / authorize / serve / mcp / sessions / audit / revoke |
 | Markdown 导入 | ✅ | Obsidian/Markdown 目录，路径生成范围 |
 | MCP | ✅ 实验 | stdio `list_memory` / `search_memory` / `read_memory` |
 | 远程 Gateway | ⚠️ 高级/预览 | mTLS + Cloudflare Tunnel |
