@@ -152,7 +152,7 @@ P&L: +72.94% | Sharpe: 1.24 | Signals: 8
 
 ## 7. 连接 Claude Desktop / Cursor（实验）
 
-CLI 内置一个 stdio MCP server，提供 `list_memory` 和 `read_memory`。先生成一个专用会话 env 文件：
+CLI 内置一个 stdio MCP server，提供 `list_memory`、`search_memory` 和 `read_memory`。`list_memory` / `search_memory` 只返回 key 和元数据，`read_memory` 返回内容。先生成一个专用会话 env 文件：
 
 ```bash
 uomp authorize ./examples/mcp-client \

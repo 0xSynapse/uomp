@@ -133,7 +133,7 @@ node ./examples/stock-analyst/index.js
 
 ## 7. Connect Claude Desktop / Cursor (Experimental)
 
-The CLI includes a stdio MCP server with `list_memory` and `read_memory`. Create a dedicated session env file:
+The CLI includes a stdio MCP server with `list_memory`, `search_memory`, and `read_memory`. List and search return keys and metadata only; `read_memory` returns content. Create a dedicated session env file:
 
 ```bash
 uomp authorize ./examples/mcp-client \
