@@ -155,10 +155,10 @@ uomp authorize ./examples/mcp-client \
   --output ~/.uomp/mcp-client.env \
   --no-server
 
-uomp mcp --session ~/.uomp/mcp-client.env --print-config
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 ```
 
-Paste the output into your client config. It looks like:
+Use `--client cursor` or `--client opencode` for those clients. Paste the output into your client config. It looks like:
 
 ```json
 {

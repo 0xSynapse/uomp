@@ -174,10 +174,10 @@ uomp authorize ./examples/mcp-client \
   --output ~/.uomp/mcp-client.env \
   --no-server
 
-uomp mcp --session ~/.uomp/mcp-client.env --print-config
+uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 ```
 
-把输出粘贴到客户端配置里。它看起来像：
+用 `--client cursor` 或 `--client opencode` 生成对应客户端配置。把输出粘贴到客户端配置里。它看起来像：
 
 ```json
 {
