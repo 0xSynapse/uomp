@@ -3,65 +3,87 @@ import Layout from '../layouts/Layout.astro';
 import { baseUrl } from '../utils/base.ts';
 ---
 
-<Layout title="路线图 - UOMP" description="UOMP 从协议草案到完整生态的发展规划与实现进度" switchHref={`${baseUrl}en/roadmap/`}>
+<Layout
+  title="路线图 - UOMP"
+  description="UOMP 接下来要做什么：面向本地知识库的 MCP server 和授权界面。进度以留存用户衡量，不以功能数量衡量。"
+  switchHref={`${baseUrl}en/roadmap/`}
+>
   <section>
     <div class="container">
       <h1>路线图</h1>
-      <p>UOMP 从协议草案到完整生态的发展规划。</p>
+      <p>进度以留存用户衡量，不以功能数量衡量。</p>
 
-      <h2>Milestone 1：核心协议与参考实现（已完成）</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-done">已完成</span>发布 UOMP-Draft-00 规范草案</li>
-        <li><span class="status status-done">已完成</span>基于 SQLite 的 Memory Store</li>
-        <li><span class="status status-done">已完成</span>Auth Service HTTP API：Session 创建/授权/关闭/撤销</li>
-        <li><span class="status status-done">已完成</span>Memory Guard HTTP API：只读访问，按 tag/key 过滤</li>
-        <li><span class="status status-done">已完成</span>JWT Capability Token 签发与校验</li>
-        <li><span class="status status-done">已完成</span>Token 黑名单持久化到 SQLite</li>
-        <li><span class="status status-done">已完成</span><code>uom.json</code> Agent Manifest 解析</li>
-        <li><span class="status status-done">已完成</span>ERC-8004 兼容 Registry 本地索引</li>
-        <li><span class="status status-done">已完成</span>通用 CLI：`discover`/`connect`/`authorize`/`import`/`sessions`/`revoke`/`audit`</li>
-        <li><span class="status status-done">已完成</span>股票分析 Agent 完整示例</li>
-        <li><span class="status status-done">已完成</span>Remote Profile + Gateway 参考实现（mTLS + 远程 Capability Token 转发）</li>
-        <li><span class="status status-done">已完成</span>聚合查询（`/v1/memory/aggregate`）+ 删除证明 API</li>
-        <li><span class="status status-done">已完成</span>Token Claims：`allowed_fields`、`aggregation_only`、`task_bound`</li>
-        <li><span class="status status-done">已完成</span>Agent Manifest `data_retention_policy`</li>
-        <li><span class="status status-done">已完成</span>UOMP SDK Phase 1（`UompClient`：memory / aggregate / payload / session / audit / auth / identity）</li>
-         <li><span class="status status-done">已完成</span>浏览器入口（uomp.org/dashboard/）：钱包认证 + Dropbox + Agent 分析</li>
-        <li><span class="status status-done">已完成</span>Cloudflare Tunnel 集成（`uomp gateway start` 一键暴露公网）</li>
-        <li><span class="status status-done">已完成</span>Store 抽象化（`IMemoryStore` 接口，SQLite + EncryptedObject）</li>
-        <li><span class="status status-done">已完成</span>Cloud Relay（`apps/relay/`，CORS + 限流 + 公钥验签）</li>
-        <li><span class="status status-done">已完成</span>钱包认证（MetaMask + Argent X，PBKDF2 密钥推导）</li>
-        <li><span class="status status-done">已完成</span>UOMP SDK Phase 1（`UompClient`：memory / aggregate / payload / session / audit）</li>
-        <li><span class="status status-done">已完成</span>股票分析 Agent v1.0（自服务 HTTP API + Digital Ocean 部署）</li>
-        <li><span class="status status-done">已完成</span>Cloudflare Tunnel 集成（`uomp gateway start` 一键暴露公网）</li>
-        <li><span class="status status-current">进行中</span>DID / GPG / X.509 身份验证（框架存在，验证强度增强）</li>
-      </ul>
+      <div class="roadmap">
+        <div class="note">
+          <strong>当前焦点：</strong>先让一个工作流真正成立——Claude Desktop 或 Cursor 读取 Obsidian 笔记库 30 分钟，有授权、有审计、能立即撤销。
+        </div>
 
-      <h2>Milestone 2：体验增强、写入与 GUI 集成</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-next">计划</span><code>uomp import</code> 字段映射、格式识别、预览</li>
-        <li><span class="status status-next">计划</span><code>uomp dry-run</code> 模拟授权</li>
-        <li><span class="status status-next">计划</span><code>uomp config</code> 用户配置</li>
-        <li><span class="status status-next">计划</span>Agent 写入暂存区（Staging）机制</li>
-        <li><span class="status status-next">计划</span><code>uom memory review</code> 用户审核命令</li>
-         <li><span class="status status-done">已完成</span>图形化授权面板（Try in Browser）</li>
-        <li><span class="status status-done">已完成</span>TypeScript SDK（`UompClient`、mTLS、聚合、Payload、删除证明）</li>
-        <li><span class="status status-done">已完成</span>Memory Store 抽象化（SQLite / S3 / IPFS 可插拔）</li>
-        <li><span class="status status-next">计划</span>审计日志可视化</li>
-        <li><span class="status status-next">计划</span>Token 安全托管模式（反向代理）</li>
-      </ul>
+        <h2>里程碑 1：授权闭环 <span class="status status-done">已完成</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-done">已完成</span>发布 UOMP-Draft-00 规范草案</li>
+          <li><span class="status status-done">已完成</span>本地 SQLite 存储，支持 CSV/JSON 导入</li>
+          <li><span class="status status-done">已完成</span><code>uom.json</code> 声明，支持 tag / key / field 范围</li>
+          <li><span class="status status-done">已完成</span>EdDSA Capability Token，默认 30 分钟</li>
+          <li><span class="status status-done">已完成</span>Auth Service + Memory Guard，只读访问强制执行</li>
+          <li><span class="status status-done">已完成</span>create / grant / revoke 需要管理员令牌</li>
+          <li><span class="status status-done">已完成</span><code>revoke</code> / <code>close</code> 在下一个请求立即生效</li>
+          <li><span class="status status-done">已完成</span>每次访问决策都有审计日志</li>
+          <li><span class="status status-done">已完成</span>CLI：<code>import</code> / <code>authorize</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">已完成</span>TypeScript SDK（<code>UompClient</code>）</li>
+          <li><span class="status status-done">已完成</span>示例 Agent：Calendar 和 Stock Analyst</li>
+        </ul>
 
-      <h2>Milestone 3：远程与高级能力</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-future">未来</span>语义检索（<code>query</code> 接口）</li>
-        <li><span class="status status-future">未来</span>写入版本历史与回滚</li>
-        <li><span class="status status-future">未来</span>策略模板（如"仅偏好"、"偏好+公开身份"）</li>
-        <li><span class="status status-future">未来</span>授权与访问事件区块链锚定</li>
-      </ul>
-    </div>
-    <div class="hero-btns" style="margin-top:2.5rem;">
-      <a href={`${baseUrl}try/`} class="btn-h1" style="background:#8B5CF6">试用 →</a>
-      <a href={`${baseUrl}tutorial/`} class="btn-h1">SDK 教程 →</a>
+        <h2>里程碑 2：第一个真实用户工作流 <span class="status status-current">进行中</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-next">下一步</span>面向 Claude Desktop、Cursor 等客户端的 MCP server</li>
+          <li><span class="status status-next">下一步</span>Obsidian / Markdown 连接器</li>
+          <li><span class="status status-next">下一步</span>浏览器授权界面：范围预览、直白授权、默认 30 分钟</li>
+          <li><span class="status status-next">下一步</span>审计时间线：哪个 Agent、什么范围、什么时候、允许还是拒绝</li>
+          <li><span class="status status-next">下一步</span>一条命令安装——不需要钱包，不需要云账号</li>
+          <li><span class="status status-next">下一步</span>Python SDK</li>
+          <li><span class="status status-next">下一步</span>10 个用自己的数据使用 UOMP 的设计伙伴</li>
+          <li><span class="status status-next">下一步</span>目标：首次授权读取在 5 分钟内完成</li>
+        </ul>
+
+        <h2>里程碑 3：留存成立之后 <span class="status status-future">计划中</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-future">之后</span>第二个连接器（Notion、普通目录或已有记忆厂商）</li>
+          <li><span class="status status-future">之后</span>团队策略、共享范围和 SSO</li>
+          <li><span class="status status-future">之后</span>托管 Relay 与多设备同步</li>
+          <li><span class="status status-future">之后</span>审计导出</li>
+          <li><span class="status status-future">之后</span>带暂存与审批的写入工作流</li>
+        </ul>
+
+        <h2>研究与预览 <span class="status status-future">未排期</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-future">研究</span>FHE（全同态加密）</li>
+          <li><span class="status status-future">研究</span>链上审计</li>
+          <li><span class="status status-future">预览</span>钱包认证 + Dropbox Dashboard</li>
+          <li><span class="status status-future">预览</span>S3 / IPFS 存储后端</li>
+          <li><span class="status status-future">预览</span>Agent Registry / 市场</li>
+        </ul>
+        <p>
+          它们会留在仓库和设计文档里。不在当前主线上，也不会拖慢第一个留存闭环。
+        </p>
+
+        <h2>怎么判断这件事成立了</h2>
+        <div class="metric-grid">
+          <div class="metric"><strong>10</strong><span>设计伙伴，用自己的数据</span></div>
+          <div class="metric"><strong>3+</strong><span>每个用户连接的 Agent 数</span></div>
+          <div class="metric"><strong>3+</strong><span>连续 4 周、每周使用次数</span></div>
+          <div class="metric"><strong>&lt;5 分钟</strong><span>从安装到首次授权读取</span></div>
+          <div class="metric"><strong>≥50%</strong><span>用户使用过撤销——控制权必须被感受到</span></div>
+        </div>
+        <p>
+          如果这些数字不成立，我们换工作流，而不是加功能。
+        </p>
+      </div>
+
+      <div class="hero-btns" style="margin-top:2.5rem;">
+        <a href={`${baseUrl}try/`} class="btn-h1" style="background:#8B5CF6">试用今天的闭环 →</a>
+        <a href={`${baseUrl}spec/`} class="btn-h1">阅读规范 →</a>
+        <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-h2">GitHub</a>
+      </div>
     </div>
   </section>
 </Layout>

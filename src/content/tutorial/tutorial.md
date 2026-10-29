@@ -11,7 +11,7 @@ description: '从零到部署的完整指南'
 
 - Node.js >= 20
 - pnpm 9（`corepack enable` 或 `npm install -g pnpm@9`）
-- 已克隆 [uomp-core](https://github.com/0xaicrypto/uomp-core) 仓库
+- 已克隆 [uomp-core](https://github.com/0xSynapse/uomp-core) 仓库
 
 ## 1. 安装与初始化
 

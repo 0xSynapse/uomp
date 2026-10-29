@@ -11,7 +11,7 @@ A complete walkthrough: install CLI, import data, authorize Agents, write Agents
 
 - Node.js >= 20
 - pnpm 9 (`corepack enable` or `npm install -g pnpm@9`)
-- Clone [uomp-core](https://github.com/0xaicrypto/uomp-core)
+- Clone [uomp-core](https://github.com/0xSynapse/uomp-core)
 
 ## 1. Install & Initialize
 

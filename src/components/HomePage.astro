@@ -1,0 +1,1284 @@
+---
+import { baseUrl } from '../utils/base.ts';
+
+export interface Props {
+  lang?: 'zh' | 'en';
+}
+
+const { lang = 'zh' } = Astro.props;
+
+const content = {
+  zh: {
+    eyebrow: '面向 AI Agent 的授权与审计层',
+    h1a: '数据留在原地。',
+    h1b: '访问必须明确。',
+    sub: 'UOMP 位于 Agent 和它想读的数据之间。每次读取都有范围、有时限、有记录。撤销在下一个请求生效，而不是第二天。',
+    ctaPrimary: '看它怎么工作',
+    ctaSecondary: '阅读协议草案',
+    meta: ['本地优先', '不上传数据', '开放协议', 'Apache 2.0'],
+    specHref: `${baseUrl}spec/`,
+    roadmapHref: `${baseUrl}roadmap/`,
+    consent: {
+      label: '授权请求',
+      timer: '00:29:41',
+      agent: 'Claude Desktop',
+      agentMeta: 'MCP 客户端',
+      badge: '只读',
+      requested: '请求范围',
+      allow: '读取',
+      allowPath: 'notes/projects/**',
+      deny: '拒绝',
+      denyPath: 'notes/journal/**',
+      session: '会话',
+      sessionValue: '30 分钟',
+      data: '数据',
+      dataValue: '留在本机',
+      denyBtn: '拒绝',
+      allowBtn: '允许 30 分钟',
+      preview: '授权界面预览 · 开发中',
+    },
+    audit: {
+      title: '审计',
+      session: '会话 7f3a',
+      rows: [
+        { time: '14:32:07', kind: 'allow', label: '允许', text: 'notes/projects/roadmap.md' },
+        { time: '14:32:09', kind: 'deny', label: '拒绝', text: 'notes/journal/2026-10.md' },
+        { time: '14:35:12', kind: 'revoke', label: '撤销', text: 'session 7f3a' },
+      ],
+    },
+    status: {
+      todayLabel: '今天',
+      today: 'CLI 授权 · 本地 SQLite · 范围读取 · 撤销 · 审计',
+      nextLabel: '下一步',
+      next: 'MCP server · Obsidian 连接器 · 浏览器授权界面',
+    },
+    how: {
+      kicker: '工作方式',
+      title: '三步，每次请求都检查。',
+      intro: 'UOMP 不把你的数据复制到另一个存储。它挡在你已有的数据前面，决定一个请求是否可以通过。',
+      steps: [
+        {
+          n: '01',
+          title: '声明',
+          body: 'Agent 在 manifest 里声明它需要的范围。按 tag、key、field 收窄，并明确写出不能读什么。',
+          codeLabel: 'uom.json',
+          code: [
+            '"requested_scopes": {',
+            '  "read": {',
+            '    "tags": ["notes/projects"],',
+            '    "deny_tags": ["notes/journal"]',
+            '  }',
+            '}',
+          ].join('\n'),
+        },
+        {
+          n: '02',
+          title: '授权',
+          body: '你只授权一个会话，范围明确、时间有限。默认 30 分钟。',
+          codeLabel: 'terminal',
+          code: [
+            '$ uomp authorize ./agent \\',
+            '    --scope notes/projects \\',
+            '    --duration 30',
+            '',
+            '✓ token issued · session 7f3a',
+          ].join('\n'),
+        },
+        {
+          n: '03',
+          title: '执行',
+          body: 'Guard 在每次读取前检查范围、过期和撤销状态。撤销后，下一个请求立即失效。',
+          codeLabel: 'terminal',
+          code: [
+            '$ uomp revoke 7f3a',
+            '✓ revoked',
+            '',
+            'GET /v1/memory  →  403',
+          ].join('\n'),
+        },
+      ],
+    },
+    guarantees: {
+      kicker: '执行',
+      title: '返回任何数据之前，先过四道检查。',
+      intro: '这些保证在请求路径里执行，不是写在文档里。',
+      rows: [
+        { key: '范围', value: 'tag、key、field 白名单；deny 规则优先。' },
+        { key: '时间', value: '会话会过期，默认 30 分钟。' },
+        { key: '撤销', value: '每个请求都检查会话状态；revoke 或 close 立即生效。' },
+        { key: '审计', value: '每次允许和拒绝都记录 Agent、范围和时间。' },
+      ],
+      note: '默认本地优先：Guard 只监听 127.0.0.1，数据留在你已有的存储里。',
+    },
+    scope: {
+      kicker: '边界',
+      title: '是访问的控制面，不是又一个记忆库。',
+      intro: 'UOMP 治理已经存在的数据，不试图成为数据存放的地方。',
+      isTitle: 'UOMP 是',
+      is: [
+        '本地的授权、撤销与审计层',
+        '治理你已有数据的访问方式',
+        '开放协议 + 参考实现',
+        'MCP 的补充层',
+      ],
+      notTitle: 'UOMP 不是',
+      not: [
+        '记忆数据库或向量库',
+        'Obsidian、Notion 或 Mem0 的替代品',
+        '模型、Agent 框架或云服务',
+        '区块链或 FHE 产品',
+      ],
+      outTitle: '当前不在主线上',
+      out: ['FHE', '链上审计', '钱包登录', '新存储后端', 'Agent Registry', '写入流程'],
+    },
+    cta: {
+      kicker: '设计伙伴',
+      title: '成为最早 10 个设计伙伴之一。',
+      body: '如果你的笔记在 Obsidian 或 Markdown 里，而且你在用不止一个 Agent，我们想了解你的工作流——不是收一张功能清单。',
+      primary: '成为设计伙伴',
+      secondary: '阅读路线图',
+    },
+  },
+  en: {
+    eyebrow: 'Consent and audit layer for AI agents',
+    h1a: 'Your data stays.',
+    h1b: 'Access is explicit.',
+    sub: 'UOMP sits between an agent and the data it wants. Every read is scoped, time-limited, and logged. Revocation takes effect on the next request — not the next day.',
+    ctaPrimary: 'See how it works',
+    ctaSecondary: 'Read the draft',
+    meta: ['Local-first', 'No data upload', 'Open protocol', 'Apache 2.0'],
+    specHref: `${baseUrl}en/spec/`,
+    roadmapHref: `${baseUrl}en/roadmap/`,
+    consent: {
+      label: 'Authorization request',
+      timer: '00:29:41',
+      agent: 'Claude Desktop',
+      agentMeta: 'MCP client',
+      badge: 'read-only',
+      requested: 'Requested scope',
+      allow: 'read',
+      allowPath: 'notes/projects/**',
+      deny: 'deny',
+      denyPath: 'notes/journal/**',
+      session: 'Session',
+      sessionValue: '30 minutes',
+      data: 'Data',
+      dataValue: 'Stays on this device',
+      denyBtn: 'Deny',
+      allowBtn: 'Allow for 30 min',
+      preview: 'Consent UI preview · in development',
+    },
+    audit: {
+      title: 'Audit',
+      session: 'Session 7f3a',
+      rows: [
+        { time: '14:32:07', kind: 'allow', label: 'allow', text: 'notes/projects/roadmap.md' },
+        { time: '14:32:09', kind: 'deny', label: 'deny', text: 'notes/journal/2026-10.md' },
+        { time: '14:35:12', kind: 'revoke', label: 'revoke', text: 'session 7f3a' },
+      ],
+    },
+    status: {
+      todayLabel: 'Today',
+      today: 'CLI grants · local SQLite · scoped reads · revoke · audit',
+      nextLabel: 'Next',
+      next: 'MCP server · Obsidian connector · browser consent UI',
+    },
+    how: {
+      kicker: 'How it works',
+      title: 'Three steps. Checked on every request.',
+      intro: 'UOMP does not copy your data into another store. It sits in front of the data you already have and decides whether a request is allowed.',
+      steps: [
+        {
+          n: '01',
+          title: 'Declare',
+          body: 'The agent ships a manifest with the scopes it needs. Narrow by tag, key, or field — and state what it must not read.',
+          codeLabel: 'uom.json',
+          code: [
+            '"requested_scopes": {',
+            '  "read": {',
+            '    "tags": ["notes/projects"],',
+            '    "deny_tags": ["notes/journal"]',
+            '  }',
+            '}',
+          ].join('\n'),
+        },
+        {
+          n: '02',
+          title: 'Approve',
+          body: 'You grant one session with an explicit scope and a time limit. The default is 30 minutes.',
+          codeLabel: 'terminal',
+          code: [
+            '$ uomp authorize ./agent \\',
+            '    --scope notes/projects \\',
+            '    --duration 30',
+            '',
+            '✓ token issued · session 7f3a',
+          ].join('\n'),
+        },
+        {
+          n: '03',
+          title: 'Enforce',
+          body: 'Guard checks scope, expiry, and revocation before every read. Revoking ends access on the next request.',
+          codeLabel: 'terminal',
+          code: [
+            '$ uomp revoke 7f3a',
+            '✓ revoked',
+            '',
+            'GET /v1/memory  →  403',
+          ].join('\n'),
+        },
+      ],
+    },
+    guarantees: {
+      kicker: 'Enforcement',
+      title: 'Four checks before any data is returned.',
+      intro: 'The guarantees live in the request path, not in the documentation.',
+      rows: [
+        { key: 'Scope', value: 'Tag, key, and field allowlists. Deny rules win.' },
+        { key: 'Time', value: 'Sessions expire. 30 minutes by default.' },
+        { key: 'Revocation', value: 'Session state is checked on every request. Revoke or close takes effect immediately.' },
+        { key: 'Audit', value: 'Every allow and deny is recorded with the agent, scope, and timestamp.' },
+      ],
+      note: 'Local-first by default: Guard binds to 127.0.0.1, and the data stays in the store you already use.',
+    },
+    scope: {
+      kicker: 'Scope',
+      title: 'A control plane, not another memory store.',
+      intro: 'UOMP governs data that already exists. It does not try to become the place where that data lives.',
+      isTitle: 'UOMP is',
+      is: [
+        'A local consent, authorization, and audit layer',
+        'A way to govern access to data you already have',
+        'An open protocol with a reference implementation',
+        'Complementary to MCP',
+      ],
+      notTitle: 'UOMP is not',
+      not: [
+        'A memory database or vector store',
+        'A replacement for Obsidian, Notion, or Mem0',
+        'A model, agent framework, or cloud',
+        'A blockchain or FHE product',
+      ],
+      outTitle: 'Not on the critical path',
+      out: ['FHE', 'On-chain audit', 'Wallet login', 'New storage backends', 'Agent registry', 'Writes'],
+    },
+    cta: {
+      kicker: 'Design partners',
+      title: 'Become one of our first ten design partners.',
+      body: 'If you keep your notes in Obsidian or Markdown and use more than one agent, we want your workflow — not a feature request.',
+      primary: 'Become a design partner',
+      secondary: 'Read the roadmap',
+    },
+  },
+};
+
+const t = content[lang];
+---
+
+<div class="home">
+  <section class="home-hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <div class="kicker">{t.eyebrow}</div>
+        <h1>{t.h1a}<span>{t.h1b}</span></h1>
+        <p class="hero-sub">{t.sub}</p>
+        <div class="hero-actions">
+          <a class="btn-solid" href="#how">{t.ctaPrimary}</a>
+          <a class="btn-line" href={t.specHref}>{t.ctaSecondary}</a>
+          <a class="link-quiet" href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="hero-meta">
+          {t.meta.map((m) => <span>{m}</span>)}
+        </div>
+      </div>
+
+      <div class="hero-demo">
+        <div class="consent">
+          <div class="consent-head">
+            <span>{t.consent.label}</span>
+            <span class="timer">{t.consent.timer}</span>
+          </div>
+          <div class="consent-body">
+            <div class="agent">
+              <div class="agent-mark">C</div>
+              <div class="agent-name">
+                <strong>{t.consent.agent}</strong>
+                <span>{t.consent.agentMeta}</span>
+              </div>
+              <span class="agent-badge">{t.consent.badge}</span>
+            </div>
+
+            <div class="scope-block">
+              <div class="scope-label">{t.consent.requested}</div>
+              <div class="scope-row">
+                <span class="pill allow">{t.consent.allow}</span>
+                <code>{t.consent.allowPath}</code>
+              </div>
+              <div class="scope-row">
+                <span class="pill deny">{t.consent.deny}</span>
+                <code>{t.consent.denyPath}</code>
+              </div>
+            </div>
+
+            <dl class="consent-meta">
+              <div><dt>{t.consent.session}</dt><dd>{t.consent.sessionValue}</dd></div>
+              <div><dt>{t.consent.data}</dt><dd>{t.consent.dataValue}</dd></div>
+            </dl>
+          </div>
+          <div class="consent-actions">
+            <span class="btn-deny">{t.consent.denyBtn}</span>
+            <span class="btn-allow">{t.consent.allowBtn}</span>
+          </div>
+          <div class="consent-foot">{t.consent.preview}</div>
+        </div>
+
+        <div class="audit">
+          <div class="audit-head">
+            <span>{t.audit.title}</span>
+            <span>{t.audit.session}</span>
+          </div>
+          {t.audit.rows.map((row) => (
+            <div class="audit-row">
+              <span class="time">{row.time}</span>
+              <span class={`kind ${row.kind}`}>{row.label}</span>
+              <code>{row.text}</code>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="status-strip">
+        <div class="status-item">
+          <span class="status-label">{t.status.todayLabel}</span>
+          <span>{t.status.today}</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label next">{t.status.nextLabel}</span>
+          <span>{t.status.next}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">{t.how.kicker}</div>
+          <h2>{t.how.title}</h2>
+        </div>
+        <p>{t.how.intro}</p>
+      </div>
+
+      <div class="how-steps">
+        {t.how.steps.map((step) => (
+          <article class="how-step">
+            <span class="how-num">{step.n}</span>
+            <h3>{step.title}</h3>
+            <p>{step.body}</p>
+            <div class="code-label">{step.codeLabel}</div>
+            <pre class="code"><code>{step.code}</code></pre>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">{t.guarantees.kicker}</div>
+          <h2>{t.guarantees.title}</h2>
+        </div>
+        <p>{t.guarantees.intro}</p>
+      </div>
+
+      <div class="guarantee-table">
+        {t.guarantees.rows.map((row) => (
+          <div class="guarantee-row">
+            <span class="guarantee-key">{row.key}</span>
+            <span class="guarantee-value">{row.value}</span>
+          </div>
+        ))}
+      </div>
+      <p class="guarantee-note">{t.guarantees.note}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">{t.scope.kicker}</div>
+          <h2>{t.scope.title}</h2>
+        </div>
+        <p>{t.scope.intro}</p>
+      </div>
+
+      <div class="scope-grid">
+        <div class="scope-col">
+          <h3>{t.scope.isTitle}</h3>
+          <ul class="plain-list yes">
+            {t.scope.is.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+        <div class="scope-col">
+          <h3>{t.scope.notTitle}</h3>
+          <ul class="plain-list no">
+            {t.scope.not.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      </div>
+
+      <div class="out-of-scope">
+        <span class="out-label">{t.scope.outTitle}</span>
+        <ul class="tags">
+          {t.scope.out.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="partner-cta">
+    <div class="wrap cta-inner">
+      <div>
+        <div class="kicker">{t.cta.kicker}</div>
+        <h2>{t.cta.title}</h2>
+        <p>{t.cta.body}</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn-solid" href="https://github.com/0xSynapse/uomp-core/issues/new" target="_blank" rel="noopener">{t.cta.primary}</a>
+        <a class="btn-line" href={t.roadmapHref}>{t.cta.secondary}</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  .home {
+    --paper: #fbfbf8;
+    --surface: #ffffff;
+    --ink: #111210;
+    --muted: #62655f;
+    --faint: #6f726a;
+    --line: #e3e3dc;
+    --line-strong: #cfcfc6;
+    --accent: #1f5f4a;
+    --accent-soft: #eef5f1;
+    --warn: #8a4b12;
+    --warn-soft: #fbf3ea;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  .home section {
+    border-bottom: 0;
+    background: transparent;
+  }
+
+  .wrap {
+    width: min(1180px, calc(100% - 64px));
+    margin: 0 auto;
+  }
+
+  .home-hero {
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 72px;
+    align-items: center;
+    padding: 84px 0 56px;
+  }
+
+  .kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .kicker::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+  }
+
+  .home-hero h1 {
+    margin: 22px 0 0;
+    font-family: var(--font-sans);
+    font-size: clamp(40px, 4.9vw, 58px);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+
+  .home-hero h1 span {
+    display: block;
+    color: var(--muted);
+  }
+
+  .hero-sub {
+    max-width: 520px;
+    margin: 24px 0 0;
+    font-size: 16.5px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+  }
+
+  .btn-solid,
+  .btn-line {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+
+  .btn-solid {
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid var(--ink);
+  }
+
+  .btn-solid:hover {
+    background: #2a2c28;
+  }
+
+  .btn-line {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+  }
+
+  .btn-line:hover {
+    border-color: var(--ink);
+  }
+
+  .link-quiet {
+    margin-left: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .link-quiet:hover {
+    color: var(--ink);
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 32px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--faint);
+  }
+
+  .hero-meta span {
+    position: relative;
+    padding-right: 18px;
+  }
+
+  .hero-meta span:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--line-strong);
+    transform: translateY(-50%);
+  }
+
+  /* ── Consent mock ── */
+  .hero-demo {
+    min-width: 0;
+  }
+
+  .consent {
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 30px 60px -36px rgba(17, 18, 16, 0.35);
+    overflow: hidden;
+  }
+
+  .consent-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .timer {
+    color: var(--ink);
+    letter-spacing: 0.06em;
+  }
+
+  .consent-body {
+    padding: 18px 18px 16px;
+  }
+
+  .agent {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding-bottom: 16px;
+  }
+
+  .agent-mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    font-family: var(--font-serif);
+    font-size: 16px;
+    flex: none;
+  }
+
+  .agent-name {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+    min-width: 0;
+  }
+
+  .agent-name strong {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .agent-name span {
+    font-size: 11px;
+    color: var(--faint);
+  }
+
+  .agent-badge {
+    margin-left: auto;
+    padding: 3px 7px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .scope-block {
+    border-top: 1px solid var(--line);
+    padding-top: 13px;
+  }
+
+  .scope-label {
+    margin-bottom: 2px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .scope-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+
+  .home .scope-row code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+
+  .pill {
+    flex: none;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .pill.allow {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .pill.deny {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+
+  .consent-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 13px 0 0;
+    padding-top: 13px;
+    border-top: 1px solid var(--line);
+  }
+
+  .consent-meta div {
+    min-width: 0;
+  }
+
+  .consent-meta dt {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .consent-meta dd {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--ink);
+  }
+
+  .consent-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--line);
+    background: #fafaf7;
+  }
+
+  .btn-deny,
+  .btn-allow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .btn-deny {
+    flex: 0 0 72px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+  }
+
+  .btn-allow {
+    flex: 1;
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .consent-foot {
+    padding: 7px 18px 8px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.05em;
+    color: var(--faint);
+  }
+
+  .audit {
+    margin-top: 14px;
+    padding: 13px 16px 11px;
+    border-radius: 10px;
+    background: var(--ink);
+    color: #d4d7d0;
+  }
+
+  .audit-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8f938c;
+  }
+
+  .audit-row {
+    display: grid;
+    grid-template-columns: 58px 52px minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #b9bdb5;
+  }
+
+  .audit-row .time {
+    color: #7e827b;
+  }
+
+  .audit-row .kind.allow {
+    color: #7fd1a8;
+  }
+
+  .audit-row .kind.deny {
+    color: #e0a56b;
+  }
+
+  .audit-row .kind.revoke {
+    color: #a9adb5;
+  }
+
+  .audit-row code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #d4d7d0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Status strip ── */
+  .status-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--line);
+  }
+
+  .status-item {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 0;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .status-item + .status-item {
+    padding-left: 24px;
+    border-left: 1px solid var(--line);
+  }
+
+  .status-label {
+    flex: none;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .status-label.next {
+    color: var(--accent);
+  }
+
+  /* ── Sections ── */
+  .section {
+    padding: 88px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 48px;
+    align-items: end;
+    margin-bottom: 46px;
+  }
+
+  .section-head h2,
+  .partner-cta h2 {
+    margin: 14px 0 0;
+    font-family: var(--font-sans);
+    font-size: clamp(26px, 3.1vw, 38px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+  }
+
+  .section-head p {
+    margin: 0;
+    max-width: 440px;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  /* ── Steps ── */
+  .how-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+    border-top: 1px solid var(--line);
+    padding-top: 26px;
+  }
+
+  .how-step {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .how-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--faint);
+  }
+
+  .how-step h3 {
+    margin: 9px 0 7px;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .how-step p {
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  .code-label {
+    margin-top: auto;
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .code {
+    margin: 0;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f4f4ef;
+    overflow-x: auto;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+
+  .home .code code {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #2a2c28;
+    white-space: pre;
+  }
+
+  /* ── Guarantees ── */
+  .guarantee-table {
+    border-top: 1px solid var(--line);
+  }
+
+  .guarantee-row {
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr);
+    gap: 24px;
+    padding: 17px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .guarantee-key {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .guarantee-value {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .guarantee-note {
+    margin: 18px 0 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.6;
+    color: var(--faint);
+  }
+
+  /* ── Scope ── */
+  .scope-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    border-top: 1px solid var(--line);
+    padding-top: 26px;
+  }
+
+  .scope-col h3 {
+    margin: 0 0 12px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .plain-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .plain-list li {
+    position: relative;
+    padding-left: 22px;
+    margin: 9px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .plain-list li::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .plain-list.yes li::before {
+    content: '✓';
+    color: var(--accent);
+  }
+
+  .plain-list.no li::before {
+    content: '×';
+    color: var(--faint);
+  }
+
+  .out-of-scope {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+
+  .out-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tags li {
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+  }
+
+  /* ── CTA ── */
+  .partner-cta {
+    padding: 76px 0 88px;
+  }
+
+  .cta-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) auto;
+    gap: 56px;
+    align-items: end;
+    border-top: 1px solid var(--line-strong);
+    padding-top: 42px;
+  }
+
+  .partner-cta h2 {
+    max-width: 620px;
+  }
+
+  .partner-cta p {
+    max-width: 560px;
+    margin: 16px 0 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 210px;
+  }
+
+  @media (max-width: 960px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+      gap: 48px;
+      padding: 64px 0 48px;
+    }
+
+    .hero-sub {
+      max-width: 620px;
+    }
+
+    .hero-demo {
+      max-width: 520px;
+    }
+
+    .section-head {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .section-head p {
+      max-width: 620px;
+    }
+
+    .how-steps {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .how-step {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .how-step:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .cta-inner {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .cta-actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .wrap {
+      width: min(100% - 40px, 1180px);
+    }
+
+    .hero-grid {
+      padding-top: 48px;
+    }
+
+    .hero-meta {
+      gap: 6px 12px;
+    }
+
+    .hero-meta span {
+      padding-right: 12px;
+    }
+
+    .section {
+      padding: 60px 0;
+    }
+
+    .status-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .status-item + .status-item {
+      padding-left: 0;
+      border-left: 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .guarantee-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .scope-grid {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .partner-cta {
+      padding: 56px 0 64px;
+    }
+
+    .home-hero h1 {
+      font-size: clamp(36px, 10vw, 46px);
+    }
+  }
+</style>

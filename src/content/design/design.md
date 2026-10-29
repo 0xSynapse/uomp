@@ -5,7 +5,7 @@ description: 'UOMP 参考实现 uomp-mvp 的架构与实现说明：组件职责
 
 # UOMP 实现设计
 
-本文档说明 UOMP 的**参考实现** [`uomp-mvp`](https://github.com/0xaicrypto/uomp-core) 如何将[协议规范](/spec/)落地为可运行的代码。
+本文档说明 UOMP 的**参考实现** [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) 如何将[协议规范](/spec/)落地为可运行的代码。
 
 ---
 
@@ -176,7 +176,7 @@ const id = await uomp.identity.fromWallet('starknet');
 
 `@uomp/sdk` 提供两个入口：`import { UompClient } from '@uomp/sdk'`（Node.js）和 `import { BrowserSDK } from '@uomp/sdk/browser'`（Web App）。
 
-完整 API 参考见 [`docs/sdk-design.md`](https://github.com/0xaicrypto/uomp-core/tree/main/docs/sdk-design.md)。
+完整 API 参考见 [`docs/sdk-design.md`](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.md)。
 
 ---
 
@@ -223,7 +223,7 @@ Guard → IMemoryStore ─┬─ SQLiteStore（本地，默认）
 
 加密在 Guard 进程内完成，云后端只存密文。密钥由钱包签名通过 HKDF 派生。
 
-完整设计文档：[`docs/store-abstraction-design.md`](https://github.com/0xaicrypto/uomp-core/tree/main/docs/store-abstraction-design.md)。
+完整设计文档：[`docs/store-abstraction-design.md`](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md)。
 
 ---
 
@@ -265,7 +265,7 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 6. `uomp sessions` / `uomp audit` 审计
 7. `uomp revoke` 撤销
 
-完整步骤见 [`examples/stock-analyst/README.md`](https://github.com/0xaicrypto/uomp-core/tree/main/examples/stock-analyst/README.md)。
+完整步骤见 [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst/README.md)。
 
 ---
 
@@ -306,7 +306,7 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 ## 9. 相关链接
 
 - [协议规范](/spec/)
-- [参考实现仓库](https://github.com/0xaicrypto/uomp-core)
-- [SDK 设计文档](https://github.com/0xaicrypto/uomp-core/tree/main/docs/sdk-design.md)
-- [Store 抽象化设计](https://github.com/0xaicrypto/uomp-core/tree/main/docs/store-abstraction-design.md)
-- [股票分析示例](https://github.com/0xaicrypto/uomp-core/tree/main/examples/stock-analyst)
+- [参考实现仓库](https://github.com/0xSynapse/uomp-core)
+- [SDK 设计文档](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.md)
+- [Store 抽象化设计](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md)
+- [股票分析示例](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst)

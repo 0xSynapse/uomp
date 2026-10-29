@@ -5,7 +5,7 @@ description: 'Architecture and implementation notes for the uomp-mvp reference i
 
 # UOMP Implementation Design
 
-This document explains how the UOMP **reference implementation** [`uomp-mvp`](https://github.com/0xaicrypto/uomp-core) turns the [protocol specification](/en/spec/) into runnable code.
+This document explains how the UOMP **reference implementation** [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) turns the [protocol specification](/en/spec/) into runnable code.
 
 ---
 
@@ -199,7 +199,7 @@ Guard → IMemoryStore ─┬─ SQLiteStore (local, default)
 
 Encryption occurs inside the Guard process; cloud backends store only ciphertext. Keys derived from wallet signatures via HKDF.
 
-Full design doc: [`docs/store-abstraction-design.md`](https://github.com/0xaicrypto/uomp-core/tree/main/docs/store-abstraction-design.md).
+Full design doc: [`docs/store-abstraction-design.md`](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md).
 
 ---
 
@@ -241,7 +241,7 @@ Agents declare `requested_scopes`, `data_retention_policy`, `external_data_sourc
 6. `uomp sessions` / `uomp audit` for auditing
 7. `uomp revoke` to revoke
 
-Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xaicrypto/uomp-core/tree/main/examples/stock-analyst/README.md).
+Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst/README.md).
 
 ---
 
@@ -282,7 +282,7 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xaicrypto/u
 ## 9. Related Links
 
 - [Protocol Specification](/en/spec/)
-- [Reference Implementation](https://github.com/0xaicrypto/uomp-core)
-- [SDK Design Document](https://github.com/0xaicrypto/uomp-core/tree/main/docs/sdk-design.en.md)
-- [Store Abstraction Design](https://github.com/0xaicrypto/uomp-core/tree/main/docs/store-abstraction-design.md)
-- [Stock Analyst Example](https://github.com/0xaicrypto/uomp-core/tree/main/examples/stock-analyst)
+- [Reference Implementation](https://github.com/0xSynapse/uomp-core)
+- [SDK Design Document](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.en.md)
+- [Store Abstraction Design](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md)
+- [Stock Analyst Example](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst)

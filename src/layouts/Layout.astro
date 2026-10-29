@@ -8,7 +8,7 @@ export interface Props {
   switchHref?: string;
 }
 
-const { title, description = 'User-Owned Memory Protocol - 用户主权型 Agent 记忆授权协议', lang = 'zh', switchHref } = Astro.props;
+const { title, description = 'UOMP - 用户与 AI Agent 之间的授权、撤销与审计层', lang = 'zh', switchHref } = Astro.props;
 
 const nav = {
   zh: {
@@ -16,15 +16,15 @@ const nav = {
     spec: '规范',
     design: '实现',
     tutorial: '教程',
-    example: 'Try',
+    example: '试用',
     roadmap: '路线图',
     github: 'GitHub',
     switch: 'EN',
     brand: 'UOMP',
-    brandTagline: '用户主权型 Agent 记忆授权协议',
+    brandTagline: '你和 AI Agent 之间的授权、撤销与审计层',
     footerCols: {
-      protocol: { title: '协议', links: [{ t: '规范', h: `${baseUrl}spec/` }, { t: '实现设计', h: `${baseUrl}design/` }, { t: '教程', h: `${baseUrl}tutorial/` }, { t: '试用', h: `${baseUrl}try/` }, { t: '路线图', h: `${baseUrl}roadmap/` }, { t: 'Try in Browser', h: `${baseUrl}dashboard/` }] },
-      community: { title: '社区', links: [{ t: 'GitHub', h: 'https://github.com/0xaicrypto/uomp-core' }, { t: 'Discussions', h: 'https://github.com/0xaicrypto/uomp-core/discussions' }] },
+      protocol: { title: '协议', links: [{ t: '规范', h: `${baseUrl}spec/` }, { t: '实现设计', h: `${baseUrl}design/` }, { t: '教程', h: `${baseUrl}tutorial/` }, { t: '试用', h: `${baseUrl}try/` }, { t: '路线图', h: `${baseUrl}roadmap/` }] },
+      community: { title: '社区', links: [{ t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
     },
     footerBtm: '© UOMP 贡献者 · 开放协议草案',
   },
@@ -38,10 +38,10 @@ const nav = {
     github: 'GitHub',
     switch: '中文',
     brand: 'UOMP',
-    brandTagline: 'User-sovereign Agent memory authorization protocol',
+    brandTagline: 'The consent and audit layer between you and AI agents',
     footerCols: {
-      protocol: { title: 'Protocol', links: [{ t: 'Spec', h: `${baseUrl}en/spec/` }, { t: 'Implementation', h: `${baseUrl}en/design/` }, { t: 'Tutorial', h: `${baseUrl}en/tutorial/` }, { t: 'Try', h: `${baseUrl}en/try/` }, { t: 'Roadmap', h: `${baseUrl}en/roadmap/` }, { t: 'Try in Browser', h: `${baseUrl}dashboard/` }] },
-      community: { title: 'Community', links: [{ t: 'GitHub', h: 'https://github.com/0xaicrypto/uomp-core' }, { t: 'Discussions', h: 'https://github.com/0xaicrypto/uomp-core/discussions' }] },
+      protocol: { title: 'Protocol', links: [{ t: 'Spec', h: `${baseUrl}en/spec/` }, { t: 'Implementation', h: `${baseUrl}en/design/` }, { t: 'Tutorial', h: `${baseUrl}en/tutorial/` }, { t: 'Try', h: `${baseUrl}en/try/` }, { t: 'Roadmap', h: `${baseUrl}en/roadmap/` }] },
+      community: { title: 'Community', links: [{ t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
     },
     footerBtm: '© UOMP contributors · Open protocol draft',
   },
@@ -125,7 +125,7 @@ const isRoadmap = pathname.startsWith(`${baseUrl}roadmap/`) || pathname.startsWi
             <span></span>
           </button>
           <a href={resolvedSwitchHref} class="btn-ng">{t.switch}</a>
-          <a href="https://github.com/0xaicrypto/uomp-core" target="_blank" rel="noopener" class="btn-np">{t.github}</a>
+          <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-np">{t.github}</a>
         </div>
       </nav>
     </div>

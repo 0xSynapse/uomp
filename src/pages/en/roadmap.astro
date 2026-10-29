@@ -5,70 +5,86 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Roadmap - UOMP"
-  description="UOMP development roadmap from protocol draft to full ecosystem."
+  description="What UOMP is building next: an MCP server and consent UI for local knowledge bases. Progress is measured by retained users, not shipped features."
   lang="en"
   switchHref={`${baseUrl}roadmap/`}
 >
   <section>
     <div class="container">
       <h1>Roadmap</h1>
-      <p>From protocol draft to a complete ecosystem.</p>
+      <p>We measure progress by retained users, not shipped features.</p>
 
-      <h2>Milestone 1: Core Protocol & Reference Implementation</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-done">Done</span>Publish UOMP-Draft-00 specification</li>
-        <li><span class="status status-done">Done</span>SQLite-based Memory Store</li>
-        <li><span class="status status-done">Done</span>Auth Service HTTP API: create/grant/close/revoke sessions</li>
-        <li><span class="status status-done">Done</span>Memory Guard HTTP API: read-only access filtered by tag/key</li>
-        <li><span class="status status-done">Done</span>JWT Capability Token issuance and validation</li>
-        <li><span class="status status-done">Done</span>Token blacklist persistence in SQLite</li>
-        <li><span class="status status-done">Done</span><code>uom.json</code> Agent Manifest parsing</li>
-        <li><span class="status status-done">Done</span>ERC-8004 compatible local Registry index</li>
-        <li><span class="status status-done">Done</span>Generic CLI: <code>discover</code>/<code>connect</code>/<code>authorize</code>/<code>import</code>/<code>sessions</code>/<code>revoke</code>/<code>audit</code></li>
-        <li><span class="status status-done">Done</span>Stock analyst Agent end-to-end example</li>
-        <li><span class="status status-done">Done</span>Remote Profile + Gateway reference implementation (mTLS + remote Capability Token forwarding)</li>
-        <li><span class="status status-done">Done</span>Aggregation query (`/v1/memory/aggregate`) + deletion proof API</li>
-        <li><span class="status status-done">Done</span>Token claims: `allowed_fields`, `aggregation_only`, `task_bound`</li>
-        <li><span class="status status-done">Done</span>Agent Manifest `data_retention_policy`</li>
-        <li><span class="status status-done">Done</span>UOMP SDK Phase 1 (`UompClient`: memory / aggregate / payload / session / audit / auth / identity)</li>
-         <li><span class="status status-done">Done</span>Browser entry (uomp.org/dashboard/): wallet auth + Dropbox + Agent analysis</li>
-        <li><span class="status status-done">Done</span>Cloudflare Tunnel integration (`uomp gateway start` one-command public expose)</li>
-        <li><span class="status status-done">Done</span>Store abstraction (`IMemoryStore` interface, SQLite + EncryptedObject backends)</li>
-        <li><span class="status status-done">Done</span>Cloud Relay (`apps/relay/`, CORS + rate limit + pubkey verification)</li>
-        <li><span class="status status-done">Done</span>Wallet authentication (MetaMask + Argent X, PBKDF2 key derivation)</li>
-        <li><span class="status status-done">Done</span>UOMP SDK Phase 1 (`UompClient`: memory / aggregate / payload / session / audit)</li>
-        <li><span class="status status-done">Done</span>Stock Analyst Agent v1.0 (self-serve HTTP API + Digital Ocean deployment)</li>
-        <li><span class="status status-done">Done</span>Cloudflare Tunnel integration (`uomp gateway start` one-command public expose)</li>
-        <li><span class="status status-current">In Progress</span>DID / GPG / X.509 identity verification (framework present, verification strength to be enhanced)</li>
-      </ul>
+      <div class="roadmap">
+        <div class="note">
+          <strong>Current focus:</strong> make one workflow real — Claude Desktop or Cursor reading an Obsidian vault for 30 minutes, with approval, audit, and instant revocation.
+        </div>
 
-      <h2>Milestone 2: UX, Writes & GUI Integration</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-next">Planned</span><code>uomp import</code> field mapping, format detection, preview</li>
-        <li><span class="status status-next">Planned</span><code>uomp dry-run</code> simulated authorization</li>
-        <li><span class="status status-next">Planned</span><code>uomp config</code> user preferences</li>
-        <li><span class="status status-next">Planned</span>Agent write staging: writes enter <code>pending</code> until user approval</li>
-        <li><span class="status status-next">Planned</span><code>uom memory review</code> approval command</li>
-        <li><span class="status status-next">Planned</span>Graphical authorization panel</li>
-         <li><span class="status status-done">Done</span>Graphical authorization panel (Try in Browser)</li>
-        <li><span class="status status-done">Done</span>TypeScript SDK (`UompClient`, mTLS, aggregation, Payload, deletion proof)</li>
-        <li><span class="status status-done">Done</span>Memory Store abstraction (SQLite / S3 / IPFS pluggable)</li>
-        <li><span class="status status-next">Planned</span>Memory Store abstraction supporting SQLite / cloud / decentralized storage</li>
-        <li><span class="status status-next">Planned</span>Audit log visualization</li>
-        <li><span class="status status-next">Planned</span>Secure token delegation mode (reverse proxy)</li>
-      </ul>
+        <h2>Milestone 1: The authorization loop <span class="status status-done">Done</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-done">Done</span>Publish UOMP-Draft-00 specification</li>
+          <li><span class="status status-done">Done</span>Local SQLite store with CSV/JSON import</li>
+          <li><span class="status status-done">Done</span><code>uom.json</code> manifests with tag, key, and field scopes</li>
+          <li><span class="status status-done">Done</span>EdDSA capability tokens, 30-minute default</li>
+          <li><span class="status status-done">Done</span>Auth Service + Memory Guard with read-only enforcement</li>
+          <li><span class="status status-done">Done</span>Admin token required for session create, grant, and revoke</li>
+          <li><span class="status status-done">Done</span><code>revoke</code> and <code>close</code> enforced on the next request</li>
+          <li><span class="status status-done">Done</span>Audit log for every access decision</li>
+          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>authorize</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">Done</span>TypeScript SDK (<code>UompClient</code>)</li>
+          <li><span class="status status-done">Done</span>Example agents: calendar and stock analyst</li>
+        </ul>
 
-      <h2>Milestone 3: Remote & Advanced Features</h2>
-      <ul class="roadmap-list">
-        <li><span class="status status-future">Future</span>Semantic retrieval (<code>query</code> endpoint)</li>
-        <li><span class="status status-future">Future</span>Write version history and rollback</li>
-        <li><span class="status status-future">Future</span>Policy templates (e.g., "preferences only", "preferences + public identity")</li>
-        <li><span class="status status-future">Future</span>Blockchain anchoring for authorization and access events</li>
-      </ul>
-    </div>
-    <div class="hero-btns" style="margin-top:2.5rem;">
-      <a href={`${baseUrl}try/`} class="btn-h1" style="background:#8B5CF6">Try →</a>
-      <a href={`${baseUrl}en/tutorial/`} class="btn-h1">SDK Tutorial →</a>
+        <h2>Milestone 2: The first real-user workflow <span class="status status-current">In progress</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-next">Next</span>MCP server for Claude Desktop, Cursor, and other MCP clients</li>
+          <li><span class="status status-next">Next</span>Obsidian / Markdown connector</li>
+          <li><span class="status status-next">Next</span>Browser consent UI: scope preview, plain-language grant, 30-minute default</li>
+          <li><span class="status status-next">Next</span>Audit timeline: agent, scope, time, allowed or denied</li>
+          <li><span class="status status-next">Next</span>One-command install — no wallet, no cloud account</li>
+          <li><span class="status status-next">Next</span>Python SDK</li>
+          <li><span class="status status-next">Next</span>10 design partners using their own data</li>
+          <li><span class="status status-next">Next</span>Target: first authorized read under 5 minutes</li>
+        </ul>
+
+        <h2>Milestone 3: After retention is proven <span class="status status-future">Planned</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-future">Later</span>Second connector (Notion, plain folders, or an existing memory vendor)</li>
+          <li><span class="status status-future">Later</span>Team policies, shared scopes, and SSO</li>
+          <li><span class="status status-future">Later</span>Hosted relay and multi-device sync</li>
+          <li><span class="status status-future">Later</span>Audit export</li>
+          <li><span class="status status-future">Later</span>Write workflows with staging and approval</li>
+        </ul>
+
+        <h2>Research &amp; preview <span class="status status-future">Not scheduled</span></h2>
+        <ul class="roadmap-list">
+          <li><span class="status status-future">Research</span>FHE (homomorphic encryption)</li>
+          <li><span class="status status-future">Research</span>On-chain audit</li>
+          <li><span class="status status-future">Preview</span>Wallet authentication + Dropbox dashboard</li>
+          <li><span class="status status-future">Preview</span>S3 / IPFS storage backends</li>
+          <li><span class="status status-future">Preview</span>Agent registry / marketplace</li>
+        </ul>
+        <p>
+          These remain in the repository and design docs. They are not on the critical path, and they will not delay the first retained-user workflow.
+        </p>
+
+        <h2>How we will know it worked</h2>
+        <div class="metric-grid">
+          <div class="metric"><strong>10</strong><span>design partners using their own data</span></div>
+          <div class="metric"><strong>3+</strong><span>agents connected per user</span></div>
+          <div class="metric"><strong>3+</strong><span>uses per week for 4 consecutive weeks</span></div>
+          <div class="metric"><strong>&lt;5 min</strong><span>from install to first authorized read</span></div>
+          <div class="metric"><strong>≥50%</strong><span>of users revoke a session — control must be felt</span></div>
+        </div>
+        <p>
+          If these numbers do not hold, we change the workflow, not the feature list.
+        </p>
+      </div>
+
+      <div class="hero-btns" style="margin-top:2.5rem;">
+        <a href={`${baseUrl}en/try/`} class="btn-h1" style="background:#8B5CF6">Try today's loop →</a>
+        <a href={`${baseUrl}en/spec/`} class="btn-h1">Read the spec →</a>
+        <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-h2">GitHub</a>
+      </div>
     </div>
   </section>
 </Layout>
