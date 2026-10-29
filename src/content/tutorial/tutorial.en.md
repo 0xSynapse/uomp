@@ -141,14 +141,25 @@ uomp authorize ./examples/mcp-client \
   --output ~/.uomp/mcp-client.env
 ```
 
-Add the server to your client config, using the absolute path to `uomp`:
+Generate the client config:
+
+```bash
+uomp mcp --session ~/.uomp/mcp-client.env --print-config
+```
+
+Paste the output into your client config. It looks like:
 
 ```json
 {
   "mcpServers": {
-    "uomp-notes": {
-      "command": "/Users/me/.local/bin/uomp",
-      "args": ["mcp", "--session", "/Users/me/.uomp/mcp-client.env"]
+    "uomp": {
+      "command": "/usr/local/bin/node",
+      "args": [
+        "/home/me/.uomp/cli/src/packages/cli/dist/cli.js",
+        "mcp",
+        "--session",
+        "/home/me/.uomp/mcp-client.env"
+      ]
     }
   }
 }
