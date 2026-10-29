@@ -4,7 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import { baseUrl } from '../../utils/base.ts';
 
 const tutorials = await getCollection('tutorial');
-const t = tutorials.find(t => t.slug === 'tutorial.en');
+const t = tutorials.find(t => t.slug === 'tutorialen');
 const { Content } = t ? await t.render() : { Content: null };
 ---
 
