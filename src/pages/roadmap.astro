@@ -31,6 +31,7 @@ import { baseUrl } from '../utils/base.ts';
           <li><span class="status status-done">已完成</span>CLI：<code>import</code> / <code>authorize</code> / <code>serve</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
           <li><span class="status status-done">已完成</span>Markdown / Obsidian 目录导入，按路径生成范围，支持 <code>--dry-run</code></li>
           <li><span class="status status-done">已完成</span><code>authorize</code> 写入 0600 会话 env 文件，默认不打印 JWT</li>
+          <li><span class="status status-done">已完成</span>一条命令安装脚本（<code>install.sh</code>，源码构建）</li>
           <li><span class="status status-done">已完成</span>TypeScript SDK（<code>UompClient</code>）</li>
           <li><span class="status status-done">已完成</span>示例 Agent：Calendar 和 Stock Analyst</li>
         </ul>
@@ -38,7 +39,7 @@ import { baseUrl } from '../utils/base.ts';
         <h2>里程碑 2：第一个真实用户工作流 <span class="status status-current">进行中</span></h2>
         <ul class="roadmap-list">
           <li><span class="status status-next">下一步</span>面向 Claude Desktop、Cursor 等客户端的 MCP server</li>
-          <li><span class="status status-next">下一步</span>一条命令安装 CLI——不需要 clone 仓库</li>
+          <li><span class="status status-next">下一步</span>打包发布 CLI（npm 或独立二进制），不需要本地构建</li>
           <li><span class="status status-next">下一步</span>浏览器授权界面：范围预览、直白授权、默认 30 分钟</li>
           <li><span class="status status-next">下一步</span>审计时间线：哪个 Agent、什么范围、什么时候、允许还是拒绝</li>
           <li><span class="status status-next">下一步</span>Python SDK</li>

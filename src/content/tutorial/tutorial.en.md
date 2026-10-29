@@ -10,18 +10,31 @@ A complete walkthrough: install CLI, import data, authorize Agents, write Agents
 ## Prerequisites
 
 - Node.js >= 22
-- pnpm 9 (`corepack enable` or `npm install -g pnpm@9`)
-- Clone [uomp-core](https://github.com/0xSynapse/uomp-core)
+- git
+- Optional: pnpm 9 (only for running from source)
 
 ## 1. Install & Initialize
 
 ```bash
+curl -fsSL https://www.uomp.org/install.sh | bash
+uomp init
+```
+
+The installer clones UOMP into `~/.uomp/cli`, builds the CLI, and links it to `~/.local/bin/uomp`.
+
+From a source checkout:
+
+```bash
+git clone https://github.com/0xSynapse/uomp-core.git
+cd uomp-core
 pnpm install
 pnpm build
 pnpm cli init
 ```
 
-`pnpm cli init` creates the Memory Store, Auth DB, Audit DB, Ed25519 key pair, and `sessions/` directory under `~/.uomp`.
+Then replace `uomp` with `pnpm cli` throughout this tutorial.
+
+`uomp init` creates the Memory Store, Auth DB, Audit DB, Ed25519 key pair, and `sessions/` directory under `~/.uomp`.
 
 ## 2. Import Data
 
@@ -29,10 +42,10 @@ Start with an Obsidian vault or a Markdown folder:
 
 ```bash
 # Recursive import; skips .obsidian and hidden directories
-pnpm cli import ~/Obsidian/MyVault
+uomp import ~/Obsidian/MyVault
 
 # Preview without writing
-pnpm cli import ~/Obsidian/MyVault --dry-run
+uomp import ~/Obsidian/MyVault --dry-run
 ```
 
 Directory paths become scopes: `projects/uomp/plan.md` is tagged `notes`, `notes/projects`, and `notes/projects/uomp`. Re-importing upserts by key instead of duplicating items.
@@ -40,9 +53,9 @@ Directory paths become scopes: `projects/uomp/plan.md` is tagged `notes`, `notes
 CSV and JSON are still supported:
 
 ```bash
-pnpm cli import ./examples/stock-analyst/sample-risk.json --replace
+uomp import ./examples/stock-analyst/sample-risk.json --replace
 
-pnpm cli import ./examples/stock-analyst/sample-holdings.csv \
+uomp import ./examples/stock-analyst/sample-holdings.csv \
   --tag portfolio:holdings \
   --sensitivity high \
   --replace
@@ -56,7 +69,7 @@ If you prefer a separate process:
 
 ```bash
 # Terminal 1
-pnpm cli serve
+uomp serve
 ```
 
 The service listens on `http://127.0.0.1:9374`.
@@ -64,7 +77,7 @@ The service listens on `http://127.0.0.1:9374`.
 ## 4. Authorize an Agent
 
 ```bash
-pnpm cli authorize ./examples/stock-analyst \
+uomp authorize ./examples/stock-analyst \
   --scope portfolio:holdings profile:risk
 ```
 
@@ -146,13 +159,13 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
 
 ```bash
 # Active sessions
-pnpm cli sessions
+uomp sessions
 
 # Audit log
-pnpm cli audit --limit 20
+uomp audit --limit 20
 
 # Revoke; the default env file is removed too
-pnpm cli revoke <session-id>
+uomp revoke <session-id>
 ```
 
 ## SDK Quick Reference
@@ -175,12 +188,12 @@ Core path:
 
 | Command | Description |
 |---------|-------------|
-| `pnpm cli init` | Initialize the data directory |
-| `pnpm cli import <path>` | Import a Markdown folder or CSV/JSON file |
-| `pnpm cli authorize <agent>` | Create a session and write a 0600 env file |
-| `pnpm cli serve` | Start Auth + Guard as a standalone process |
-| `pnpm cli sessions` | View active sessions |
-| `pnpm cli audit --limit 20` | View audit logs |
-| `pnpm cli revoke <id>` | Revoke a session and remove its default env file |
+| `uomp init` | Initialize the data directory |
+| `uomp import <path>` | Import a Markdown folder or CSV/JSON file |
+| `uomp authorize <agent>` | Create a session and write a 0600 env file |
+| `uomp serve` | Start Auth + Guard as a standalone process |
+| `uomp sessions` | View active sessions |
+| `uomp audit --limit 20` | View audit logs |
+| `uomp revoke <id>` | Revoke a session and remove its default env file |
 
 Advanced commands are hidden from help but still callable: `memory`, `registry`, `discover`, `connect`, `agent`, `gateway`.

@@ -10,18 +10,31 @@ description: '从零到部署的完整指南'
 ## 前置条件
 
 - Node.js >= 22
-- pnpm 9（`corepack enable` 或 `npm install -g pnpm@9`）
-- 已克隆 [uomp-core](https://github.com/0xSynapse/uomp-core) 仓库
+- git
+- 可选：pnpm 9（从源码运行时需要）
 
 ## 1. 安装与初始化
 
 ```bash
+curl -fsSL https://www.uomp.org/install.sh | bash
+uomp init
+```
+
+安装脚本会把仓库克隆到 `~/.uomp/cli`，构建 CLI，并链接到 `~/.local/bin/uomp`。
+
+从源码运行：
+
+```bash
+git clone https://github.com/0xSynapse/uomp-core.git
+cd uomp-core
 pnpm install
 pnpm build
 pnpm cli init
 ```
 
-`pnpm cli init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB、Ed25519 密钥对和 `sessions/` 目录。
+之后把教程里的 `uomp` 换成 `pnpm cli`。
+
+`uomp init` 会在 `~/.uomp` 创建 Memory Store、Auth DB、Audit DB、Ed25519 密钥对和 `sessions/` 目录。
 
 ## 2. 导入私有数据
 
@@ -29,10 +42,10 @@ pnpm cli init
 
 ```bash
 # 递归导入，跳过 .obsidian 和隐藏目录
-pnpm cli import ~/Obsidian/MyVault
+uomp import ~/Obsidian/MyVault
 
 # 只看会导入什么，不写库
-pnpm cli import ~/Obsidian/MyVault --dry-run
+uomp import ~/Obsidian/MyVault --dry-run
 ```
 
 路径会变成授权范围：`projects/uomp/plan.md` 带有 `notes`、`notes/projects`、`notes/projects/uomp` 三个 tag。重新导入会按 key 更新，不会重复写入。
@@ -40,9 +53,9 @@ pnpm cli import ~/Obsidian/MyVault --dry-run
 也支持 CSV 和 JSON：
 
 ```bash
-pnpm cli import ./examples/stock-analyst/sample-risk.json --replace
+uomp import ./examples/stock-analyst/sample-risk.json --replace
 
-pnpm cli import ./examples/stock-analyst/sample-holdings.csv \
+uomp import ./examples/stock-analyst/sample-holdings.csv \
   --tag portfolio:holdings \
   --sensitivity high \
   --replace
@@ -56,7 +69,7 @@ pnpm cli import ./examples/stock-analyst/sample-holdings.csv \
 
 ```bash
 # 终端 1
-pnpm cli serve
+uomp serve
 ```
 
 服务监听 `http://127.0.0.1:9374`。
@@ -64,7 +77,7 @@ pnpm cli serve
 ## 4. 授权 Agent
 
 ```bash
-pnpm cli authorize ./examples/stock-analyst \
+uomp authorize ./examples/stock-analyst \
   --scope portfolio:holdings profile:risk
 ```
 
@@ -157,7 +170,7 @@ uomp gateway start
 
 ```bash
 # audience 指向 Gateway 的公网地址
-pnpm cli authorize ./examples/stock-analyst \
+uomp authorize ./examples/stock-analyst \
   --scope portfolio:holdings profile:risk \
   --output /tmp/uomp-remote.env
 
@@ -181,13 +194,13 @@ curl -X POST https://uomp-stock-analyst-mvblm.ondigitalocean.app/analyze \
 
 ```bash
 # 查看活跃会话
-pnpm cli sessions
+uomp sessions
 
 # 查看审计日志
-pnpm cli audit --limit 20
+uomp audit --limit 20
 
 # 撤销会话；默认 env 文件也会被删除
-pnpm cli revoke <session-id>
+uomp revoke <session-id>
 ```
 
 ## 10. Gateway 管理（高级 / 预览）
@@ -223,12 +236,12 @@ uomp gateway status
 
 | 命令 | 说明 |
 |------|------|
-| `pnpm cli init` | 初始化 UOMP 数据目录 |
-| `pnpm cli import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
-| `pnpm cli authorize <agent>` | 创建会话，写入 0600 env 文件 |
-| `pnpm cli serve` | 单独启动 Auth + Guard server |
-| `pnpm cli sessions` | 查看活跃会话 |
-| `pnpm cli audit --limit 20` | 查看审计日志 |
-| `pnpm cli revoke <id>` | 撤销会话并删除默认 env 文件 |
+| `uomp init` | 初始化 UOMP 数据目录 |
+| `uomp import <path>` | 导入 Markdown 目录或 CSV/JSON 文件 |
+| `uomp authorize <agent>` | 创建会话，写入 0600 env 文件 |
+| `uomp serve` | 单独启动 Auth + Guard server |
+| `uomp sessions` | 查看活跃会话 |
+| `uomp audit --limit 20` | 查看审计日志 |
+| `uomp revoke <id>` | 撤销会话并删除默认 env 文件 |
 
 高级命令默认从帮助中隐藏，但仍可调用：`memory`、`registry`、`discover`、`connect`、`agent`、`gateway`。
