@@ -109,7 +109,7 @@ Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heur
 - Aegis policy/lease, memory gateway, TLS/mTLS: done
 - Staged writes, payloads, remote device flow: done
 - Native SQLite store and Markdown importer: foundation landed
-- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` are native; the rest are migrating
+- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `staged` / `payload` are native; the rest are migrating
 - Gateway cutover to the native store: in progress
 - Unified web trusted UI: pending
 

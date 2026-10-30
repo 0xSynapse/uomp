@@ -109,7 +109,7 @@ POST /v1/payload
 - Aegis policy/lease、memory gateway、TLS/mTLS：完成
 - staged writes、payload、remote device flow：完成
 - 原生 SQLite store 与 Markdown importer：基础完成
-- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` 已原生；其余迁移中
+- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` / `staged` / `payload` 已原生；其余迁移中
 - Gateway 完全切到原生 store：进行中
 - 统一 Web trusted UI：待完成
 
