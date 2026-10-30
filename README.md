@@ -11,10 +11,10 @@
 <p align="center">
   <a href="https://www.uomp.org/spec/"><img src="https://img.shields.io/badge/spec-Draft--00-6B7280" alt="Spec" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" /></a>
-  <a href="https://github.com/0xaicrypto/uomp-core"><img src="https://img.shields.io/badge/reference%20implementation-uomp--core-0A0A0A" alt="Reference Implementation" /></a>
+  <a href="https://github.com/heurion-org/aegis-os"><img src="https://img.shields.io/badge/module-Aegis%20OS-233E33" alt="Reference Implementation" /></a>
 </p>
 
-这是 [UOMP（User-Owned Memory Protocol）](https://www.uomp.org/) 的官方网站仓库，包含协议规范、实现设计、路线图和展示页面。
+这是 [UOMP（User-Owned Memory Protocol）](https://www.uomp.org/) 的官方网站仓库，只包含协议规范、设计说明、路线图和展示页面。UOMP 的原生实现已经作为 **Aegis OS 的 memory module** 维护，代码在 [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os) 的 `crates/aos-memory*` 与 `modules/uomp`。
 
 UOMP 是一种用户主权型授权协议：用户的记忆数据保留在本地，AI Agent 只能通过短时会话（Session）和最小化范围（Capability Token）临时访问数据，会话结束或撤销后立即失效。
 
@@ -30,7 +30,7 @@ UOMP 是一种用户主权型授权协议：用户的记忆数据保留在本地
   <a href="https://www.uomp.org/">中文</a>
 </p>
 
-This is the official website repository for the [User-Owned Memory Protocol (UOMP)](https://www.uomp.org/). It hosts the protocol specification, implementation design, roadmap, and landing pages.
+This is the official website repository for the [User-Owned Memory Protocol (UOMP)](https://www.uomp.org/). It is website/spec-only. The native implementation lives in [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os) as the Aegis OS memory module (`crates/aos-memory*`, `modules/uomp`).
 
 UOMP is a user-sovereign authorization protocol: your memory data stays on your device, and AI Agents can only access it temporarily through short-lived sessions and scoped Capability Tokens. Access ends when the session ends or is revoked.
 
@@ -97,7 +97,7 @@ pnpm preview
 
 | 仓库 | 说明 |
 |------|------|
-| [0xaicrypto/uomp-core](https://github.com/0xaicrypto/uomp-core) | UOMP 参考实现（TypeScript CLI + SDK + HTTP 服务），含 [CLI/SDK 设计文档](https://github.com/0xaicrypto/uomp-core/tree/main/docs) 与 [远程授权设计文档](https://github.com/0xaicrypto/uomp-core/tree/main/docs) |
+| [0xaicrypto/uomp-core](https://github.com/heurion-org/aegis-os) | UOMP 参考实现（TypeScript CLI + SDK + HTTP 服务），含 [CLI/SDK 设计文档](https://github.com/heurion-org/aegis-os/tree/main/docs) 与 [远程授权设计文档](https://github.com/heurion-org/aegis-os/tree/main/docs) |
 | [0xaicrypto/uomp](https://github.com/0xaicrypto/uomp) | 本仓库：官方网站与协议规范 |
 
 ---
@@ -105,7 +105,7 @@ pnpm preview
 ## 参与贡献 / Contributing
 
 - 协议讨论：[GitHub Discussions](https://github.com/0xaicrypto/uomp/discussions)
-- 参考实现 Issues：[uomp-core Issues](https://github.com/0xaicrypto/uomp-core/issues)
+- 参考实现 Issues：[uomp-core Issues](https://github.com/heurion-org/aegis-os/issues)
 - 网站 Issues：[uomp Issues](https://github.com/0xaicrypto/uomp/issues)
 
 ## 许可证 / License

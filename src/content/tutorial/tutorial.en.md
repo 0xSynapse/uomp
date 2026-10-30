@@ -15,8 +15,8 @@ Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 
 ## What you will do
 
-1. Install UOMP
-2. Use `uomp setup` to import notes, start the local service, and write the client config (no access yet)
+1. Install Aegis OS
+2. Use `aegis-os memory setup` to import notes, start the local service, and write the client config (no access yet)
 3. Make the first request from the client and approve the UOMP consent page
 4. Read notes
 5. Inspect the audit log and revoke
@@ -27,55 +27,53 @@ Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 
 You need:
 
-- Node.js **22 or newer**
-- `git`
+- Aegis OS
 - An MCP client: Claude Desktop, Cursor, or OpenCode
 - An Obsidian vault or a Markdown directory
 
-Check Node:
+During migration, `aegis-os memory` delegates to the UOMP reference CLI, so you also need:
+
+- Node.js **22 or newer**
+- `git`
+
+Node/git will not be required after the native cutover.
+
+Check:
 
 ```bash
+aegis-os --version
 node --version
 ```
-
-Upgrade Node.js if it is below v22.
 
 ---
 
 ## 2. Install
 
-In a terminal:
-
 ```bash
-curl -fsSL https://www.uomp.org/install.sh | bash
+brew install aegis-os
 ```
 
-The installer:
-
-- clones UOMP into `~/.uomp/cli`
-- builds the CLI
-- links `uomp` into `~/.local/bin`
-
-If `uomp` is not on your `PATH`, the script prints the line to add, for example:
+Verify:
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+aegis-os --version
+aegis-os memory --help
 ```
 
-Open a new terminal and verify:
+During migration, `aegis-os memory` calls the `uomp` reference CLI. If `uomp` is not on `PATH`:
 
 ```bash
-uomp --version
+export UOMP_BIN=/path/to/uomp
 ```
 
-The first `uomp setup` or `uomp connect` creates `~/.uomp`, the admin token, and the `sessions/` directory. Run `uomp init` separately only if you want to prepare the data directory in advance.
+The first `aegis-os memory setup` or `aegis-os memory connect` creates `~/.uomp`, the admin token, and the `sessions/` directory. Run `aegis-os memory init` separately only if you want to prepare the data directory in advance.
 
 ---
 
 ## 3. See the loop first (optional)
 
 ```bash
-uomp demo
+aegis-os memory demo
 ```
 
 It runs import → authorize → allowed read → denied read → audit → revoke in a temporary directory.
@@ -85,7 +83,7 @@ It runs import → authorize → allowed read → denied read → audit → revo
 If installation or configuration is wrong, run:
 
 ```bash
-uomp doctor
+aegis-os memory doctor
 ```
 
 It checks Node, git, directory permissions, keys, databases, session files, and the local port.
@@ -97,7 +95,7 @@ It checks Node, git, directory permissions, keys, databases, session files, and 
 ### 4.1 Set up the client
 
 ```bash
-uomp setup claude --vault ~/Obsidian/MyVault
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
 ```
 
 This command:
@@ -112,8 +110,8 @@ The command exits and leaves the service running in the background. Then **resta
 Cursor and OpenCode use the same command:
 
 ```bash
-uomp setup cursor --vault ~/Obsidian/MyVault
-uomp setup opencode --vault ~/Obsidian/MyVault
+aegis-os memory setup cursor --vault ~/Obsidian/MyVault
+aegis-os memory setup opencode --vault ~/Obsidian/MyVault
 ```
 
 ### 4.2 The first request
@@ -135,9 +133,9 @@ Claude calls UOMP's `list_memory(tag="notes/projects")`. UOMP then:
 If the page does not open, use the terminal fallback:
 
 ```bash
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
+aegis-os memory pending
+aegis-os memory approve <request-id>
+aegis-os memory deny <request-id>
 ```
 
 When the token expires, the next tool call creates a new request; no need to re-run `setup`.
@@ -148,10 +146,10 @@ High-sensitivity tags (for example `portfolio:holdings`, or items imported with 
 
 The approval page lists the keys under each high-sensitivity tag and leaves them unchecked. The agent can only read the keys you select.
 
-For scripts, skip the page with `uomp connect`:
+For scripts, skip the page with `aegis-os memory connect`:
 
 ```bash
-uomp connect ./examples/stock-analyst \
+aegis-os memory connect ./examples/stock-analyst \
   --scope portfolio:holdings \
   --allow-key AAPL MSFT
 ```
@@ -159,19 +157,19 @@ uomp connect ./examples/stock-analyst \
 Or explicitly allow every key under a high-sensitivity tag (this prints an override warning):
 
 ```bash
-uomp connect ./examples/stock-analyst \
+aegis-os memory connect ./examples/stock-analyst \
   --scope portfolio:holdings \
   --allow-high portfolio:holdings
 ```
 
-`uomp connect` is the advanced pre-authorize path; normal use is `uomp setup` + the approval page.
+`aegis-os memory connect` is the advanced pre-authorize path; normal use is `aegis-os memory setup` + the approval page.
 
 ### 4.4 Sync notes later
 
 Run the import command again:
 
 ```bash
-uomp import ~/Obsidian/MyVault
+aegis-os memory import ~/Obsidian/MyVault
 ```
 
 Import rules:
@@ -187,11 +185,11 @@ Import rules:
 >
 > ```bash
 > # Terminal 1
-> uomp serve
+> aegis-os memory serve
 >
 > # Terminal 2
-> uomp authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
-> uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
+> aegis-os memory authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
+> aegis-os memory mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 > ```
 >
 > Paste the JSON into the client config. `connect` supports Claude Desktop, Cursor, and OpenCode; other clients can use `--print-config`.
@@ -241,33 +239,33 @@ That proves scope enforcement works, and the denial is written to the audit log.
 Back in the terminal:
 
 ```bash
-uomp status
-uomp sessions
-uomp audit --limit 20
+aegis-os memory status
+aegis-os memory sessions
+aegis-os memory audit --limit 20
 ```
 
 Last 24 hours:
 
 ```bash
-uomp audit --since 24h
+aegis-os memory audit --since 24h
 ```
 
 Denied entries only:
 
 ```bash
-uomp audit --result deny
+aegis-os memory audit --result deny
 ```
 
 Filter by key:
 
 ```bash
-uomp audit --key note.projects.plan
+aegis-os memory audit --key note.projects.plan
 ```
 
 For scripts or a future UI:
 
 ```bash
-uomp audit --since 24h --result deny --json
+aegis-os memory audit --since 24h --result deny --json
 ```
 
 Audit entries show time, result, action, agent, target, session, and reason.
@@ -277,7 +275,7 @@ Audit entries show time, result, action, agent, target, session, and reason.
 ## 7. Revoke
 
 ```bash
-uomp revoke sess_...
+aegis-os memory revoke sess_...
 ```
 
 After revocation:
@@ -287,26 +285,26 @@ After revocation:
 - the `uomp` entry in the client config remains; re-run `connect` to authorize again, or remove it manually
 - a custom `--output` file outside `~/.uomp/sessions` is not removed automatically
 
-Stopping `uomp connect` / `uomp serve` / `uomp stop` does **not** revoke the token. Use `uomp revoke` to actually remove access.
+Stopping `aegis-os memory connect` / `aegis-os memory serve` / `aegis-os memory stop` does **not** revoke the token. Use `aegis-os memory revoke` to actually remove access.
 
 To remove the client config as well:
 
 ```bash
-uomp disconnect claude
+aegis-os memory disconnect claude
 ```
 
 This removes the `uomp` entry from the Claude Desktop config, revokes the current session, and deletes the matching env file.
 
-In `setup` mode there is no active session until the first request is approved; after approval, use `uomp revoke` or `uomp disconnect` the same way.
+In `setup` mode there is no active session until the first request is approved; after approval, use `aegis-os memory revoke` or `aegis-os memory disconnect` the same way.
 
 ### After the session expires
 
 In `setup` mode, the next tool call creates a new approval request; approve it and the call continues. No need to re-run `setup`.
 
-If you are using the pre-authorize path (`uomp connect`), run it again:
+If you are using the pre-authorize path (`aegis-os memory connect`), run it again:
 
 ```bash
-uomp connect claude --scope notes/projects
+aegis-os memory connect claude --scope notes/projects
 ```
 
 The MCP server re-reads the env file before every tool call. Re-running `connect` revokes the previous session for the same env file, writes a new token, and the next call picks it up **without restarting the client**.
@@ -318,15 +316,15 @@ The MCP server re-reads the env file before every tool call. Re-running `connect
 | Problem | Fix |
 |---|---|
 | `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
-| `uomp doctor` says the data directory is missing | Run `uomp setup claude ...` or `uomp init` |
-| Port 9374 is occupied | Run `uomp stop` first; or `uomp setup claude --port 9380 ...` |
-| The client does not show UOMP tools | Use `uomp status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
-| The tool says `UOMP approval required` | Open the approval page from the message, or run `uomp pending` / `uomp approve <request-id>` |
-| `SESSION_NOT_ACTIVE` | The session expired or was revoked; make a new request from the client, or run `uomp connect claude --scope notes/projects` |
-| `ACCESS_DENIED` | The key/tag is outside the granted scope; check the approval page, `--scope`, or `uomp audit` |
+| `aegis-os memory doctor` says the data directory is missing | Run `aegis-os memory setup claude ...` or `aegis-os memory init` |
+| Port 9374 is occupied | Run `aegis-os memory stop` first; or `aegis-os memory setup claude --port 9380 ...` |
+| The client does not show UOMP tools | Use `aegis-os memory status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `aegis-os memory connected` |
+| The tool says `UOMP approval required` | Open the approval page from the message, or run `aegis-os memory pending` / `aegis-os memory approve <request-id>` |
+| `SESSION_NOT_ACTIVE` | The session expired or was revoked; make a new request from the client, or run `aegis-os memory connect claude --scope notes/projects` |
+| `ACCESS_DENIED` | The key/tag is outside the granted scope; check the approval page, `--scope`, or `aegis-os memory audit` |
 | High-sensitivity data is unreadable | High-sensitivity keys must be granted explicitly; select them on the approval page or use `--allow-key` / `--allow-high` |
-| Env-file permission warning | `uomp doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
-| Reset all local data | Run `uomp stop`, then remove `~/.uomp`; use `pkill -f "uomp serve"` if needed. This deletes notes, keys, and audit data |
+| Env-file permission warning | `aegis-os memory doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
+| Reset all local data | Run `aegis-os memory stop`, then remove `~/.uomp`; use `pkill -f "aegis-os memory serve"` if needed. This deletes notes, keys, and audit data |
 | Running on Windows | Windows is not supported; use macOS or Linux |
 
 ### Where data lives
@@ -345,8 +343,8 @@ The MCP server re-reads the env file before every tool call. Re-running `connect
 ### Uninstall
 
 ```bash
-uomp stop || true
-pkill -f "uomp serve" || true
+aegis-os memory stop || true
+pkill -f "aegis-os memory serve" || true
 rm -rf ~/.uomp
 rm -f ~/.local/bin/uomp
 ```

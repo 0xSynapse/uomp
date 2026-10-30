@@ -30,7 +30,7 @@ The User-Owned Memory Protocol (UOMP) defines a user-sovereign authorization pro
 
 This document is the UOMP protocol draft (Draft-00). It describes the protocol design intent, data formats, HTTP API, and security requirements. It is intended to evolve into a formal standard through public discussion. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-> **Reference implementation status (2026-10):** the current `uomp` reference CLI implements the Local Profile first: the user runs `uomp setup` once to import notes, write the client config, and start the background server without pre-authorizing. The agent's first request for a tag/key opens the local consent page; the user approves and the call continues. `pending` / `approve` / `deny` are the terminal fallback; `connect` is the advanced pre-authorize path, and `authorize`, `serve`, and `mcp` are manual/script paths. The stdio MCP bridge is experimental. Remote Agent Profile is optional; the reference implementation uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. Aegis OS is the reference runtime that enforces the protocol.
+> **Reference implementation status (2026-10):** the current reference implementation is the Aegis OS memory module, which implements the Local Profile first: the user runs `aegis-os memory setup` once to import notes, write the client config, and start the background server without pre-authorizing. The agent's first request for a tag/key opens the local consent page; the user approves and the call continues. `pending` / `approve` / `deny` are the terminal fallback; `connect` is the advanced pre-authorize path, and `authorize`, `serve`, and `mcp` are manual/script paths. The stdio MCP bridge is experimental. Remote Agent Profile is optional; the reference implementation uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. UOMP is the protocol; Aegis OS is the native implementation.
 
 ## 3. Introduction
 
@@ -70,7 +70,7 @@ UOMP's design goals are:
 | **Session** | A single Agent task cycle with a unique `session_id`. |
 | **Capability Token** | Session-level authorization credential specifying the Agent's accessible tag/key scope. |
 | **Agent** | A program that accesses user memory through UOMP, running locally or remotely. |
-| **MCP bridge** | Optional stdio adapter (`uomp mcp`) that translates MCP tool calls into Guard HTTP requests. |
+| **MCP bridge** | Optional stdio adapter (`aegis-os memory mcp`) that translates MCP tool calls into Guard HTTP requests. |
 | **uom.json** | Agent manifest file describing the Agent's identity and default requested memory scope. |
 | **Local Profile** | Local deployment model where Memory Guard listens on `127.0.0.1`; default and current implementation. |
 | **Remote Agent Profile** | Remote Agent reaches local Guard through Aegis Memory Gateway; optional/advanced, data never leaves the user device. |
@@ -88,17 +88,17 @@ UOMP's complete architecture includes the following components:
 | Component | Location | Responsibility |
 |-----------|----------|----------------|
 | **Memory Store** | User's machine | Persistent memory data storage. Supports pluggable backends (SQLite, encrypted object/S3, IPFS) via the `IMemoryStore` interface. |
-| **Auth Service** | User's machine | Session management, token issuance, identity verification. Combined with Memory Guard as `uomp serve` in the reference implementation. |
+| **Auth Service** | User's machine | Session management, token issuance, identity verification. Combined with Memory Guard as `aegis-os memory serve` in the reference implementation. |
 | **Memory Guard** | User's machine | Token validation, scope filtering, aggregate queries, audit logging. |
 | **CLI** | User's machine | User interaction: import, authorize, sessions, audit, revoke. |
-| **MCP bridge** | User's machine (optional) | stdio MCP adapter (`uomp mcp`): Claude Desktop / Cursor / OpenCode → HTTP Guard. Experimental. |
+| **MCP bridge** | User's machine (optional) | stdio MCP adapter (`aegis-os memory mcp`): Claude Desktop / Cursor / OpenCode → HTTP Guard. Experimental. |
 | **Aegis Memory Gateway** | User's machine (optional) | mTLS/tunnel entry point that forwards validated remote Agent requests to local Guard; reference implementation provided by Aegis OS. |
 | **Agent** | Anywhere | Independent process carrying a Capability Token to read data via Guard or Gateway. |
 
 Three access paths:
 
 1. **Local (default)**: the CLI authorizes and writes the token to a `0600` session env file; the Agent accesses Guard directly at `127.0.0.1:9374`.
-2. **MCP (local adapter, experimental)**: the MCP client starts `uomp mcp` over stdio; the bridge reads the same session env file and calls Guard over HTTP + Token. The MCP bridge does not add a new trust boundary.
+2. **MCP (local adapter, experimental)**: the MCP client starts `aegis-os memory mcp` over stdio; the bridge reads the same session env file and calls Guard over HTTP + Token. The MCP bridge does not add a new trust boundary.
 3. **Remote (optional/advanced)**: a remote Agent (reference: Aegis Cloud) reaches local Guard through Aegis Memory Gateway (mTLS + Tunnel); data stays local.
 
 The Local Profile and its MCP adapter are the current reference implementation path. Remote Agent Profile is an optional extension and is not required for all implementations.
@@ -106,7 +106,7 @@ The Local Profile and its MCP adapter are the current reference implementation p
 ### 5.2 Flow
 
 1. The Agent runs as an independent process and provides a `uom.json` declaring its identity and default requested memory scope.
-2. The user runs `uomp setup` once (or `uomp authorize` manually). When the agent first requests data, the Auth Service creates a Session in the `created` state and UOMP opens the local consent page; the Token is issued after the user approves. The Auth Service may run on the same machine as the Memory Guard / Store or may be provided by a trusted service chosen by the user.
+2. The user runs `aegis-os memory setup` once (or `aegis-os memory authorize` manually). When the agent first requests data, the Auth Service creates a Session in the `created` state and UOMP opens the local consent page; the Token is issued after the user approves. The Auth Service may run on the same machine as the Memory Guard / Store or may be provided by a trusted service chosen by the user.
 3. After the user confirms or adjusts the authorization scope, the Auth Service issues a Capability Token and writes it to a `0600` session env file (`UOM_TOKEN` + `UOMP_BASE_URL`).
 4. The Session enters the `active` state, and the Agent or MCP bridge loads the env file.
 5. The Agent or MCP bridge calls Memory Guard via the HTTP API with the Token.
@@ -977,7 +977,7 @@ Authorization: Bearer <gateway-token>
 X-UOMP-Agent-Id: <agent_id>
 ```
 
-> **Reference implementation:** the Aegis OS memory gateway / policy / lease integration; `uomp-mvp/apps/gateway` is kept as a historical implementation and is no longer a product entry point.
+> **Reference implementation:** the Aegis OS memory gateway / policy / lease integration; `aos-memory-gateway` is the native implementation; the old `uomp-mvp` gateway is historical.
 
 ### 15.5 Token Refresh
 
@@ -1081,8 +1081,8 @@ UOMP core protocol does not define an Agent Registry. Protocol reference impleme
 The MVP reference implementation SHOULD provide the following CLI commands:
 
 ```bash
-uomp registry search <keyword>
-uomp registry install <agent_id>
+aegis-os memory registry search <keyword>
+aegis-os memory registry install <agent_id>
 ```
 
 Registry clients MUST return Agent metadata and `uom.json` location but MUST NOT participate in authorization decisions.
@@ -1361,35 +1361,35 @@ Deletion proofs can be recorded on-chain via the `AuditAnchor` contract (§18.4)
 
 ```bash
 # MCP client: one-time setup (import + config + background server), no access granted
-uomp setup claude --vault ~/Obsidian/MyVault
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
 # Restart Claude Desktop, then ask it to read notes
 
 # On the agent's first request, UOMP opens the consent page; terminal fallback:
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
+aegis-os memory pending
+aegis-os memory approve <request-id>
+aegis-os memory deny <request-id>
 
 # Advanced: pre-authorize / scripts
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+aegis-os memory connect claude --vault ~/Obsidian/MyVault --scope notes/projects
 
 # Agent package: authorize + write the session env file
-uomp connect ./examples/calendar-agent --scope preference
+aegis-os memory connect ./examples/calendar-agent --scope preference
 source ~/.uomp/sessions/<session-id>.env
 node ./examples/calendar-agent/index.js
 
 # Manual / unsupported clients
-uomp serve
-uomp authorize --scope notes/projects --output ~/.uomp/calendar.env --no-server
-uomp mcp --session ~/.uomp/calendar.env --print-config
+aegis-os memory serve
+aegis-os memory authorize --scope notes/projects --output ~/.uomp/calendar.env --no-server
+aegis-os memory mcp --session ~/.uomp/calendar.env --print-config
 
 # View sessions and audit
-uomp sessions
-uomp audit --limit 20
+aegis-os memory sessions
+aegis-os memory audit --limit 20
 
 # Disconnect the client / stop the background server / revoke the session
-uomp disconnect claude
-uomp stop
-uomp revoke <session-id>
+aegis-os memory disconnect claude
+aegis-os memory stop
+aegis-os memory revoke <session-id>
 ```
 
 ---

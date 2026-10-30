@@ -30,7 +30,7 @@ User-Owned Memory Protocol（UOMP）定义了一种用户主权型授权协议�
 
 本文档为 UOMP 协议草案（Draft-00），描述协议设计意图、数据格式、HTTP API 和安全要求。本文档旨在通过公开讨论后演进为正式标准。本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"MAY"、"OPTIONAL" 按照 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) 解释。
 
-> **参考实现状态（2026-10）：** 当前 `uomp` reference CLI 优先实现 Local Profile：用户运行一次 `uomp setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次请求 tag/key 时打开本地审批页，用户批准后继续。`pending` / `approve` / `deny` 是终端兜底；`connect` 是高级预授权入口，`authorize`、`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为实验能力。Remote Agent Profile 是可选能力，参考实现使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。Aegis OS 是执行该协议的参考运行时。
+> **参考实现状态（2026-10）：** 当前参考实现是 Aegis OS 的 memory module，优先实现 Local Profile：用户运行一次 `aegis-os memory setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次请求 tag/key 时打开本地审批页，用户批准后继续。`pending` / `approve` / `deny` 是终端兜底；`connect` 是高级预授权入口，`authorize`、`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为实验能力。Remote Agent Profile 是可选能力，参考实现使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。UOMP 是协议，Aegis OS 是原生实现。
 
 ## 3. Introduction
 
@@ -70,7 +70,7 @@ UOMP 的设计目标是：
 | **Session** | 一次 Agent 任务周期，拥有唯一 `session_id`。 |
 | **Capability Token** | 会话级授权凭证，标明 Agent 可访问的标签/键范围。 |
 | **Agent** | 通过 UOMP 访问用户记忆的程序，可运行在本机或远程。 |
-| **MCP bridge** | 可选的 stdio 适配器（`uomp mcp`），把 MCP 工具调用转换为 Guard HTTP 请求。 |
+| **MCP bridge** | 可选的 stdio 适配器（`aegis-os memory mcp`），把 MCP 工具调用转换为 Guard HTTP 请求。 |
 | **uom.json** | Agent 声明文件，描述 Agent 身份和默认请求的记忆范围。 |
 | **Local Profile** | 本机部署模式，Memory Guard 监听 `127.0.0.1`；默认且当前实现。 |
 | **Remote Agent Profile** | 远程 Agent 经 Aegis Memory Gateway 访问本地 Guard；可选/高级，数据不离开用户设备。 |
@@ -88,17 +88,17 @@ UOMP 的完整架构包含以下组件：
 | 组件 | 位置 | 职责 |
 |------|------|------|
 | **Memory Store** | 用户本机 | 持久化存储记忆数据。支持可插拔后端（SQLite、加密对象/S3、IPFS），通过 `IMemoryStore` 接口抽象。 |
-| **Auth Service** | 用户本机 | 会话管理、Token 签发、身份验证。参考实现中与 Memory Guard 组合为 `uomp serve`。 |
+| **Auth Service** | 用户本机 | 会话管理、Token 签发、身份验证。参考实现中与 Memory Guard 组合为 `aegis-os memory serve`。 |
 | **Memory Guard** | 用户本机 | Token 校验、scope 过滤、聚合查询、审计日志记录。 |
 | **CLI** | 用户本机 | 用户交互：导入、授权、会话、审计、撤销。 |
-| **MCP bridge** | 用户本机（可选） | stdio MCP 适配器（`uomp mcp`）：Claude Desktop / Cursor / OpenCode → HTTP Guard。实验能力。 |
+| **MCP bridge** | 用户本机（可选） | stdio MCP 适配器（`aegis-os memory mcp`）：Claude Desktop / Cursor / OpenCode → HTTP Guard。实验能力。 |
 | **Aegis Memory Gateway** | 用户本机（可选） | mTLS/Tunnel 入口，把远程 Agent 的已校验请求转发给本地 Guard；参考实现由 Aegis OS 提供。 |
 | **Agent** | 任意位置 | 独立进程，携带 Capability Token 通过 Guard 或 Gateway 读取数据。 |
 
 三条访问路径：
 
 1. **本地（默认）**：CLI 完成授权并把 Token 写入 `0600` 会话 env 文件；Agent 直接访问 `127.0.0.1:9374` 上的 Guard。
-2. **MCP（本地适配器，实验）**：MCP 客户端通过 stdio 启动 `uomp mcp`；bridge 读取同一个会话 env 文件，再以 HTTP + Token 访问 Guard。MCP bridge 不引入新的信任边界。
+2. **MCP（本地适配器，实验）**：MCP 客户端通过 stdio 启动 `aegis-os memory mcp`；bridge 读取同一个会话 env 文件，再以 HTTP + Token 访问 Guard。MCP bridge 不引入新的信任边界。
 3. **远程（可选/高级）**：远程 Agent（参考实现：Aegis Cloud）通过 Aegis Memory Gateway（mTLS + Tunnel）访问本地 Guard；数据留在本机。
 
 Local Profile 和它的 MCP 适配器是当前参考实现的主路径；Remote Agent Profile 是可选扩展，不要求所有实现支持。
@@ -106,7 +106,7 @@ Local Profile 和它的 MCP 适配器是当前参考实现的主路径；Remote 
 ### 5.2 Flow
 
 1. Agent 作为独立进程运行，提供 `uom.json` 声明其身份和默认请求的记忆范围。
-2. 用户运行一次 `uomp setup`（或手动 `uomp authorize`）。Agent 第一次请求数据时，Auth Service 创建 Session（`created` 状态），UOMP 打开本地审批页；用户确认后签发 Token。Auth Service 可以与 Memory Guard / Store 位于同一机器，也可以由用户选择的可信服务提供。
+2. 用户运行一次 `aegis-os memory setup`（或手动 `aegis-os memory authorize`）。Agent 第一次请求数据时，Auth Service 创建 Session（`created` 状态），UOMP 打开本地审批页；用户确认后签发 Token。Auth Service 可以与 Memory Guard / Store 位于同一机器，也可以由用户选择的可信服务提供。
 3. 用户确认或调整授权范围后，Auth Service 签发 Capability Token，并将其写入 `0600` 会话 env 文件（`UOM_TOKEN` + `UOMP_BASE_URL`）。
 4. Session 进入 `active` 状态，Agent 或 MCP bridge 加载该 env 文件。
 5. Agent 或 MCP bridge 通过 HTTP API 携带 Token 访问 Memory Guard。
@@ -1092,8 +1092,8 @@ UOMP 核心协议不定义 Agent Registry。协议参考实现 MAY 支持现有 
 MVP 参考实现 SHOULD 提供以下 CLI 命令：
 
 ```bash
-uomp registry search <keyword>
-uomp registry install <agent_id>
+aegis-os memory registry search <keyword>
+aegis-os memory registry install <agent_id>
 ```
 
 Registry 客户端 MUST 返回 Agent 元数据和 `uom.json` 位置，但 MUST NOT 参与授权决策。
@@ -1372,35 +1372,35 @@ Auth Service 或 Gateway 收到后：
 
 ```bash
 # MCP 客户端：一次性设置（导入 + 写配置 + 后台服务），不授权
-uomp setup claude --vault ~/Obsidian/MyVault
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
 # 重启 Claude Desktop，然后在客户端里请求数据
 
 # Agent 第一次请求时，UOMP 打开审批页；终端兜底：
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
+aegis-os memory pending
+aegis-os memory approve <request-id>
+aegis-os memory deny <request-id>
 
 # 高级：预授权 / 脚本
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+aegis-os memory connect claude --vault ~/Obsidian/MyVault --scope notes/projects
 
 # Agent 包：授权 + 写会话 env 文件
-uomp connect ./examples/calendar-agent --scope preference
+aegis-os memory connect ./examples/calendar-agent --scope preference
 source ~/.uomp/sessions/<session-id>.env
 node ./examples/calendar-agent/index.js
 
 # 手动 / 不支持的客户端
-uomp serve
-uomp authorize --scope notes/projects --output ~/.uomp/calendar.env --no-server
-uomp mcp --session ~/.uomp/calendar.env --print-config
+aegis-os memory serve
+aegis-os memory authorize --scope notes/projects --output ~/.uomp/calendar.env --no-server
+aegis-os memory mcp --session ~/.uomp/calendar.env --print-config
 
 # 查看会话与审计
-uomp sessions
-uomp audit --limit 20
+aegis-os memory sessions
+aegis-os memory audit --limit 20
 
 # 断开客户端 / 停止后台服务 / 撤销会话
-uomp disconnect claude
-uomp stop
-uomp revoke <session-id>
+aegis-os memory disconnect claude
+aegis-os memory stop
+aegis-os memory revoke <session-id>
 ```
 
 ---

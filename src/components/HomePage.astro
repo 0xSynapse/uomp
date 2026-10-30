@@ -11,13 +11,13 @@ const aegisHref = 'https://heurion.org/#aegis-os';
 
 const content = {
   zh: {
-    eyebrow: 'UOMP · 记忆同意协议',
+    eyebrow: 'AEGIS OS · 记忆同意协议',
     h1a: '让 Agent 请求记忆，',
     h1b: '让运行时执行同意。',
-    sub: 'UOMP 定义 Agent 如何请求个人记忆：范围、时效、撤销与审计。Aegis OS 是执行这套协议的参考运行时。',
+    sub: 'UOMP 定义 Agent 如何请求个人记忆：范围、时效、撤销与审计。它是 Aegis OS 的 memory module，由 Aegis 原生执行。',
     ctaPrimary: '阅读协议',
-    ctaSecondary: 'Aegis OS 参考实现',
-    meta: ['开放协议草案', 'Apache 2.0', '参考实现：Aegis OS', 'Heurion Research'],
+    ctaSecondary: 'Aegis OS 原生实现',
+    meta: ['开放协议草案', 'Apache 2.0', 'Aegis OS memory module', 'Heurion Research'],
     tutorialHref: `${baseUrl}tutorial/`,
     roadmapHref: `${baseUrl}roadmap/`,
     editorial: [
@@ -154,8 +154,8 @@ const content = {
           href: specHref,
         },
         {
-          label: 'Aegis OS · 参考实现',
-          title: '执行协议的内核运行时',
+          label: 'Aegis OS · 原生模块',
+          title: '执行协议的原生运行时',
           body: '把协议语义落到沙箱、策略、租约与可信审批上。',
           points: ['内核沙箱与独立运行时', 'Policy + lease + escalation', '可信审批与审计记录'],
           link: '了解 Aegis OS',
@@ -172,13 +172,13 @@ const content = {
     },
   },
   en: {
-    eyebrow: 'UOMP · MEMORY CONSENT PROTOCOL',
+    eyebrow: 'AEGIS OS · MEMORY CONSENT PROTOCOL',
     h1a: 'Agents ask for memory.',
     h1b: 'Runtimes enforce consent.',
-    sub: 'UOMP defines how agents ask for personal memory: scope, duration, revocation, and audit. Aegis OS is the reference runtime that enforces it.',
+    sub: 'UOMP defines how agents ask for personal memory: scope, duration, revocation, and audit. It is the memory module of Aegis OS, enforced natively by Aegis.',
     ctaPrimary: 'Read the protocol',
-    ctaSecondary: 'Aegis OS reference',
-    meta: ['Open protocol draft', 'Apache 2.0', 'Reference runtime: Aegis OS', 'Heurion Research'],
+    ctaSecondary: 'Aegis OS native module',
+    meta: ['Open protocol draft', 'Apache 2.0', 'Aegis OS memory module', 'Heurion Research'],
     tutorialHref: `${baseUrl}en/tutorial/`,
     roadmapHref: `${baseUrl}en/roadmap/`,
     editorial: [
@@ -315,8 +315,8 @@ const content = {
           href: specHref,
         },
         {
-          label: 'Aegis OS · Reference runtime',
-          title: 'The kernel runtime that enforces it',
+          label: 'Aegis OS · Native module',
+          title: 'The native runtime that enforces it',
           body: 'Turns protocol semantics into sandboxing, policy, leases, and trusted approval.',
           points: ['Kernel sandbox & standalone runtime', 'Policy + lease + escalation', 'Trusted approval & audit records'],
           link: 'Explore Aegis OS',

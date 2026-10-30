@@ -5,91 +5,71 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Roadmap - UOMP"
-  description="What UOMP is building next: make the agent client the entry point, with UOMP as one-time setup and local consent. Progress is measured by retained users, not shipped features."
+  description="UOMP protocol and Aegis OS memory module roadmap: native commands, data plane, unified trusted UI, and remote Agents."
   lang="en"
   switchHref={`${baseUrl}roadmap/`}
 >
   <section>
     <div class="container">
       <h1>Roadmap</h1>
-      <p>We measure progress by retained users, not shipped features.</p>
+      <p>UOMP is the protocol; Aegis OS is the native implementation.</p>
 
       <div class="roadmap">
         <div class="note">
-          <strong>Current focus:</strong> the user entry point is Claude / Cursor / an agent CLI, not <code>uomp</code>. The user runs <code>uomp setup</code> once; afterwards the agent requests data and UOMP opens the local consent page. Claude Desktop / Cursor validation and packaged CLI come next.
+          <strong>Current focus:</strong> finish UOMP as the Aegis OS memory module — native commands, native data plane, and a unified trusted UI.
         </div>
 
-        <h2>Milestone 1: The authorization loop <span class="status status-done">Done</span></h2>
+        <h2>Done <span class="status status-done">Done</span></h2>
         <ul class="roadmap-list">
-          <li><span class="status status-done">Done</span>Publish UOMP-Draft-00 specification</li>
-          <li><span class="status status-done">Done</span>Local SQLite store with CSV/JSON import</li>
-          <li><span class="status status-done">Done</span><code>uom.json</code> manifests with tag, key, and field scopes</li>
-          <li><span class="status status-done">Done</span>EdDSA capability tokens, 30-minute default</li>
-          <li><span class="status status-done">Done</span>Auth Service + Memory Guard with read-only enforcement</li>
-          <li><span class="status status-done">Done</span>Admin token required for session create, grant, and revoke</li>
-          <li><span class="status status-done">Done</span><code>revoke</code> and <code>close</code> enforced on the next request</li>
-          <li><span class="status status-done">Done</span>Audit log for every access decision</li>
-          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>setup</code> / <code>connect</code> / <code>authorize</code> / <code>serve</code> / <code>start</code> / <code>status</code> / <code>stop</code> / <code>disconnect</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
-          <li><span class="status status-done">Done</span><code>setup --vault</code> imports, writes the client config, and starts the server without granting access</li>
-          <li><span class="status status-done">Done</span>Agent-initiated consent: MCP tool calls request a tag/key, then the local consent page asks the user</li>
-          <li><span class="status status-done">Done</span>On-demand consent: local browser approval / desktop notification / <code>pending</code> / <code>approve</code> / <code>deny</code></li>
-          <li><span class="status status-done">Done</span>High-sensitivity tags are off by default and require per-key approval; <code>--allow-key</code> / <code>--allow-high</code> for scripts</li>
-          <li><span class="status status-done">Done</span>Markdown / Obsidian folder import with path-derived scopes and <code>--dry-run</code></li>
-          <li><span class="status status-done">Done</span><code>authorize</code> writes a 0600 session env file and does not print the JWT by default</li>
-          <li><span class="status status-done">Done</span>One-command install script (<code>install.sh</code>, source build)</li>
-          <li><span class="status status-done">Done</span>stdio MCP server (<code>list_memory</code> / <code>search_memory</code> / <code>read_memory</code>, experimental)</li>
-          <li><span class="status status-done">Done</span>TypeScript SDK (<code>UompClient</code>)</li>
-          <li><span class="status status-done">Done</span>Example agents: calendar and stock analyst</li>
+          <li><span class="status status-done">Done</span>UOMP-Draft-00 spec and Aegis OS field mapping</li>
+          <li><span class="status status-done">Done</span>Aegis policy / lease / escalation / trusted approval</li>
+          <li><span class="status status-done">Done</span>Aegis Memory Gateway: JWT, TLS/mTLS, session check, rate limiting, audit</li>
+          <li><span class="status status-done">Done</span>UOMP adapter: Aegis policy evaluation + trusted approval endpoint</li>
+          <li><span class="status status-done">Done</span>Agent write staging and high-sensitivity rejection</li>
+          <li><span class="status status-done">Done</span>Encrypted payload upload / read / delete</li>
+          <li><span class="status status-done">Done</span>Remote Agent device flow and one-time remote token</li>
+          <li><span class="status status-done">Done</span>Unified approvals CLI: <code>aegis-os memory approvals</code></li>
+          <li><span class="status status-done">Done</span><code>aos-memory-store</code>: UOMP-compatible SQLite schema + Markdown importer</li>
         </ul>
 
-        <h2>Milestone 2: The first real-user workflow <span class="status status-current">In progress</span></h2>
+        <h2>In progress <span class="status status-current">In progress</span></h2>
         <ul class="roadmap-list">
-          <li><span class="status status-next">Next</span>Claude Desktop / Cursor end-to-end validation</li>
-          <li><span class="status status-next">Next</span>Packaged CLI release (npm or a standalone binary) without a local build</li>
-          <li><span class="status status-next">Next</span>Audit timeline: agent, scope, time, allowed or denied</li>
-          <li><span class="status status-next">Next</span>Python SDK</li>
-          <li><span class="status status-next">Next</span>10 design partners using their own data</li>
-          <li><span class="status status-next">Next</span>Target: first authorized read under 5 minutes</li>
+          <li><span class="status status-next">Next</span>Native <code>aegis-os memory status</code> / <code>import</code></li>
+          <li><span class="status status-next">Next</span>Gateway read path cutover to <code>aos-memory-store</code></li>
+          <li><span class="status status-next">Next</span>Move staged writes / payload metadata to Rust</li>
+          <li><span class="status status-next">Next</span>Unified web trusted UI (UOMP + Aegis)</li>
         </ul>
 
-        <h2>Milestone 3: After retention is proven <span class="status status-future">Planned</span></h2>
+        <h2>Later <span class="status status-future">Planned</span></h2>
         <ul class="roadmap-list">
-          <li><span class="status status-future">Later</span>Second connector (Notion, plain folders, or an existing memory vendor)</li>
-          <li><span class="status status-future">Later</span>Team policies, shared scopes, and SSO</li>
-          <li><span class="status status-future">Later</span>Aegis Cloud remote Agent integration and multi-device sync</li>
-          <li><span class="status status-future">Later</span>Audit export</li>
-          <li><span class="status status-future">Later</span>Write workflows with staging and approval</li>
+          <li><span class="status status-future">Later</span>CSV / JSON connectors and a <code>~/.uomp</code> migration tool</li>
+          <li><span class="status status-future">Later</span>Aegis Cloud remote Agent auto-configuration</li>
+          <li><span class="status status-future">Later</span>Standalone daemon / sandbox / OS keychain</li>
+          <li><span class="status status-future">Later</span>UOMP conformance suite</li>
         </ul>
 
-        <h2>Research &amp; preview <span class="status status-future">Not scheduled</span></h2>
+        <h2>Research <span class="status status-future">Not scheduled</span></h2>
         <ul class="roadmap-list">
           <li><span class="status status-future">Research</span>FHE (homomorphic encryption)</li>
           <li><span class="status status-future">Research</span>On-chain audit</li>
-          <li><span class="status status-future">Preview</span>Aegis Memory Gateway (local entry point; replaces the standalone relay)</li>
-          <li><span class="status status-future">Preview</span>S3 / IPFS storage backends</li>
-          <li><span class="status status-future">Preview</span>Agent registry / marketplace</li>
+          <li><span class="status status-future">Research</span>TEE / remote Agent isolation</li>
         </ul>
-        <p>
-          These remain in the repository and design docs. They are not on the critical path, and they will not delay the first retained-user workflow.
-        </p>
 
-        <h2>How we will know it worked</h2>
+        <h2>Definition of done</h2>
         <div class="metric-grid">
-          <div class="metric"><strong>10</strong><span>design partners using their own data</span></div>
-          <div class="metric"><strong>3+</strong><span>agents connected per user</span></div>
-          <div class="metric"><strong>3+</strong><span>uses per week for 4 consecutive weeks</span></div>
-          <div class="metric"><strong>&lt;5 min</strong><span>from install to first authorized read</span></div>
-          <div class="metric"><strong>≥50%</strong><span>of users revoke a session — control must be felt</span></div>
+          <div class="metric"><strong>1</strong><span>user installs only Aegis OS</span></div>
+          <div class="metric"><strong>0</strong><span>memory commands that need Node</span></div>
+          <div class="metric"><strong>1</strong><span>unified trusted UI</span></div>
+          <div class="metric"><strong>0</strong><span>same-user Agent direct data access</span></div>
         </div>
         <p>
-          If these numbers do not hold, we change the workflow, not the feature list.
+          UOMP is a native Aegis OS memory module only when all four are true.
         </p>
       </div>
 
       <div class="hero-btns" style="margin-top:2.5rem;">
-        <a href={`${baseUrl}en/try/`} class="btn-h1" style="background:#8B5CF6">Try today's loop →</a>
+        <a href={`${baseUrl}en/try/`} class="btn-h1">Try via Aegis OS →</a>
         <a href={`${baseUrl}en/spec/`} class="btn-h1">Read the spec →</a>
-        <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-h2">GitHub</a>
       </div>
     </div>
   </section>

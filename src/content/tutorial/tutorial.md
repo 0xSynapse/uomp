@@ -15,8 +15,8 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 
 ## 你将完成什么
 
-1. 安装 UOMP
-2. 用 `uomp setup` 导入笔记、启动本地服务并写客户端配置（不授权）
+1. 安装 Aegis OS
+2. 用 `aegis-os memory setup` 导入笔记、启动本地服务并写客户端配置（不授权）
 3. 在客户端里发起第一次请求，批准 UOMP 审批页
 4. 读取笔记
 5. 查看审计，然后撤销
@@ -27,55 +27,53 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 
 需要：
 
-- Node.js **22 或更高版本**
-- `git`
+- Aegis OS
 - 一个 MCP 客户端：Claude Desktop、Cursor 或 OpenCode
 - 一个 Obsidian vault 或普通 Markdown 目录
 
-检查 Node：
+迁移期 `aegis-os memory` 委托 UOMP reference CLI，因此还需要：
+
+- Node.js **22 或更高版本**
+- `git`
+
+原生迁移完成后不再需要 Node/git。
+
+检查：
 
 ```bash
+aegis-os --version
 node --version
 ```
-
-如果低于 v22，先升级 Node.js。
 
 ---
 
 ## 2. 安装
 
-在终端运行：
-
 ```bash
-curl -fsSL https://www.uomp.org/install.sh | bash
+brew install aegis-os
 ```
 
-安装脚本会：
-
-- 把 UOMP 克隆到 `~/.uomp/cli`
-- 构建 CLI
-- 把 `uomp` 链接到 `~/.local/bin`
-
-如果 `uomp` 不在 `PATH` 里，脚本会打印需要添加的那一行，例如：
+确认：
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+aegis-os --version
+aegis-os memory --help
 ```
 
-重新打开终端，确认：
+迁移期 `aegis-os memory` 会调用 `uomp` reference CLI。如果 `uomp` 不在 `PATH`，设置：
 
 ```bash
-uomp --version
+export UOMP_BIN=/path/to/uomp
 ```
 
-第一次运行 `uomp setup` 或 `uomp connect` 时会自动创建 `~/.uomp`、管理员令牌和 `sessions/` 目录。只有想提前准备数据目录时才需要单独运行 `uomp init`。
+第一次运行 `aegis-os memory setup` 或 `aegis-os memory connect` 时会自动创建 `~/.uomp`、管理员令牌和 `sessions/` 目录。只有想提前准备数据目录时才需要单独运行 `aegis-os memory init`。
 
 ---
 
 ## 3. 先看一遍完整闭环（可选）
 
 ```bash
-uomp demo
+aegis-os memory demo
 ```
 
 它会在临时目录里演示：导入 → 授权 → 允许读取 → 拒绝读取 → 审计 → 撤销。
@@ -85,7 +83,7 @@ uomp demo
 如果安装或环境有问题，运行：
 
 ```bash
-uomp doctor
+aegis-os memory doctor
 ```
 
 它会检查 Node、git、目录权限、密钥、数据库、会话文件和端口。
@@ -97,7 +95,7 @@ uomp doctor
 ### 4.1 设置客户端
 
 ```bash
-uomp setup claude --vault ~/Obsidian/MyVault
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
 ```
 
 这条命令会：
@@ -112,8 +110,8 @@ uomp setup claude --vault ~/Obsidian/MyVault
 Cursor / OpenCode 用同样的方式：
 
 ```bash
-uomp setup cursor --vault ~/Obsidian/MyVault
-uomp setup opencode --vault ~/Obsidian/MyVault
+aegis-os memory setup cursor --vault ~/Obsidian/MyVault
+aegis-os memory setup opencode --vault ~/Obsidian/MyVault
 ```
 
 ### 4.2 第一次请求
@@ -135,9 +133,9 @@ Claude 会调用 UOMP 的 `list_memory(tag="notes/projects")`。这时 UOMP 会�
 页面没有打开时，用终端兜底：
 
 ```bash
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
+aegis-os memory pending
+aegis-os memory approve <request-id>
+aegis-os memory deny <request-id>
 ```
 
 Token 过期后，下一次工具调用会自动创建新的请求，不需要重新运行 `setup`。
@@ -151,7 +149,7 @@ Token 过期后，下一次工具调用会自动创建新的请求，不需要�
 如果你在脚本里需要预授权（跳过审批页）：
 
 ```bash
-uomp connect ./examples/stock-analyst \
+aegis-os memory connect ./examples/stock-analyst \
   --scope portfolio:holdings \
   --allow-key AAPL MSFT
 ```
@@ -159,19 +157,19 @@ uomp connect ./examples/stock-analyst \
 或者显式放开某个高敏 tag 下的全部 key（会在终端打印 override 警告）：
 
 ```bash
-uomp connect ./examples/stock-analyst \
+aegis-os memory connect ./examples/stock-analyst \
   --scope portfolio:holdings \
   --allow-high portfolio:holdings
 ```
 
-`uomp connect` 是高级入口；普通使用优先用 `uomp setup` + 审批页。
+`aegis-os memory connect` 是高级入口；普通使用优先用 `aegis-os memory setup` + 审批页。
 
 ### 4.4 之后同步笔记
 
 重新运行导入命令即可：
 
 ```bash
-uomp import ~/Obsidian/MyVault
+aegis-os memory import ~/Obsidian/MyVault
 ```
 
 导入规则：
@@ -187,11 +185,11 @@ uomp import ~/Obsidian/MyVault
 >
 > ```bash
 > # 终端 1
-> uomp serve
+> aegis-os memory serve
 >
 > # 终端 2
-> uomp authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
-> uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
+> aegis-os memory authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
+> aegis-os memory mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 > ```
 >
 > 把输出的 JSON 粘贴到客户端配置。`setup` 支持 Claude Desktop、Cursor、OpenCode；其他客户端用 `--print-config` 手动接入。
@@ -241,33 +239,33 @@ ACCESS_DENIED: Key not in authorized scope
 回到终端：
 
 ```bash
-uomp status
-uomp sessions
-uomp audit --limit 20
+aegis-os memory status
+aegis-os memory sessions
+aegis-os memory audit --limit 20
 ```
 
 只看最近 24 小时：
 
 ```bash
-uomp audit --since 24h
+aegis-os memory audit --since 24h
 ```
 
 只看拒绝：
 
 ```bash
-uomp audit --result deny
+aegis-os memory audit --result deny
 ```
 
 按 key 过滤：
 
 ```bash
-uomp audit --key note.projects.plan
+aegis-os memory audit --key note.projects.plan
 ```
 
 脚本或后续 UI 可以用 JSON：
 
 ```bash
-uomp audit --since 24h --result deny --json
+aegis-os memory audit --since 24h --result deny --json
 ```
 
 审计会显示时间、结果、操作、Agent、目标、会话和原因。
@@ -277,7 +275,7 @@ uomp audit --since 24h --result deny --json
 ## 7. 撤销
 
 ```bash
-uomp revoke sess_...
+aegis-os memory revoke sess_...
 ```
 
 撤销后：
@@ -287,26 +285,26 @@ uomp revoke sess_...
 - 客户端配置里的 `uomp` 条目会保留；重新 `connect` 即可再次授权，或手动删除该条目
 - 自定义 `--output` 且不在 `~/.uomp/sessions` 下的文件不会被自动删除
 
-如果只是关闭 `uomp connect` / `uomp serve` / 执行 `uomp stop`，token 不会立刻失效；一定要用 `uomp revoke` 才能真正收回访问。
+如果只是关闭 `aegis-os memory connect` / `aegis-os memory serve` / 执行 `aegis-os memory stop`，token 不会立刻失效；一定要用 `aegis-os memory revoke` 才能真正收回访问。
 
 如果想连同客户端配置一起移除：
 
 ```bash
-uomp disconnect claude
+aegis-os memory disconnect claude
 ```
 
 它会删除 Claude Desktop 配置里的 `uomp` 条目、撤销当前会话，并清理对应的 env 文件。
 
-`setup` 模式在第一次请求批准前没有活动会话；批准后同样用 `uomp revoke` 或 `uomp disconnect` 收回。
+`setup` 模式在第一次请求批准前没有活动会话；批准后同样用 `aegis-os memory revoke` 或 `aegis-os memory disconnect` 收回。
 
 ### 会话过期后
 
 `setup` 模式下，下一次工具调用会自动创建新的审批请求，批准后继续，不需要重新运行 `setup`。
 
-如果你使用的是预授权模式（`uomp connect`），重新执行同一条命令即可：
+如果你使用的是预授权模式（`aegis-os memory connect`），重新执行同一条命令即可：
 
 ```bash
-uomp connect claude --scope notes/projects
+aegis-os memory connect claude --scope notes/projects
 ```
 
 MCP server 会在每次工具调用前重新读取 env 文件。重新执行 `connect` 会先撤销同一 env 文件里的旧会话，再写入新 token，下一次调用会自动生效，**不需要重启客户端**。
@@ -318,15 +316,15 @@ MCP server 会在每次工具调用前重新读取 env 文件。重新执行 `co
 | 问题 | 处理 |
 |---|---|
 | `uomp: command not found` | 把 `~/.local/bin` 加到 `PATH`，或重新打开终端 |
-| `uomp doctor` 提示数据目录不存在 | 运行 `uomp setup claude ...` 或 `uomp init` |
-| 端口 9374 被占用 | 先 `uomp stop`；或 `uomp setup claude --port 9380 ...` |
-| 客户端看不到 UOMP 工具 | `uomp status` 确认后台服务在运行；重启客户端；检查配置文件位置；OpenCode 等 `uomp connected` |
-| 工具提示 `UOMP approval required` | 按提示打开审批页，或运行 `uomp pending` / `uomp approve <request-id>` |
-| 工具报 `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `uomp connect claude --scope notes/projects` |
-| 工具报 `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 `--scope` 或查看 `uomp audit` |
+| `aegis-os memory doctor` 提示数据目录不存在 | 运行 `aegis-os memory setup claude ...` 或 `aegis-os memory init` |
+| 端口 9374 被占用 | 先 `aegis-os memory stop`；或 `aegis-os memory setup claude --port 9380 ...` |
+| 客户端看不到 UOMP 工具 | `aegis-os memory status` 确认后台服务在运行；重启客户端；检查配置文件位置；OpenCode 等 `aegis-os memory connected` |
+| 工具提示 `UOMP approval required` | 按提示打开审批页，或运行 `aegis-os memory pending` / `aegis-os memory approve <request-id>` |
+| 工具报 `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `aegis-os memory connect claude --scope notes/projects` |
+| 工具报 `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 `--scope` 或查看 `aegis-os memory audit` |
 | 高敏数据读不到 | 高敏 key 必须显式授权；交互运行或使用 `--allow-key` / `--allow-high` |
-| 会话 env 权限告警 | `uomp doctor` 会提示；按建议 `chmod 600 ~/.uomp/sessions/*.env` |
-| 想清空所有本地数据 | 先 `uomp stop`，再删除 `~/.uomp`；必要时 `pkill -f "uomp serve"`。这会删除笔记库、密钥和审计 |
+| 会话 env 权限告警 | `aegis-os memory doctor` 会提示；按建议 `chmod 600 ~/.uomp/sessions/*.env` |
+| 想清空所有本地数据 | 先 `aegis-os memory stop`，再删除 `~/.uomp`；必要时 `pkill -f "aegis-os memory serve"`。这会删除笔记库、密钥和审计 |
 | 在 Windows 上运行 | 不支持 Windows；请使用 macOS 或 Linux |
 
 ### 数据在哪里
@@ -345,8 +343,8 @@ MCP server 会在每次工具调用前重新读取 env 文件。重新执行 `co
 ### 如何彻底卸载
 
 ```bash
-uomp stop || true
-pkill -f "uomp serve" || true
+aegis-os memory stop || true
+pkill -f "aegis-os memory serve" || true
 rm -rf ~/.uomp
 rm -f ~/.local/bin/uomp
 ```

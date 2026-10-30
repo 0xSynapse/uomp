@@ -4,18 +4,18 @@ import { baseUrl } from '../../utils/base.ts';
 ---
 
 <Layout
-  title="Try - UOMP"
-  description="One uomp setup command imports notes, writes the client config, and starts the background server. The first request comes from the agent, and UOMP opens a local approval page. Packaging the CLI is next."
+  title="Try UOMP via Aegis OS"
+  description="aegis-os memory setup imports notes, writes the client config, and starts the background server. The first request comes from the agent, and Aegis OS opens the local approval page."
   lang="en"
   switchHref={`${baseUrl}try/`}
 >
   <section>
     <div class="container">
-      <h1 style="margin-bottom:.25rem">Try UOMP</h1>
+      <h1 style="margin-bottom:.25rem">Try UOMP via Aegis OS</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
-        Today one <code>uomp setup</code> command imports Markdown notes, starts the background server, and writes the Claude Desktop / Cursor / OpenCode config. It does not pre-authorize anything.
+        Today one <code>aegis-os memory setup</code> command imports Markdown notes, starts the background server, and writes the Claude Desktop / Cursor / OpenCode config. It does not pre-authorize anything. UOMP is the memory module of Aegis OS; consent, leases, and audit are enforced by Aegis.
         When you ask the client for notes, the agent requests access and UOMP opens a local approval page. Packaging the CLI and broader client validation are next.
-        Both share <code style="font-size:.88rem">@uomp/sdk</code>, the Token system, Guard auth, and audit logs.
+        UOMP owns the protocol semantics; Aegis OS owns policy, leases, sandboxing, the gateway, and audit.
       </p>
     </div>
 
@@ -29,42 +29,42 @@ import { baseUrl } from '../../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP Client</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>uomp setup</code> writes the client config, while read access is requested by the agent and approved on the local consent page.
+            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>aegis-os memory setup</code> writes the client config, while read access is requested by the agent and approved on the local consent page.
           </p>
-          <div style="background:var(--violet-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--violet)">
-            <strong>Experimental.</strong> Available now: <code>uomp setup claude</code>; the first tool call opens the local approval page. Claude Desktop / Cursor validation is still in progress.
+          <div style="background:var(--accent-soft);border:1px solid var(--border);border-radius:2px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--accent)">
+            <strong>Experimental.</strong> Available now: <code>aegis-os memory setup claude</code>; the first tool call opens the local approval page. Claude Desktop / Cursor validation is still in progress.
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Intended workflow</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
-              1. Point UOMP at an Obsidian vault with <code>uomp setup claude --vault</code><br/>
+              1. Point UOMP at an Obsidian vault with <code>aegis-os memory setup claude --vault</code><br/>
               2. Ask the client for <code>notes/projects/**</code><br/>
               3. UOMP opens the approval page: scope, duration, per-key high-sensitivity<br/>
               4. After approval the agent continues; every read is checked and logged<br/>
               5. Revoke — the next request returns <code>403</code>
             </div>
           </div>
-          <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#7C3AED;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
+          <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
             MCP setup →
           </a>
         </div>
 
         <!-- CLI Card -->
-        <div class="card" style="flex:1;min-width:320px;order:1;border-color:var(--violet);border-width:2px">
+        <div class="card" style="flex:1;min-width:320px;order:1;border-color:var(--accent);border-width:1px">
           <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
             <span style="font-size:2rem">⌨️</span>
-            <h2 style="margin:0;font-size:1.35rem">Try with CLI</h2>
+            <h2 style="margin:0;font-size:1.35rem">Try with the Aegis CLI</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:1.25rem;max-width:400px">
             Works today. Import Obsidian/Markdown notes and grant a local agent a time-limited, revocable session.
           </p>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:.75rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Quick commands</div>
-            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>curl -fsSL https://www.uomp.org/install.sh | bash
-uomp setup claude --vault ~/Obsidian/MyVault
-uomp status
-uomp pending
-uomp revoke &lt;id&gt;</code></pre>
+            <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>brew install aegis-os
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
+aegis-os memory status
+aegis-os memory pending
+aegis-os memory revoke &lt;id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
             <code>setup</code> only imports notes, starts the background server, and writes the client config; it grants nothing. The first client request opens the approval page; <code>pending</code> / <code>approve</code> are the terminal fallback. Use <code>status</code> / <code>stop</code> to manage the server.
@@ -81,33 +81,30 @@ uomp revoke &lt;id&gt;</code></pre>
       <div class="card" style="max-width:760px">
         <h2 style="font-size:1.15rem;margin-bottom:.75rem">Shared Infrastructure</h2>
         <p style="color:var(--mid);font-size:.88rem;line-height:1.7">
-          CLI and MCP are <strong>two interfaces to the same implementation</strong>. Both share <code>@uomp/sdk</code>, <code>@uomp/core</code>, the Capability Token system, Guard auth, and audit logs. Today <code>setup</code> handles one-time wiring, and the agent requests access when it needs data; next comes broader client validation and a packaged CLI.
+          CLI and MCP both use the Aegis OS memory module. They share the UOMP protocol, Aegis policy/leases, the Capability Token system, and audit logs. Today <code>aegis-os memory setup</code> handles one-time wiring, and the agent requests access when it needs data.
         </p>
       </div>
     </div>
 
-    <!-- SDK Quick Reference -->
+    <!-- Native modules -->
     <div class="container" style="margin-top:3.5rem">
-      <h2 style="font-size:1.15rem;margin-bottom:.5rem">Build Your Own Agent</h2>
-      <p style="color:var(--mid);margin-bottom:1.5rem">For agent developers, integrate via <code>@uomp/sdk</code>:</p>
+      <h2 style="font-size:1.15rem;margin-bottom:.5rem">Build on Aegis OS</h2>
+      <p style="color:var(--mid);margin-bottom:1.5rem">UOMP is enforced natively by Aegis OS; Agents connect through MCP or the Aegis adapter.</p>
       <div class="table-wrap">
       <table>
-        <tr><th>Sub-client</th><th>Method</th><th>Description</th></tr>
-        <tr><td><code>uomp.memory</code></td><td><code>get</code>, <code>getByTag</code>, <code>getByKeys</code></td><td>Read user data</td></tr>
-        <tr><td><code>uomp.memory</code></td><td><code>set</code>, <code>delete</code></td><td>Write (requires auth)</td></tr>
-        <tr><td><code>uomp.aggregate</code></td><td><code>sum</code>, <code>avg</code>, <code>count</code>, <code>min</code>, <code>max</code></td><td>Aggregate queries</td></tr>
-        <tr><td><code>uomp.payload</code></td><td><code>upload</code>, <code>download</code></td><td>Upload / download reports</td></tr>
-        <tr><td><code>uomp.session</code></td><td><code>submitDeletionProof</code>, <code>finalize</code></td><td>Deletion proof + close session</td></tr>
-        <tr><td><code>uomp.auth</code></td><td><code>createSession</code>, <code>grant</code>, <code>revoke</code></td><td>Session management</td></tr>
-        <tr><td><code>uomp.audit</code></td><td><code>query</code></td><td>Audit log</td></tr>
+        <tr><th>Module</th><th>Responsibility</th></tr>
+        <tr><td><code>aos-memory</code></td><td>scope / lease mapping, deny / field filtering, remote token policy</td></tr>
+        <tr><td><code>aos-memory-store</code></td><td>UOMP-compatible SQLite schema, Markdown importer</td></tr>
+        <tr><td><code>aos-memory-gateway</code></td><td>remote Agent entry, TLS/mTLS, rate limiting, audit</td></tr>
+        <tr><td><code>aegis-os memory</code></td><td>user command entry (delegates to the UOMP reference CLI during migration)</td></tr>
       </table>
       </div>
     </div>
 
     <div class="hero-btns" style="margin-top:3rem">
-      <a href="https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst" target="_blank" rel="noopener" class="btn-h1" style="background:#059669">Stock Analyst Source →</a>
-      <a href={`${baseUrl}en/tutorial/`} class="btn-h1">SDK Tutorial →</a>
-      <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-h2">GitHub</a>
+      <a href="https://github.com/heurion-org/aegis-os/tree/main/modules/uomp" target="_blank" rel="noopener" class="btn-h1" style="background:#233E33">UOMP module →</a>
+      <a href={`${baseUrl}en/tutorial/`} class="btn-h1">Tutorial →</a>
+      <a href="https://github.com/heurion-org/aegis-os" target="_blank" rel="noopener" class="btn-h2">GitHub</a>
     </div>
   </section>
 </Layout>

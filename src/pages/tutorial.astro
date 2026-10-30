@@ -15,7 +15,9 @@ const { Content } = t ? await t.render() : { Content: null };
         <div class="sec-num">指南</div>
         <span class="sec-tag">真实用户上手</span>
       </div>
-      {Content && <Content />}
+      <div class="spec-content">
+        {Content && <Content />}
+      </div>
       <div class="hero-btns" style="margin-top: 2.5rem;">
         <a href={`${baseUrl}spec/`} class="btn-h1">协议规范 →</a>
         <a href={`${baseUrl}design/`} class="btn-h1">实现设计 →</a>

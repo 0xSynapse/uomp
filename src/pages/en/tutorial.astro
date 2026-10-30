@@ -20,7 +20,9 @@ const { Content } = t ? await t.render() : { Content: null };
         <div class="sec-num">Guide</div>
         <span class="sec-tag">Get started</span>
       </div>
-      {Content && <Content />}
+      <div class="spec-content">
+        {Content && <Content />}
+      </div>
       <div class="hero-btns" style="margin-top: 2.5rem;">
         <a href={`${baseUrl}en/spec/`} class="btn-h1">Specification →</a>
         <a href={`${baseUrl}en/design/`} class="btn-h1">Implementation →</a>

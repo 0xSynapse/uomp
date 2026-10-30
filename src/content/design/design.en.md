@@ -1,262 +1,122 @@
 ---
-title: 'UOMP Implementation Design'
-description: 'Architecture and implementation notes for the uomp-mvp reference implementation: components, deployment modes, SDK, remote access, store abstraction'
+title: 'UOMP Native Implementation'
+description: 'UOMP as the native Aegis OS memory module: aos-memory, aos-memory-store, aos-memory-gateway, and the aegis-os memory CLI'
 ---
 
-# UOMP Implementation Design
+# UOMP Native Implementation
 
-> **Implementation status (2026-10):** the current focus is the local CLI + MCP loop; Aegis OS is the reference runtime that enforces the protocol. Remote Gateway, Cloud Relay, S3/IPFS, and on-chain sections are research or preview capabilities, not shipped product. For the current workflow, see the [README](https://github.com/0xSynapse/uomp-core#quick-start) and [tutorial](/en/tutorial/). The rest of this document preserves the original implementation design.
+> **UOMP is the protocol; Aegis OS is the native implementation.** This website is spec/design only. Runnable code lives in [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os).
 
-UOMP is the open protocol and Aegis OS is the reference runtime; [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) in this repository is the reference CLI and local implementation. This document explains how it turns the [protocol specification](/en/spec/) into runnable code. For the field-level mapping, see [UOMP → Aegis OS memory consent mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md).
+## 1. Modules
 
----
+| Module | Responsibility |
+|---|---|
+| `crates/aos-memory` | scope/lease mapping, deny/field filtering, high-sensitivity keys, remote token policy |
+| `crates/aos-memory-store` | UOMP-compatible SQLite schema, Markdown import, CRUD |
+| `crates/aos-memory-gateway` | remote Agent entry point, EdDSA JWT verification, TLS/mTLS, rate limiting, audit |
+| `aegis-os memory` | user-facing command entry; delegates to the UOMP reference CLI during migration |
+| `aegis-os memory-gateway` | starts the local Aegis Memory Gateway |
 
-## 1. Implementation Overview
-
-`uomp-mvp` is a TypeScript monorepo. Each package maps to a Spec role:
-
-| Package / App | Role | Responsibility |
-|---------------|------|----------------|
-| `packages/core` | Shared | Types, constants, utilities |
-| `packages/store` | Memory Store | Pluggable storage backends (SQLite / Encrypted Object S3 / IPFS) |
-| `packages/token` | — | EdDSA JWT issuance and verification |
-| `packages/auth` | Auth Service | Session create/grant/close/revoke |
-| `packages/guard` | Memory Guard | Token validation, scope filtering, audit logging |
-| `packages/identity` | Identity Verification | DID/GPG verification framework |
-| `packages/sdk` | Agent SDK | `UompClient`, Node.js client |
-| `packages/cli` | User UI | User CLI: import, authorize, `serve`, `mcp`, sessions/audit, Gateway/Store management |
-| `apps/server` | — | Combined Auth + Guard HTTP service (`127.0.0.1:9374`) |
-| `apps/gateway` | — | Self-hosted Gateway: mTLS + token forwarding + Cloudflare Tunnel |
-| `apps/relay` | Cloud Relay | Stateless public Relay (design phase): pubkey verification + ciphertext forwarding |
-
----
-
-## 2. Architecture & Deployment Modes
-
-UOMP supports three deployment modes, ordered by user burden (low to high):
-
-### 2.1 Local Mode (Agent + Guard on same machine)
-
-Default, zero-config. Agent connects directly to Memory Guard at `http://127.0.0.1:9374`.
-
-```
-┌──────────┐   HTTP   ┌──────────────┐   ┌──────────────┐
-│  Agent   │ ───────► │ Memory Guard │──►│ Memory Store │
-└──────────┘          └──────────────┘   └──────────────┘
-```
+## 2. Local flow
 
 ```bash
-# MCP client (recommended): one-time setup, no access granted
-uomp setup claude --vault ~/Obsidian/MyVault
+brew install aegis-os
 
-# The agent requests access from the client; UOMP opens the consent page. Terminal fallback:
-uomp pending
-uomp approve <request-id>
+# one-time setup: import + client config + background server, no access granted
+aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
-# Manage
-uomp status
-uomp stop
-uomp disconnect claude
+# ask Claude / Cursor / OpenCode for notes
+# Aegis OS opens the local consent page; the agent continues after approval
 
-# Advanced: pre-authorize / scripts
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
-
-# Agent package: authorize + write the env file
-uomp connect ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env
-source ~/.uomp/my-agent.env && node index.js
-
-# Manual / unsupported clients
-uomp serve
-uomp authorize ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env --no-server
-source ~/.uomp/my-agent.env && node index.js
-uomp mcp --session ~/.uomp/my-agent.env --print-config
+aegis-os memory status
+aegis-os memory pending
+aegis-os memory approve <request-id>
+aegis-os memory revoke <session-id>
 ```
 
-> `uomp agent run ./my-agent` is a hidden local debugging shortcut. It is for development only.
+Local path:
 
-### 2.2 Remote Mode (Agent external, via Gateway)
-
-Agent runs on cloud (Digital Ocean / VPS / container), connects back through Gateway.
-
-```
-┌──────────────┐   mTLS + Token   ┌──────────────┐   HTTP   ┌──────────────┐
-│ Remote Agent │ ────────────────► │   Gateway    │ ───────► │ Memory Guard │
-└──────────────┘                  └──────────────┘          └──────────────┘
-```
-
-One command with Cloudflare Tunnel (no public IP needed):
-
-```bash
-uomp gateway start
-# ═══ Public Gateway URL ═══
-#   https://xxx.trycloudflare.com
+```text
+Agent / MCP client
+      │  UOMP token
+      ▼
+Aegis policy + lease
+      │
+      ▼
+aos-memory-store (SQLite + Markdown connector)
+      │
+      ▼
+audit
 ```
 
-## 3. SDK
+## 3. Remote Agent
 
-`packages/sdk` provides the `UompClient` class for Node.js Agents.
-
-### 3.1 Node.js Mode
-
-```ts
-import { UompClient } from '@uomp/sdk';
-
-const uomp = UompClient.fromEnv(); // reads UOM_TOKEN + UOMP_BASE_URL
-
-await uomp.memory.getByTag('portfolio:holdings');
-await uomp.aggregate.sum('portfolio:holdings', 'value.market_value');
-await uomp.payload.upload(report);
-await uomp.session.finalize(); // deletion proof + close
-await uomp.auth.createSession({ agentId, requestedScopes });
-
-console.log(uomp.tokenInfo.scopes);
-console.log(uomp.tokenInfo.expiresAt);
+```text
+Remote Agent (Aegis Cloud)
+      │  TLS 1.3 + mTLS
+      ▼
+aegis-os memory-gateway
+      │  session check + scope + rate limit + audit
+      ▼
+local Aegis memory store
 ```
 
-Transport handles: `http://` → direct, `https://` → mTLS auto-load, retry + backoff + timeout, `UompError`.
+Remote onboarding uses a device flow:
 
-### 3.2 Sub-client Quick Reference
+1. Agent calls `POST /v1/remote/requests`
+2. The user approves locally
+3. The Agent polls and retrieves a one-time remote token
+4. The token is bound to an audience and dies on expiry/revocation
 
-| Sub-client | Key Methods |
-|------------|-------------|
-| `uomp.memory` | `get(key)`, `getByTag(tag)`, `getByKeys(keys)`, `listTags()`, `has(key)`, `set(key, item)`, `delete(key)` |
-| `uomp.aggregate` | `sum(tag, field)`, `avg()`, `count()`, `min()`, `max()` |
-| `uomp.payload` | `upload(data)`, `download(id)`, `info(id)` |
-| `uomp.session` | `submitDeletionProof()`, `finalize()`, `close()`, `trackAccess(key)` |
-| `uomp.audit` | `query({ sessionId, limit })`, `getLastAccess()` |
-| `uomp.auth` | `createSession()`, `grant()`, `revoke()`, `validate()` |
+## 4. Writes and payloads
 
----
+Agent writes never modify the Memory Store directly:
 
-## 4. Remote Access
-
-### 4.1 User Gateway
-
-`apps/gateway` is the user's self-hosted Memory Guard entry point:
-
-```bash
-uomp gateway start               # Gateway + Cloudflare Tunnel
-uomp gateway start --no-tunnel   # Gateway only
+```text
+PUT /v1/memory/:key
+  → write scope check
+  → high-sensitivity reject
+  → staged_writes
+  → user approve
+  → apply + audit
 ```
 
-Responsibilities: mTLS termination, token validation (audience + signature + expiry), memory/audit forwarding, payload cache.
+Encrypted payloads:
 
-### 4.2 Cloud Relay
-
-Cloud Relay is a stateless public version of Gateway. UOMP runs a default instance (`relay.uomp.org`); open-source code allows anyone to self-host.
-
-| | User Gateway | Cloud Relay |
-|------|------------|------------|
-| Deployed | User local | Public cloud (always online) |
-| Sees plaintext | ✅ | ❌ (encrypted in Guard before storage) |
-| User burden | Install + run | Zero install |
-| Use case | High-sensitivity data | General use, Webapp developers |
-
-Relay stores no data and reads no plaintext — it only validates tokens and forwards ciphertext.
-
-### 4.3 Store Abstraction
-
-Memory Store is abstracted behind the `IMemoryStore` interface:
-
-```
-Guard → IMemoryStore ─┬─ SQLiteStore (local, default)
-                       ├─ EncryptedObjectStore (S3/R2, multi-device)
-                       └─ IPFSStore (decentralized)
+```text
+POST /v1/payload
+  → encrypted envelope
+  → session/agent bound
+  → user retrieves and decrypts locally
 ```
 
-- **SQLite**: `~/.uomp/memory.db`, default, zero-config
-- **Encrypted Object**: each Memory Item independently AES-256-GCM encrypted, stored on S3-compatible object storage. Multi-device via shared encrypted data
-- **IPFS**: content-addressed, decentralized (future)
+## 5. Data model mapping
 
-Encryption occurs inside the Guard process; cloud backends store only ciphertext. Keys are derived from Guard key material.
+| UOMP | Aegis OS |
+|---|---|
+| Session | consent envelope + `LeaseGrant` |
+| ConsentRequest | `PendingEscalation` |
+| CapabilityToken | lease token |
+| tag / key | `memory:tag:<tag>` / `memory:key:<key>` |
+| `uom.json` | Aegis manifest memory profile |
+| Memory Guard | gateway + policy + memory module + recorder |
 
-Full design doc: [`docs/store-abstraction-design.md`](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md).
+Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md).
 
----
+## 6. Migration status
 
-## 5. Auth & Authorization
+- Brand, spec, homepage, docs: done
+- Aegis policy/lease, memory gateway, TLS/mTLS: done
+- Staged writes, payloads, remote device flow: done
+- Native SQLite store and Markdown importer: foundation landed
+- `aegis-os memory` native commands: in progress (delegates to `uomp`)
+- Gateway cutover to the native store: in progress
+- Unified web trusted UI: pending
 
-### 5.1 Agent Manifest (uom.json)
+## 7. Links
 
-Agents declare `requested_scopes`, `data_retention_policy`, `external_data_sources` in `uom.json`. The CLI parses these in `packages/cli/src/utils/manifest.ts`.
-
-### 5.2 Session Lifecycle
-
-```
-[created] ──grant──► [active] ──close/timeout/revoke/deletion-proof──► [closed/expired/revoked]
-```
-
-`AuthService.grantSession()` issues Capability Tokens with optional `allowedFields`, `aggregationOnly`, `taskBound` constraints.
-
-### 5.3 JWT Implementation
-
-- Algorithm: `EdDSA` (curve `Ed25519`), using `jose`
-- Internal payload camelCase, JWT claims snake_case
-- Claims: `session_id`, `agent_id`, `scopes`, `limits`, `profile`, `audience`, `allowed_fields`, `aggregation_only`, `task_bound`
-
-### 5.4 Guard Enforcement
-
-`MemoryGuard.validateRequest()` checks in order: signature → expiry → denylist → scope → sensitivity. `aggregation_only` tokens are rejected on non-aggregation paths. High-sensitivity items require explicit key authorization.
-
----
-
-## 6. Stock Analyst Example
-
-`examples/stock-analyst/` is the full acceptance example:
-
-1. `uomp import` holdings CSV + risk profile
-2. (Optional) use the advanced `uomp discover` / `uomp inspect` commands to inspect and verify the Agent
-3. `uomp connect` creates a session and writes the env file (MCP clients also get a client config)
-4. Agent reads data → fetches quotes → analyzes (P&L, Sharpe, Beta, RSI, scenarios)
-5. Generates bilingual reports (JSON + Markdown + HTML)
-6. `uomp sessions` / `uomp audit` for auditing
-7. `uomp revoke` to revoke
-
-Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst/README.md).
-
----
-
-## 7. Local Config Files
-
-```
-~/.uomp/
-├── agents/               # Installed agents
-├── registry/             # Local registry
-├── sessions/             # 0600 session env files
-├── server.json           # Background server state
-├── server.log            # Background server log
-├── memory.db             # Memory Store (SQLite)
-├── auth.db               # Sessions and denylist
-├── audit.db              # Audit logs
-├── .secrets/             # Ed25519 keypair + admin token
-└── .gateway-certs/       # Only when the Gateway is enabled
-```
-
----
-
-## 8. MVP Limitations & Future Extensions
-
-| Capability | Status | Notes |
-|------------|--------|-------|
-| Agent read | ✅ | Authorized by tag/key/field |
-| Agent write | ❌ | Guard returns `503 WRITE_NOT_AVAILABLE` |
-| Local CLI | ✅ | import / setup / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
-| Markdown import | ✅ | Obsidian/Markdown folders with path-derived scopes |
-| MCP | ✅ Experimental | stdio `list_memory` / `search_memory` / `read_memory` |
-| Remote Gateway | ⚠️ Advanced/preview | mTLS + Cloudflare Tunnel |
-| Aggregation | ✅ | sum/avg/count/min/max, paired with `aggregation_only` |
-| Deletion proof | ✅ | Agent submits signed proof, session auto-closes |
-| Field filtering | ✅ | Token specifies `allowed_fields`, Guard filters |
-| Store abstraction | ⚠️ Partial | `IMemoryStore` + SQLite; S3/IPFS still designed |
-| Cloud Relay | ⚠️ Designed | `apps/relay/` prototype, not on the core path |
-| Identity verification | ⚠️ | DID/GPG framework present, verification to be strengthened |
-
----
-
-## 9. Related Links
-
-- [Protocol Specification](/en/spec/)
-- [Reference Implementation](https://github.com/0xSynapse/uomp-core)
-- [SDK Design Document](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.en.md)
-- [Store Abstraction Design](https://github.com/0xSynapse/uomp-core/tree/main/docs/store-abstraction-design.md)
-- [Stock Analyst Example](https://github.com/0xSynapse/uomp-core/tree/main/examples/stock-analyst)
+- [Protocol spec](/en/spec/)
+- [Aegis OS](https://github.com/heurion-org/aegis-os)
+- [UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
+- [UOMP → Aegis OS mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)
+- [Reference CLI (migration only)](https://github.com/0xSynapse/uomp-core)
