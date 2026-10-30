@@ -16,7 +16,7 @@ import { baseUrl } from '../../utils/base.ts';
 
       <div class="roadmap">
         <div class="note">
-          <strong>Current focus:</strong> finish UOMP as the Aegis OS memory module — native commands, native data plane, and a unified trusted UI.
+          <strong>Current focus:</strong> native commands and the data plane are done; the remaining priority is the unified web trusted UI.
         </div>
 
         <h2>Done <span class="status status-done">Done</span></h2>
@@ -24,18 +24,18 @@ import { baseUrl } from '../../utils/base.ts';
           <li><span class="status status-done">Done</span>UOMP-Draft-00 spec and Aegis OS field mapping</li>
           <li><span class="status status-done">Done</span>Aegis policy / lease / escalation / trusted approval</li>
           <li><span class="status status-done">Done</span>Aegis Memory Gateway: JWT, TLS/mTLS, session check, rate limiting, audit</li>
-          <li><span class="status status-done">Done</span>UOMP adapter: Aegis policy evaluation + trusted approval endpoint</li>
           <li><span class="status status-done">Done</span>Agent write staging and high-sensitivity rejection</li>
           <li><span class="status status-done">Done</span>Encrypted payload upload / read / delete</li>
           <li><span class="status status-done">Done</span>Remote Agent device flow and one-time remote token</li>
-          <li><span class="status status-done">Done</span>Unified approvals CLI: <code>aegis-os memory approvals</code></li>
-          <li><span class="status status-done">Done</span><code>aos-memory-store</code>: UOMP-compatible SQLite schema + Markdown importer</li>
-          <li><span class="status status-done">Done</span>Native <code>aegis-os memory status/import/read/list/search/staged/payload/mcp</code></li>
+          <li><span class="status status-done">Done</span><code>aos-memory-store</code>: UOMP-compatible SQLite schema + Markdown importer + staged writes + payloads</li>
+          <li><span class="status status-done">Done</span><code>aos-memory-server</code>: native consent requests, sessions, Ed25519 JWT, revocation, audit</li>
+          <li><span class="status status-done">Done</span>Agent-first consent: <code>memory setup</code> does not pre-authorize; the first tool call requests consent</li>
+          <li><span class="status status-done">Done</span>All native <code>aegis-os memory</code> commands, including <code>serve/setup/pending/approve/deny/audit/connect/disconnect/sessions/revoke</code></li>
+          <li><span class="status status-done">Done</span><code>uomp-core</code> / <code>uomp-mvp</code> archived; no Node or reference CLI at runtime</li>
         </ul>
 
         <h2>In progress <span class="status status-current">In progress</span></h2>
         <ul class="roadmap-list">
-          <li><span class="status status-next">Next</span>Gateway read path cutover to <code>aos-memory-store</code></li>
           <li><span class="status status-next">Next</span>Unified web trusted UI (UOMP + Aegis)</li>
         </ul>
 
@@ -62,7 +62,7 @@ import { baseUrl } from '../../utils/base.ts';
           <div class="metric"><strong>0</strong><span>same-user Agent direct data access</span></div>
         </div>
         <p>
-          UOMP is a native Aegis OS memory module only when all four are true.
+          The first, second, and fourth are already true; the unified web trusted UI is the remaining item.
         </p>
       </div>
 

@@ -15,7 +15,7 @@ import { baseUrl } from '../utils/base.ts';
 
       <div class="roadmap">
         <div class="note">
-          <strong>当前焦点：</strong>把 UOMP 完整收口为 Aegis OS 的 memory module——原生命令、原生数据平面、统一审批 UI。
+          <strong>当前焦点：</strong>原生命令与数据平面已完成；剩余重点是统一 Web Trusted UI。
         </div>
 
         <h2>已完成 <span class="status status-done">Done</span></h2>
@@ -23,18 +23,18 @@ import { baseUrl } from '../utils/base.ts';
           <li><span class="status status-done">已完成</span>UOMP-Draft-00 规范与 Aegis OS 字段映射</li>
           <li><span class="status status-done">已完成</span>Aegis policy / lease / escalation / trusted approval</li>
           <li><span class="status status-done">已完成</span>Aegis Memory Gateway：JWT、TLS/mTLS、session check、限流、审计</li>
-          <li><span class="status status-done">已完成</span>UOMP adapter：Aegis 策略评估 + 可信审批端点</li>
           <li><span class="status status-done">已完成</span>Agent 写入 staging 与高敏写入拒绝</li>
           <li><span class="status status-done">已完成</span>加密 Payload 上传 / 读取 / 删除</li>
           <li><span class="status status-done">已完成</span>远程 Agent device flow 与一次性 remote token</li>
-          <li><span class="status status-done">已完成</span>统一审批 CLI：<code>aegis-os memory approvals</code></li>
-          <li><span class="status status-done">已完成</span><code>aos-memory-store</code>：UOMP 兼容 SQLite schema + Markdown importer</li>
-          <li><span class="status status-done">已完成</span>原生 <code>aegis-os memory status/import/read/list/search/staged/payload/mcp</code></li>
+          <li><span class="status status-done">已完成</span><code>aos-memory-store</code>：UOMP 兼容 SQLite schema + Markdown importer + staged writes + payload</li>
+          <li><span class="status status-done">已完成</span><code>aos-memory-server</code>：原生 consent request、session、Ed25519 JWT、撤销、audit</li>
+          <li><span class="status status-done">已完成</span>Agent-first consent：<code>memory setup</code> 不预授权，首次 tool call 发起请求</li>
+          <li><span class="status status-done">已完成</span>原生 <code>aegis-os memory</code> 全部命令，包括 <code>serve/setup/pending/approve/deny/audit/connect/disconnect/sessions/revoke</code></li>
+          <li><span class="status status-done">已完成</span><code>uomp-core</code> / <code>uomp-mvp</code> 归档，运行时不再依赖 Node 或 reference CLI</li>
         </ul>
 
         <h2>进行中 <span class="status status-current">In progress</span></h2>
         <ul class="roadmap-list">
-          <li><span class="status status-next">下一步</span>Gateway 读路径切到 <code>aos-memory-store</code></li>
           <li><span class="status status-next">下一步</span>统一 Web Trusted UI（UOMP + Aegis）</li>
         </ul>
 
@@ -61,7 +61,7 @@ import { baseUrl } from '../utils/base.ts';
           <div class="metric"><strong>0</strong><span>同用户 Agent 可直接读数据</span></div>
         </div>
         <p>
-          当这四项同时成立，UOMP 才真正成为 Aegis OS 的原生 memory module。
+          前三项已经成立；最后一项统一 Web Trusted UI 仍在进行中。
         </p>
       </div>
 

@@ -1,48 +1,43 @@
 ---
 title: 'UOMP User Guide'
-description: 'Install UOMP, import notes, connect Claude Desktop / Cursor, audit reads, and revoke access'
+description: 'Install Aegis OS, import notes, connect Claude Desktop / Cursor, approve access on demand, audit, and revoke'
 ---
 
 # UOMP User Guide
 
-This guide is for a first-time UOMP user. By the end, you will have a local note store, a revocable agent session, and an audit log you can inspect.
+This guide is for a first-time UOMP user. By the end you will have a local notes store, a revocable Agent session, and a readable access audit.
 
-Time: **5–10 minutes**. Your notes and tokens stay on your machine.
+Estimated time: **5–10 minutes**. All notes and tokens stay on your machine.
 
-> **Tested on**: macOS and Linux terminals; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. **Windows is not supported.**
+> **Supported environment:** macOS or Linux terminal; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. **Windows is not supported.**
 
 ---
 
 ## What you will do
 
 1. Install Aegis OS
-2. Use `aegis-os memory setup` to import notes, start the local service, and write the client config (no access yet)
-3. Make the first request from the client and approve the UOMP consent page
+2. Run `aegis-os memory setup` to import notes, start the local server, and write the client config (no access granted)
+3. Make the first request from the client and approve the consent request in the CLI
 4. Read notes
-5. Inspect the audit log and revoke
+5. Review the audit and revoke access
 
 ---
 
-## 1. Prerequisites
+## 1. Requirements
 
 You need:
 
 - Aegis OS
 - An MCP client: Claude Desktop, Cursor, or OpenCode
-- An Obsidian vault or a Markdown directory
+- An Obsidian vault or a plain Markdown directory
 
-During migration, `aegis-os memory` delegates to the UOMP reference CLI, so you also need:
-
-- Node.js **22 or newer**
-- `git`
-
-Node/git will not be required after the native cutover.
+Node.js, pnpm, and the `uomp` binary are **not** required. Every `aegis-os memory` command is native Rust.
 
 Check:
 
 ```bash
 aegis-os --version
-node --version
+aegis-os memory --help
 ```
 
 ---
@@ -60,39 +55,9 @@ aegis-os --version
 aegis-os memory --help
 ```
 
-During migration, `aegis-os memory` calls the `uomp` reference CLI. If `uomp` is not on `PATH`:
-
-```bash
-export UOMP_BIN=/path/to/uomp
-```
-
-The first `aegis-os memory setup` or `aegis-os memory connect` creates `~/.uomp`, the admin token, and the `sessions/` directory. Run `aegis-os memory init` separately only if you want to prepare the data directory in advance.
-
 ---
 
-## 3. See the loop first (optional)
-
-```bash
-aegis-os memory demo
-```
-
-It runs import → authorize → allowed read → denied read → audit → revoke in a temporary directory.
-
-**It does not touch your real `~/.uomp`.**
-
-If installation or configuration is wrong, run:
-
-```bash
-aegis-os memory doctor
-```
-
-It checks Node, git, directory permissions, keys, databases, session files, and the local port.
-
----
-
-## 4. Set up once and start using it
-
-### 4.1 Set up the client
+## 3. One-time setup
 
 ```bash
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
@@ -100,71 +65,71 @@ aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
 This command:
 
-- imports the Markdown vault (base tag `notes`; change it with `--vault-tag`)
-- starts the local Auth + Guard service in the background (`http://127.0.0.1:9374`)
-- merges the UOMP entry into the Claude Desktop config (an existing file is backed up)
-- **does not grant any access**
+- imports the Markdown vault (base tag `notes` by default; use `--tag` to change it)
+- starts `aegis-os memory serve` in the background if it is not already running (default `http://127.0.0.1:9374`)
+- writes the `~/.uomp/sessions/claude.env` bridge profile
+- merges a `uomp` MCP entry into the Claude Desktop config
+- **issues no token and grants no access**
 
-The command exits and leaves the service running in the background. Then **restart Claude Desktop** so it loads the new MCP config.
+The command exits; the server keeps running. **Restart Claude Desktop** so it loads the new MCP config.
 
-Cursor and OpenCode use the same command:
+Cursor / OpenCode work the same way:
 
 ```bash
 aegis-os memory setup cursor --vault ~/Obsidian/MyVault
 aegis-os memory setup opencode --vault ~/Obsidian/MyVault
 ```
 
-### 4.2 The first request
+Default config paths:
+
+- Claude Desktop: `~/.config/Claude/claude_desktop_config.json` (`~/Library/Application Support/Claude/` on macOS)
+- Cursor: `~/.cursor/mcp.json`
+- OpenCode: `~/.config/opencode/opencode.json`
+
+Use `--config` for a custom path, or `--listen 127.0.0.1:9380` to change the port.
+
+---
+
+## 4. First request
 
 Open Claude Desktop and ask:
 
 ```text
-List notes under notes/projects
+List the notes under notes/projects
 ```
 
-Claude calls UOMP's `list_memory(tag="notes/projects")`. UOMP then:
+Claude calls UOMP's `list_memory(tag="notes/projects")`. The MCP bridge will:
 
-1. creates a pending consent request
-2. opens a local approval page (Linux/macOS also show a desktop notification)
-3. shows who is asking, the scope, and the duration
-4. continues the same tool call after you click Approve
-5. creates a new request on the next call after Deny
+1. create a consent request through `UOMP_BRIDGE_FILE`
+2. print the request id and approval command to stderr
+3. wait for your approval (120 seconds by default)
 
-If the page does not open, use the terminal fallback:
+In a terminal:
 
 ```bash
 aegis-os memory pending
 aegis-os memory approve <request-id>
+```
+
+`pending` shows the request id, Agent, session id, and expiry. After approval the **current tool call continues**; a denial returns an error and the next call creates a new request.
+
+```bash
 aegis-os memory deny <request-id>
 ```
 
-When the token expires, the next tool call creates a new request; no need to re-run `setup`.
+The browser consent page is deferred; CLI approval is the native path for now. An Agent cannot approve its own request.
 
-### 4.3 High-sensitivity data
+After the token expires or is revoked, the next tool call creates a new consent request; you do not need to rerun `setup`.
 
-High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default, and cannot be granted by tag alone.
+### High-sensitivity data
 
-The approval page lists the keys under each high-sensitivity tag and leaves them unchecked. The agent can only read the keys you select.
+High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are not covered by a tag scope. The Agent must call `read_memory` for a specific key; the consent request carries that key, and you approve it in `pending`.
 
-For scripts, skip the page with `aegis-os memory connect`:
+Do not grant high-sensitivity data with a blanket tag scope.
 
-```bash
-aegis-os memory connect ./examples/stock-analyst \
-  --scope portfolio:holdings \
-  --allow-key AAPL MSFT
-```
+---
 
-Or explicitly allow every key under a high-sensitivity tag (this prints an override warning):
-
-```bash
-aegis-os memory connect ./examples/stock-analyst \
-  --scope portfolio:holdings \
-  --allow-high portfolio:holdings
-```
-
-`aegis-os memory connect` is the advanced pre-authorize path; normal use is `aegis-os memory setup` + the approval page.
-
-### 4.4 Sync notes later
+## 5. Re-import notes
 
 Run the import command again:
 
@@ -174,31 +139,40 @@ aegis-os memory import ~/Obsidian/MyVault
 
 Import rules:
 
-- recursively processes `.md` files
+- recursive `.md` files
 - skips `.obsidian`, hidden directories, and `node_modules`
 - directory paths become scopes:
   - `projects/uomp/plan.md` → `notes`, `notes/projects`, `notes/projects/uomp`
 - frontmatter `tags`, `title`, `description`, and `sensitivity` are preserved
 - re-importing updates existing notes instead of duplicating them
 
-> To run the server separately, or for an unsupported client, use the manual flow:
->
-> ```bash
-> # Terminal 1
-> aegis-os memory serve
->
-> # Terminal 2
-> aegis-os memory authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server
-> aegis-os memory mcp --session ~/.uomp/mcp-client.env --print-config --client claude
-> ```
->
-> Paste the JSON into the client config. `connect` supports Claude Desktop, Cursor, and OpenCode; other clients can use `--print-config`.
+---
+
+## 6. Manual flow and pre-authorization
+
+If your client is not in the supported list, or you want to run the server separately:
+
+```bash
+# terminal 1
+aegis-os memory serve
+
+# terminal 2: write a bridge profile + custom client config
+aegis-os memory setup my-client --no-server --config /path/to/mcp.json
+```
+
+`setup` writes a standard `mcpServers` structure (OpenCode uses `mcp`). Copy the `uomp` entry into your client.
+
+For scripts that need to skip approval, use `connect`:
+
+```bash
+aegis-os memory connect claude --scope notes/projects
+```
+
+`connect` immediately creates and approves a 30-minute session, writes the token to `~/.uomp/sessions/claude.env`, and configures the client with `UOMP_TOKEN_FILE`. It is intended for scripts and CI; prefer `setup` + CLI approval for daily use.
 
 ---
 
-## 5. Verify inside the client
-
-The first request opens the approval page; approve it to let the same request continue. If you deny it, the tool returns an approval-required message.
+## 7. Verify in the client
 
 In Claude Desktop / Cursor / OpenCode, ask:
 
@@ -214,27 +188,27 @@ Search notes/projects for "Ship" and read the matching note
 
 UOMP exposes three tools:
 
-- `list_memory`: keys and metadata, no note content
-- `search_memory`: search within an authorized tag, no note content
-- `read_memory`: read the content for one key
+- `list_memory`: lists keys and metadata, no body
+- `search_memory`: searches inside an authorized tag, no body
+- `read_memory`: reads one body by key
 
-Now try an unauthorized note:
+Try an unauthorized note:
 
 ```text
 Read note.journal.private
 ```
 
-You should get:
+You should see something like:
 
 ```text
-ACCESS_DENIED: Key not in authorized scope
+ACCESS_DENIED: key is outside the token scope
 ```
 
-That proves scope enforcement works, and the denial is written to the audit log.
+This proves scope enforcement is working, and the denial is audited.
 
 ---
 
-## 6. Inspect the audit log
+## 8. Review the audit
 
 Back in the terminal:
 
@@ -244,124 +218,108 @@ aegis-os memory sessions
 aegis-os memory audit --limit 20
 ```
 
-Last 24 hours:
+`status` shows the local store count and tags; `sessions` shows session state; `audit` shows recent allow/deny events with Agent, session, resource, and reason.
+
+Check that the server is running:
 
 ```bash
-aegis-os memory audit --since 24h
+curl -s http://127.0.0.1:9374/health
 ```
-
-Denied entries only:
-
-```bash
-aegis-os memory audit --result deny
-```
-
-Filter by key:
-
-```bash
-aegis-os memory audit --key note.projects.plan
-```
-
-For scripts or a future UI:
-
-```bash
-aegis-os memory audit --since 24h --result deny --json
-```
-
-Audit entries show time, result, action, agent, target, session, and reason.
 
 ---
 
-## 7. Revoke
+## 9. Revoke and stop
+
+List sessions:
 
 ```bash
-aegis-os memory revoke sess_...
+aegis-os memory sessions
 ```
 
-After revocation:
+Revoke one session:
 
-- the next request returns `403` immediately
-- the session's env files are removed (including the `claude.env` written by `connect`)
-- the `uomp` entry in the client config remains; re-run `connect` to authorize again, or remove it manually
-- a custom `--output` file outside `~/.uomp/sessions` is not removed automatically
+```bash
+aegis-os memory revoke <session-id>
+```
 
-Stopping `aegis-os memory connect` / `aegis-os memory serve` / `aegis-os memory stop` does **not** revoke the token. Use `aegis-os memory revoke` to actually remove access.
+The next request immediately returns `401 SESSION_NOT_ACTIVE`.
 
-To remove the client config as well:
+Remove the client config as well:
 
 ```bash
 aegis-os memory disconnect claude
 ```
 
-This removes the `uomp` entry from the Claude Desktop config, revokes the current session, and deletes the matching env file.
+`disconnect` removes the `uomp` entry from the client config, revokes the session in the env file (the `connect` path), and deletes the env file. A `setup` bridge env has no session id; use `memory sessions` + `memory revoke` for that session.
 
-In `setup` mode there is no active session until the first request is approved; after approval, use `aegis-os memory revoke` or `aegis-os memory disconnect` the same way.
+Stop the background server:
 
-### After the session expires
+```bash
+aegis-os memory stop
+```
 
-In `setup` mode, the next tool call creates a new approval request; approve it and the call continues. No need to re-run `setup`.
+`stop` only stops the server; it does not immediately revoke issued sessions. Sessions still expire at their expiry time. Use `revoke` or `disconnect` to remove access immediately.
 
-If you are using the pre-authorize path (`aegis-os memory connect`), run it again:
+### After a session expires
+
+In `setup` mode, the next tool call creates a new consent request; approve it and continue without rerunning `setup`.
+
+For the pre-authorized path (`connect`), rerun the same command:
 
 ```bash
 aegis-os memory connect claude --scope notes/projects
 ```
 
-The MCP server re-reads the env file before every tool call. Re-running `connect` revokes the previous session for the same env file, writes a new token, and the next call picks it up **without restarting the client**.
+The MCP server checks the token before each tool call, so the next call uses the new token **without restarting the client**.
 
 ---
 
-## 8. Troubleshooting
+## 10. Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
-| `aegis-os memory doctor` says the data directory is missing | Run `aegis-os memory setup claude ...` or `aegis-os memory init` |
-| Port 9374 is occupied | Run `aegis-os memory stop` first; or `aegis-os memory setup claude --port 9380 ...` |
-| The client does not show UOMP tools | Use `aegis-os memory status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `aegis-os memory connected` |
-| The tool says `UOMP approval required` | Open the approval page from the message, or run `aegis-os memory pending` / `aegis-os memory approve <request-id>` |
-| `SESSION_NOT_ACTIVE` | The session expired or was revoked; make a new request from the client, or run `aegis-os memory connect claude --scope notes/projects` |
-| `ACCESS_DENIED` | The key/tag is outside the granted scope; check the approval page, `--scope`, or `aegis-os memory audit` |
-| High-sensitivity data is unreadable | High-sensitivity keys must be granted explicitly; select them on the approval page or use `--allow-key` / `--allow-high` |
-| Env-file permission warning | `aegis-os memory doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
-| Reset all local data | Run `aegis-os memory stop`, then remove `~/.uomp`; use `pkill -f "aegis-os memory serve"` if needed. This deletes notes, keys, and audit data |
-| Running on Windows | Windows is not supported; use macOS or Linux |
+| Client does not show UOMP tools | Check the `uomp` entry in the client config; restart the client; confirm the server with `curl -s http://127.0.0.1:9374/health` |
+| Port 9374 is in use | `aegis-os memory stop`; or `aegis-os memory setup claude --listen 127.0.0.1:9380 ...` |
+| Tool waits for approval forever | In another terminal run `aegis-os memory pending`, then `approve` / `deny` |
+| `SESSION_NOT_ACTIVE` | Session expired or was revoked; make a new request, or run `aegis-os memory connect claude --scope notes/projects` |
+| `ACCESS_DENIED` | The key/tag is outside the granted scope; inspect the consent request scope or `aegis-os memory audit` |
+| High-sensitivity data is unreadable | High-sensitivity items require a per-key request and approval; a tag scope does not cover them |
+| Reset all local data | `aegis-os memory stop`, then delete `~/.uomp`. This removes notes, keys, and audit |
+| Run on Windows | Not supported; use macOS or Linux |
 
 ### Where data lives
 
 ```text
 ~/.uomp/
 ├── memory.db          # imported notes
-├── auth.db            # sessions
-├── audit.db           # audit log
-├── sessions/          # 0600 session env files
-├── server.json        # background server state
-├── server.log         # background server log
-└── .secrets/          # Ed25519 key + admin token
+├── auth.db            # sessions, consent requests, audit
+├── sessions/          # 0600 bridge / token env files
+├── server.pid         # background server pid
+└── .secrets/          # Ed25519 keys, admin token, bridge token
 ```
 
-### Uninstall
+### Full uninstall
 
 ```bash
 aegis-os memory stop || true
-pkill -f "aegis-os memory serve" || true
 rm -rf ~/.uomp
-rm -f ~/.local/bin/uomp
 ```
+
+If setup wrote a client config, run `aegis-os memory disconnect <client>` or remove the `uomp` entry manually.
 
 ---
 
-## 9. Security boundaries
+## 11. Security boundary
 
 UOMP provides:
 
-- local-first storage; notes stay on your machine by default
-- tag/key scope enforcement
-- high-sensitivity tags are off by default; high-sensitivity items require explicit keys
-- on-demand approval links carry a one-time secret and stay on loopback
+- local-first storage; notes do not leave your machine by default
+- tag/key scope limits
+- high-sensitivity items require explicit key approval
+- the first tool call creates a consent request; the user approves it in the local CLI
 - session expiry and immediate revocation
 - an audit record for every allow/deny decision
-- tokens in `0600` files, with no JWT printed by default
+- the bridge profile holds no token; pre-authorized tokens live in `0600` files, with no JWT printed by default
 
 UOMP does not protect against:
 
@@ -374,9 +332,9 @@ Do not commit `~/.uomp` to git, and do not share session env files publicly.
 
 ---
 
-## 10. Advanced
+## 12. Advanced
 
 - Protocol and token format: [Draft-00 specification](/en/spec/)
-- Build your own agent: [README](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference#readme)
-- TypeScript SDK: [SDK design](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference/docs/sdk-design.en.md)
+- Build your own agent: [Aegis OS UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
+- MCP clients: `aegis-os memory mcp` (see the module README)
 - Remote agents / Gateway are advanced preview features, not required for the local workflow

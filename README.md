@@ -97,7 +97,7 @@ pnpm preview
 
 | 仓库 | 说明 |
 |------|------|
-| [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os) | Aegis OS 原生 memory module + `modules/uomp/reference` 迁移参考实现 |
+| [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os) | Aegis OS 原生 memory module（UOMP 的唯一实现入口） |
 | [0xaicrypto/uomp](https://github.com/0xaicrypto/uomp) | 本仓库：官方网站与协议规范 |
 
 ---

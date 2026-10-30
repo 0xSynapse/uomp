@@ -56,7 +56,7 @@ const content = {
       todayLabel: '今天',
       today: '协议草案 · Agent 发起 · 范围与租约 · 本地审批 · 可撤销 · 审计',
       nextLabel: '下一步',
-      next: 'Aegis OS 集成 · 独立 daemon · 沙箱隔离 · 打包参考 CLI',
+      next: 'Aegis OS 原生运行时 · 统一 Web Trusted UI · 远程 Agent · conformance suite',
     },
     how: {
       kicker: '协议模型',
@@ -80,7 +80,7 @@ const content = {
         {
           n: '02',
           title: '请求同意',
-          body: 'Agent 通过运行时请求范围；UOMP 定义请求载荷，Aegis OS 打开本地审批页。用户只批准这次请求，默认 30 分钟。',
+          body: 'Agent 通过运行时请求范围；UOMP 定义请求载荷，Aegis OS 创建 consent request。用户在 CLI 只批准这次请求，默认 30 分钟。',
           codeLabel: 'protocol',
           code: [
             'agent → runtime',
@@ -117,7 +117,7 @@ const content = {
         { key: '隔离', value: 'Agent 在沙箱中运行，只通过受控接口访问记忆。' },
         { key: '审批', value: '审批由可信 UI 完成；Agent 不能自己批准自己。' },
       ],
-      note: '本地优先：参考运行时在用户设备上执行策略，数据留在你已有的存储里。',
+      note: '本地优先：Aegis OS 在用户设备上执行策略，数据留在你已有的存储里。',
     },
     scope: {
       kicker: '边界',
@@ -217,7 +217,7 @@ const content = {
       todayLabel: 'Today',
       today: 'Protocol draft · agent-initiated · scope & lease · local consent · revocable · audit',
       nextLabel: 'Next',
-      next: 'Aegis OS integration · standalone daemon · sandbox isolation · packaged reference CLI',
+      next: 'Aegis OS native runtime · unified web trusted UI · remote Agent · conformance suite',
     },
     how: {
       kicker: 'Protocol model',
@@ -278,7 +278,7 @@ const content = {
         { key: 'Isolation', value: 'The agent runs in a sandbox and reaches memory only through a controlled interface.' },
         { key: 'Approval', value: 'Approval happens in a trusted UI; the agent cannot approve itself.' },
       ],
-      note: 'Local-first: the reference runtime enforces policy on the user device, and the data stays in the store you already use.',
+      note: 'Local-first: Aegis OS enforces policy on the user device, and the data stays in the store you already use.',
     },
     scope: {
       kicker: 'Boundary',
@@ -347,7 +347,7 @@ const t = content[lang];
         <div class="hero-actions">
           <a class="btn-solid" href={specHref}>{t.ctaPrimary} <span aria-hidden="true">→</span></a>
           <a class="btn-line" href={aegisHref} target="_blank" rel="noopener">{t.ctaSecondary} <span aria-hidden="true">↗</span></a>
-          <a class="link-quiet" href="https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference" target="_blank" rel="noopener">GitHub</a>
+          <a class="link-quiet" href="https://github.com/heurion-org/aegis-os/tree/main/modules/uomp" target="_blank" rel="noopener">GitHub</a>
         </div>
         <div class="hero-meta">
           {t.meta.map((m) => <span>{m}</span>)}

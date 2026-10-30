@@ -2,8 +2,8 @@
 export interface Props { lang?: 'zh' | 'en' }
 const { lang = 'zh' } = Astro.props;
 const stats = lang === 'zh'
-  ? [{ v: '本地优先', l: '数据留在原地' },{ v: '最小范围', l: 'tag / key / field' },{ v: '即时撤销', l: '下一个请求 403' },{ v: '可审计', l: '每次决策都有日志' },{ v: 'MCP', l: 'connect + 按需审批' }]
-  : [{ v: 'Local-first', l: 'Data stays where it is' },{ v: 'Scoped', l: 'tag / key / field' },{ v: 'Revocable', l: '403 on the next request' },{ v: 'Auditable', l: 'Every decision logged' },{ v: 'MCP', l: 'connect + on-demand consent' }];
+  ? [{ v: '本地优先', l: '数据留在原地' },{ v: '最小范围', l: 'tag / key / field' },{ v: '即时撤销', l: '下一个请求 401' },{ v: '可审计', l: '每次决策都有日志' },{ v: 'MCP', l: 'connect + 按需审批' }]
+  : [{ v: 'Local-first', l: 'Data stays where it is' },{ v: 'Scoped', l: 'tag / key / field' },{ v: 'Revocable', l: '401 on the next request' },{ v: 'Auditable', l: 'Every decision logged' },{ v: 'MCP', l: 'connect + on-demand consent' }];
 ---
 <div class="window-wrap">
   <div class="window">
@@ -26,8 +26,8 @@ const stats = lang === 'zh'
   const zh = el.dataset.lang === 'zh';
   const frames = [
     `<span style="color:${C.g}">$</span> <span style="color:${C.w}">aegis-os memory setup claude --vault ~/Obsidian/MyVault</span><br><span style="color:${C.gn}">\u2713 ${zh ? 'setup 完成 · 还没有授权' : 'setup complete \u00b7 no access yet'}</span><br>`,
-    `<span style="color:${C.w}">Claude: ${zh ? '列出 notes/projects 下的笔记' : 'list notes under notes/projects'}</span><br><span style="color:${C.g}">\u2192 ${zh ? '审批页 · 允许 30 分钟' : 'approval page \u00b7 allow 30 min'}</span><br><span style="color:${C.gn}">\u2713 ${zh ? '12 次读取 · 3 次被范围拦截 · 全部有日志' : '12 reads \u00b7 3 blocked by scope \u00b7 all logged'}</span><br>`,
-    `<span style="color:${C.g}">$</span> <span style="color:${C.w}">aegis-os memory revoke 7f3a</span><br><span style="color:${C.gn}">\u2713 ${zh ? '下一个请求' : 'next request'} \u2192 403</span><br>`,
+    `<span style="color:${C.w}">Claude: ${zh ? '列出 notes/projects 下的笔记' : 'list notes under notes/projects'}</span><br><span style="color:${C.g}">\u2192 ${zh ? 'consent request · 允许 30 分钟' : 'consent request \u00b7 allow 30 min'}</span><br><span style="color:${C.gn}">\u2713 ${zh ? '12 次读取 · 3 次被范围拦截 · 全部有日志' : '12 reads \u00b7 3 blocked by scope \u00b7 all logged'}</span><br>`,
+    `<span style="color:${C.g}">$</span> <span style="color:${C.w}">aegis-os memory revoke 7f3a</span><br><span style="color:${C.gn}">\u2713 ${zh ? '下一个请求' : 'next request'} \u2192 401</span><br>`,
   ];
   let i = 0, cycle = 0, timer;
   const maxCycles = 3;

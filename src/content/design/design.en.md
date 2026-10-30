@@ -1,6 +1,6 @@
 ---
 title: 'UOMP Native Implementation'
-description: 'UOMP as the native Aegis OS memory module: aos-memory, aos-memory-store, aos-memory-gateway, and the aegis-os memory CLI'
+description: 'UOMP as the native Aegis OS memory module: aos-memory, aos-memory-store, aos-memory-server, aos-memory-gateway, and the aegis-os memory CLI'
 ---
 
 # UOMP Native Implementation
@@ -12,9 +12,10 @@ description: 'UOMP as the native Aegis OS memory module: aos-memory, aos-memory-
 | Module | Responsibility |
 |---|---|
 | `crates/aos-memory` | scope/lease mapping, deny/field filtering, high-sensitivity keys, remote token policy |
-| `crates/aos-memory-store` | UOMP-compatible SQLite schema, Markdown import, CRUD |
+| `crates/aos-memory-store` | UOMP-compatible SQLite schema, Markdown import, staged writes, payloads |
+| `crates/aos-memory-server` | native consent requests, sessions, Ed25519 JWT, revocation, audit |
 | `crates/aos-memory-gateway` | remote Agent entry point, EdDSA JWT verification, TLS/mTLS, rate limiting, audit |
-| `aegis-os memory` | user-facing command entry; delegates to the UOMP reference CLI during migration |
+| `aegis-os memory` | user-facing command entry; every command is native Rust |
 | `aegis-os memory-gateway` | starts the local Aegis Memory Gateway |
 
 ## 2. Local flow
@@ -26,27 +27,26 @@ brew install aegis-os
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
 # ask Claude / Cursor / OpenCode for notes
-# Aegis OS opens the local consent page; the agent continues after approval
+# the first tool call creates a consent request; the agent continues after approval
 
-aegis-os memory status
 aegis-os memory pending
 aegis-os memory approve <request-id>
-aegis-os memory revoke <session-id>
+aegis-os memory audit
+aegis-os memory disconnect claude
 ```
+
+The browser consent page is deferred; CLI approval is the native path for now. An Agent cannot approve its own request, and high-sensitivity items stay outside Agent scopes.
 
 Local path:
 
 ```text
 Agent / MCP client
-      │  UOMP token
+      │  UOMP bridge / token
       ▼
-Aegis policy + lease
-      │
+aos-memory-server (consent, session, JWT, audit)
+      │  scoped request
       ▼
-aos-memory-store (SQLite + Markdown connector)
-      │
-      ▼
-audit
+aos-memory-store (SQLite + Markdown + staged + payload)
 ```
 
 ## 3. Remote Agent
@@ -103,15 +103,16 @@ POST /v1/payload
 
 Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md).
 
-## 6. Migration status
+## 6. Implementation status
 
 - Brand, spec, homepage, docs: done
 - Aegis policy/lease, memory gateway, TLS/mTLS: done
 - Staged writes, payloads, remote device flow: done
-- Native SQLite store and Markdown importer: foundation landed
-- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `staged` / `payload` / `mcp` are native; the rest are migrating
-- Gateway cutover to the native store: in progress
-- Unified web trusted UI: pending
+- Native SQLite store, Markdown importer, staged writes, payloads: done
+- Native consent server, sessions, Ed25519 JWT, revocation, audit: done
+- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` are all native
+- `uomp-core` / `uomp-mvp` reference: archived, no longer vendored or invoked at runtime
+- Unified web trusted UI: pending (CLI approval today)
 
 ## 7. Links
 
@@ -119,4 +120,3 @@ Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heur
 - [Aegis OS](https://github.com/heurion-org/aegis-os)
 - [UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - [UOMP → Aegis OS mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)
-- [Reference CLI (migration only)](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference)

@@ -1,6 +1,6 @@
 ---
 title: 'UOMP 原生实现'
-description: 'UOMP 作为 Aegis OS memory module 的原生实现：aos-memory、aos-memory-store、aos-memory-gateway 与 aegis-os memory CLI'
+description: 'UOMP 作为 Aegis OS memory module 的原生实现：aos-memory、aos-memory-store、aos-memory-server、aos-memory-gateway 与 aegis-os memory CLI'
 ---
 
 # UOMP 原生实现
@@ -12,9 +12,10 @@ description: 'UOMP 作为 Aegis OS memory module 的原生实现：aos-memory、
 | 模块 | 职责 |
 |---|---|
 | `crates/aos-memory` | scope/lease 映射、deny/field 过滤、高敏 key、远程 token 校验 |
-| `crates/aos-memory-store` | UOMP 兼容 SQLite schema、Markdown 导入、CRUD |
+| `crates/aos-memory-store` | UOMP 兼容 SQLite schema、Markdown 导入、staged writes、payload |
+| `crates/aos-memory-server` | 原生 consent request、session、Ed25519 JWT、撤销、audit |
 | `crates/aos-memory-gateway` | 远程 Agent 入口、EdDSA JWT 验签、TLS/mTLS、限流、审计 |
-| `aegis-os memory` | 用户命令入口，迁移期委托给 UOMP reference CLI |
+| `aegis-os memory` | 用户命令入口，全部为原生 Rust 命令 |
 | `aegis-os memory-gateway` | 启动本地 Aegis Memory Gateway |
 
 ## 2. 本地流程
@@ -22,31 +23,30 @@ description: 'UOMP 作为 Aegis OS memory module 的原生实现：aos-memory、
 ```bash
 brew install aegis-os
 
-# 一次性设置：导入 + 客户端配置 + 后台服务，不授权
+# 一次性设置：导入 + 客户端配置 + 后台服务，不预先授权
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
 # 在 Claude / Cursor / OpenCode 里请求读取
-# Aegis OS 打开本地审批页；批准后 Agent 继续
+# 第一次 tool call 会创建 consent request；批准后 Agent 继续
 
-aegis-os memory status
 aegis-os memory pending
 aegis-os memory approve <request-id>
-aegis-os memory revoke <session-id>
+aegis-os memory audit
+aegis-os memory disconnect claude
 ```
+
+浏览器审批页暂缓；当前原生审批路径是 CLI。Agent 不能批准自己的请求，高敏条目不会进入 Agent scope。
 
 本地路径：
 
 ```text
 Agent / MCP client
-      │  UOMP token
+      │  UOMP bridge / token
       ▼
-Aegis policy + lease
-      │
+aos-memory-server (consent, session, JWT, audit)
+      │  scoped request
       ▼
-aos-memory-store (SQLite + Markdown connector)
-      │
-      ▼
-audit
+aos-memory-store (SQLite + Markdown + staged + payload)
 ```
 
 ## 3. 远程 Agent
@@ -103,15 +103,16 @@ POST /v1/payload
 
 完整映射见 [UOMP → Aegis OS 记忆同意映射](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)。
 
-## 6. 迁移状态
+## 6. 实现状态
 
 - 品牌、规范、首页、文档：完成
 - Aegis policy/lease、memory gateway、TLS/mTLS：完成
 - staged writes、payload、remote device flow：完成
-- 原生 SQLite store 与 Markdown importer：基础完成
-- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` / `staged` / `payload` / `mcp` 已原生；其余迁移中
-- Gateway 完全切到原生 store：进行中
-- 统一 Web trusted UI：待完成
+- 原生 SQLite store、Markdown importer、staged writes、payload：完成
+- 原生 consent server、session、Ed25519 JWT、撤销、audit：完成
+- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` 全部原生
+- `uomp-core` / `uomp-mvp` reference：已归档，不再 vendored，也不在运行时调用
+- 统一 Web trusted UI：待完成（当前为 CLI 审批）
 
 ## 7. 相关链接
 
@@ -119,4 +120,3 @@ POST /v1/payload
 - [Aegis OS](https://github.com/heurion-org/aegis-os)
 - [UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - [UOMP → Aegis OS mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)
-- [Reference CLI (migration only)](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference)

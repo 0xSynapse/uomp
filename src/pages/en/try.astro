@@ -5,7 +5,7 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Try UOMP via Aegis OS"
-  description="aegis-os memory setup imports notes, writes the client config, and starts the background server. The first request comes from the agent, and Aegis OS opens the local approval page."
+  description="aegis-os memory setup imports notes, writes the client config, and starts the background server. The first request comes from the agent, and you approve the consent request in the terminal."
   lang="en"
   switchHref={`${baseUrl}try/`}
 >
@@ -14,7 +14,7 @@ import { baseUrl } from '../../utils/base.ts';
       <h1 style="margin-bottom:.25rem">Try UOMP via Aegis OS</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
         Today one <code>aegis-os memory setup</code> command imports Markdown notes, starts the background server, and writes the Claude Desktop / Cursor / OpenCode config. It does not pre-authorize anything. UOMP is the memory module of Aegis OS; consent, leases, and audit are enforced by Aegis.
-        When you ask the client for notes, the agent requests access and UOMP opens a local approval page. Packaging the CLI and broader client validation are next.
+        When you ask the client for notes, the MCP bridge creates a consent request; you approve it with <code>memory pending</code> / <code>approve</code> in the terminal, and the agent continues. The browser consent page is deferred.
         UOMP owns the protocol semantics; Aegis OS owns policy, leases, sandboxing, the gateway, and audit.
       </p>
     </div>
@@ -29,19 +29,19 @@ import { baseUrl } from '../../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP Client</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>aegis-os memory setup</code> writes the client config, while read access is requested by the agent and approved on the local consent page.
+            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>aegis-os memory setup</code> writes the client config, while read access is requested by the agent and approved in the terminal.
           </p>
           <div style="background:var(--accent-soft);border:1px solid var(--border);border-radius:2px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--accent)">
-            <strong>Experimental.</strong> Available now: <code>aegis-os memory setup claude</code>; the first tool call opens the local approval page. Claude Desktop / Cursor validation is still in progress.
+            <strong>Native.</strong> <code>aegis-os memory setup claude</code> writes the bridge profile; the first tool call creates a consent request, and terminal <code>pending</code> / <code>approve</code> completes approval.
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Intended workflow</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
               1. Point UOMP at an Obsidian vault with <code>aegis-os memory setup claude --vault</code><br/>
               2. Ask the client for <code>notes/projects/**</code><br/>
-              3. UOMP opens the approval page: scope, duration, per-key high-sensitivity<br/>
+              3. Terminal <code>memory pending</code> / <code>approve</code>: scope, duration, per-key high-sensitivity<br/>
               4. After approval the agent continues; every read is checked and logged<br/>
-              5. Revoke — the next request returns <code>403</code>
+              5. Revoke — the next request returns <code>401 SESSION_NOT_ACTIVE</code>
             </div>
           </div>
           <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
@@ -64,10 +64,12 @@ import { baseUrl } from '../../utils/base.ts';
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 aegis-os memory status
 aegis-os memory pending
-aegis-os memory revoke &lt;id&gt;</code></pre>
+aegis-os memory approve &lt;request-id&gt;
+aegis-os memory sessions
+aegis-os memory revoke &lt;session-id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
-            <code>setup</code> only imports notes, starts the background server, and writes the client config; it grants nothing. The first client request opens the approval page; <code>pending</code> / <code>approve</code> are the terminal fallback. Use <code>status</code> / <code>stop</code> to manage the server.
+            <code>setup</code> only imports notes, starts the background server, and writes the client config; it grants nothing. The first client request creates a consent request; <code>pending</code> / <code>approve</code> is the approval path. Use <code>sessions</code> / <code>revoke</code> to revoke sessions, and <code>stop</code> to stop the server.
           </p>
           <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
             CLI Tutorial →
@@ -94,9 +96,10 @@ aegis-os memory revoke &lt;id&gt;</code></pre>
       <table>
         <tr><th>Module</th><th>Responsibility</th></tr>
         <tr><td><code>aos-memory</code></td><td>scope / lease mapping, deny / field filtering, remote token policy</td></tr>
-        <tr><td><code>aos-memory-store</code></td><td>UOMP-compatible SQLite schema, Markdown importer</td></tr>
+        <tr><td><code>aos-memory-store</code></td><td>UOMP-compatible SQLite schema, Markdown importer, staged writes, payloads</td></tr>
+        <tr><td><code>aos-memory-server</code></td><td>consent requests, sessions, Ed25519 JWT, revocation, audit</td></tr>
         <tr><td><code>aos-memory-gateway</code></td><td>remote Agent entry, TLS/mTLS, rate limiting, audit</td></tr>
-        <tr><td><code>aegis-os memory</code></td><td>user command entry (delegates to the UOMP reference CLI during migration)</td></tr>
+        <tr><td><code>aegis-os memory</code></td><td>user command entry (all native Rust)</td></tr>
       </table>
       </div>
     </div>
