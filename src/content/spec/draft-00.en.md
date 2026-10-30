@@ -568,8 +568,11 @@ The Auth Service MUST verify `session_id` matches the path. If the Token has `ta
 | GET | `/v1/memory/aggregate?tag=:tag&op=:op&field=:field` | Aggregation query (sum/avg/count/min/max), no raw data, see §10.5 |
 | GET | `/v1/audit` | Query audit logs, see §18 |
 | POST | `/v1/memory/query` | Semantic query (not in MVP) |
-| PUT | `/v1/memory/:key` | Write or update (MVP returns `WRITE_NOT_AVAILABLE`) |
+| PUT | `/v1/memory/:key` | Stage a write; returns `202` + `staged_write_id`; applied after user approval |
 | DELETE | `/v1/memory/:key` | Delete (MVP returns `WRITE_NOT_AVAILABLE`) |
+| GET | `/v1/staged-writes` | List pending writes (admin) |
+| POST | `/v1/staged-writes/:id/approve` | Approve and apply a staged write (admin) |
+| POST | `/v1/staged-writes/:id/deny` | Deny a staged write (admin) |
 
 ### 10.2 Read by Key
 
@@ -695,8 +698,8 @@ The Guard MUST first validate tag access authorization (same as regular tag quer
 ### 11.3 Sensitivity Rules
 
 - `sensitivity=high` Memory Items cannot be accessed via tag authorization.
-- Agents MUST NOT write any Memory Items during the MVP phase.
-- After Milestone 2 introduces Staging writes, Agent writes to high-sensitivity items MUST still be rejected.
+- Agent writes MUST enter Staging and take effect only after user approval.
+- Agent writes to high-sensitivity items MUST be rejected.
 
 ## 12. Memory Import Format
 
@@ -1328,7 +1331,6 @@ Deletion proofs can be recorded on-chain via the `AuditAnchor` contract (§18.4)
 ## 22. Future Work
 
 - **On-chain audit (Phase 4)**: Starknet `AuditAnchor` contract, Authorization / Revocation / Access events on-chain.
-- Agent write staging.
 - **FHE integration (Phase 7-9)**: Fully Homomorphic Encryption. Agents compute on ciphertext, never see plaintext. Combined with on-chain audit for complete trustless data authorization. See `docs/on-chain-audit-design.md` §10.
 - Semantic retrieval (`query` endpoint).
 - Write version history and rollback.
