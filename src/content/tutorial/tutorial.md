@@ -377,6 +377,6 @@ UOMP 不能防止：
 ## 10. 进阶
 
 - 想了解协议和 Token 格式：[规范 Draft-00](/spec/)
-- 想写自己的 Agent：[README](https://github.com/0xSynapse/uomp-core#readme)
-- 想用 TypeScript SDK：[SDK 设计](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.md)
+- 想写自己的 Agent：[README](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference#readme)
+- 想用 TypeScript SDK：[SDK 设计](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference/docs/sdk-design.md)
 - 远程 Agent / Gateway 属于高级预览，不是本地流程的必需部分

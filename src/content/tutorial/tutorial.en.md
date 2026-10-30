@@ -377,6 +377,6 @@ Do not commit `~/.uomp` to git, and do not share session env files publicly.
 ## 10. Advanced
 
 - Protocol and token format: [Draft-00 specification](/en/spec/)
-- Build your own agent: [README](https://github.com/0xSynapse/uomp-core#readme)
-- TypeScript SDK: [SDK design](https://github.com/0xSynapse/uomp-core/tree/main/docs/sdk-design.en.md)
+- Build your own agent: [README](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference#readme)
+- TypeScript SDK: [SDK design](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference/docs/sdk-design.en.md)
 - Remote agents / Gateway are advanced preview features, not required for the local workflow

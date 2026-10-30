@@ -97,7 +97,7 @@ pnpm preview
 
 | 仓库 | 说明 |
 |------|------|
-| [0xaicrypto/uomp-core](https://github.com/heurion-org/aegis-os) | UOMP 参考实现（TypeScript CLI + SDK + HTTP 服务），含 [CLI/SDK 设计文档](https://github.com/heurion-org/aegis-os/tree/main/docs) 与 [远程授权设计文档](https://github.com/heurion-org/aegis-os/tree/main/docs) |
+| [heurion-org/aegis-os](https://github.com/heurion-org/aegis-os) | Aegis OS 原生 memory module + `modules/uomp/reference` 迁移参考实现 |
 | [0xaicrypto/uomp](https://github.com/0xaicrypto/uomp) | 本仓库：官方网站与协议规范 |
 
 ---
@@ -105,7 +105,7 @@ pnpm preview
 ## 参与贡献 / Contributing
 
 - 协议讨论：[GitHub Discussions](https://github.com/0xaicrypto/uomp/discussions)
-- 参考实现 Issues：[uomp-core Issues](https://github.com/heurion-org/aegis-os/issues)
+- 实现 Issues：[Aegis OS Issues](https://github.com/heurion-org/aegis-os/issues)
 - 网站 Issues：[uomp Issues](https://github.com/0xaicrypto/uomp/issues)
 
 ## 许可证 / License

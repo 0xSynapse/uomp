@@ -119,4 +119,4 @@ Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heur
 - [Aegis OS](https://github.com/heurion-org/aegis-os)
 - [UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - [UOMP → Aegis OS mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)
-- [Reference CLI (migration only)](https://github.com/0xSynapse/uomp-core)
+- [Reference CLI (migration only)](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp/reference)

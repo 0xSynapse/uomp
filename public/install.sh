@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="${UOMP_REPO_URL:-https://github.com/0xSynapse/uomp-core.git}"
+REPO_URL="${UOMP_REPO_URL:-https://github.com/heurion-org/aegis-os.git}"
 REF="${UOMP_REF:-main}"
 INSTALL_ROOT="${UOMP_INSTALL_ROOT:-$HOME/.uomp/cli}"
 BIN_DIR="${UOMP_BIN_DIR:-$HOME/.local/bin}"
-SRC_DIR="$INSTALL_ROOT/src"
+CLONE_DIR="$INSTALL_ROOT/src"
+SRC_DIR="$CLONE_DIR/modules/uomp/reference"
 BIN_PATH="$BIN_DIR/uomp"
 
 info() { printf '%s\n' "$*"; }
@@ -35,17 +36,17 @@ else
   fail "pnpm 9 is required. Install pnpm or enable corepack and try again."
 fi
 
-info "Installing UOMP from $REPO_URL ($REF)"
+info "Installing UOMP reference from Aegis OS ($REPO_URL, $REF)"
 
 mkdir -p "$INSTALL_ROOT" "$BIN_DIR"
 
-if [ -d "$SRC_DIR/.git" ]; then
-  info "Updating existing checkout in $SRC_DIR"
-  git -C "$SRC_DIR" fetch --depth 1 origin "$REF"
-  git -C "$SRC_DIR" checkout -q FETCH_HEAD
+if [ -d "$CLONE_DIR/.git" ]; then
+  info "Updating existing checkout in $CLONE_DIR"
+  git -C "$CLONE_DIR" fetch --depth 1 origin "$REF"
+  git -C "$CLONE_DIR" checkout -q FETCH_HEAD
 else
-  rm -rf "$SRC_DIR"
-  git clone --depth 1 --branch "$REF" "$REPO_URL" "$SRC_DIR"
+  rm -rf "$CLONE_DIR"
+  git clone --depth 1 --branch "$REF" "$REPO_URL" "$CLONE_DIR"
 fi
 
 cd "$SRC_DIR"
@@ -73,9 +74,8 @@ case ":$PATH:" in
 esac
 
 info ""
-info "Next:"
-info "  uomp demo"
-info "  uomp init"
-info "  uomp import ~/Obsidian/MyVault"
-info "  uomp authorize --scope notes/projects --output ~/.uomp/mcp-client.env --no-server"
-info "  uomp doctor"
+info "Next (product entry):"
+info "  aegis-os memory setup claude --vault ~/Obsidian/MyVault"
+info "  aegis-os memory status"
+info ""
+info "The installed uomp binary is the reference CLI used by aegis-os memory during migration."
