@@ -5,9 +5,9 @@ description: 'Architecture and implementation notes for the uomp-mvp reference i
 
 # UOMP Implementation Design
 
-> **Implementation status (2026-10):** the current focus is the local CLI + MCP loop. Remote Gateway, Cloud Relay, S3/IPFS, and on-chain sections are research or preview capabilities, not shipped product. For the current workflow, see the [README](https://github.com/0xSynapse/uomp-core#quick-start) and [tutorial](/en/tutorial/). The rest of this document preserves the original implementation design.
+> **Implementation status (2026-10):** the current focus is the local CLI + MCP loop; Aegis OS is the reference runtime that enforces the protocol. Remote Gateway, Cloud Relay, S3/IPFS, and on-chain sections are research or preview capabilities, not shipped product. For the current workflow, see the [README](https://github.com/0xSynapse/uomp-core#quick-start) and [tutorial](/en/tutorial/). The rest of this document preserves the original implementation design.
 
-This document explains how the UOMP **reference implementation** [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) turns the [protocol specification](/en/spec/) into runnable code.
+UOMP is the open protocol and Aegis OS is the reference runtime; [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) in this repository is the reference CLI and local implementation. This document explains how it turns the [protocol specification](/en/spec/) into runnable code. For the field-level mapping, see [UOMP → Aegis OS memory consent mapping](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md).
 
 ---
 
@@ -46,12 +46,20 @@ Default, zero-config. Agent connects directly to Memory Guard at `http://127.0.0
 ```
 
 ```bash
-# MCP client (recommended): authorize + write client config + start the local server in the background
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+# MCP client (recommended): one-time setup, no access granted
+uomp setup claude --vault ~/Obsidian/MyVault
+
+# The agent requests access from the client; UOMP opens the consent page. Terminal fallback:
+uomp pending
+uomp approve <request-id>
+
+# Manage
 uomp status
-uomp start
 uomp stop
 uomp disconnect claude
+
+# Advanced: pre-authorize / scripts
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
 
 # Agent package: authorize + write the env file
 uomp connect ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env
@@ -232,7 +240,7 @@ Full steps: [`examples/stock-analyst/README.md`](https://github.com/0xSynapse/uo
 |------------|--------|-------|
 | Agent read | ✅ | Authorized by tag/key/field |
 | Agent write | ❌ | Guard returns `503 WRITE_NOT_AVAILABLE` |
-| Local CLI | ✅ | import / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
+| Local CLI | ✅ | import / setup / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
 | Markdown import | ✅ | Obsidian/Markdown folders with path-derived scopes |
 | MCP | ✅ Experimental | stdio `list_memory` / `search_memory` / `read_memory` |
 | Remote Gateway | ⚠️ Advanced/preview | mTLS + Cloudflare Tunnel |

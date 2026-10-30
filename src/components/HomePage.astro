@@ -6,23 +6,29 @@ export interface Props {
 }
 
 const { lang = 'zh' } = Astro.props;
+const specHref = lang === 'zh' ? `${baseUrl}spec/` : `${baseUrl}en/spec/`;
+const aegisHref = 'https://heurion.org/#aegis-os';
 
 const content = {
   zh: {
-    eyebrow: '面向 AI Agent 的授权与审计层',
-    h1a: '数据留在原地。',
-    h1b: '访问必须明确。',
-    sub: 'UOMP 位于 Agent 和它想读的数据之间。每次读取都有范围、有时限、有记录。撤销在下一个请求生效，而不是第二天。',
-    ctaPrimary: '看它怎么工作',
-    ctaSecondary: '阅读用户指南',
-    meta: ['本地优先', '不上传数据', '开放协议', 'Apache 2.0'],
+    eyebrow: 'UOMP · 记忆同意协议',
+    h1a: '让 Agent 请求记忆，',
+    h1b: '让运行时执行同意。',
+    sub: 'UOMP 定义 Agent 如何请求个人记忆：范围、时效、撤销与审计。Aegis OS 是执行这套协议的参考运行时。',
+    ctaPrimary: '阅读协议',
+    ctaSecondary: 'Aegis OS 参考实现',
+    meta: ['开放协议草案', 'Apache 2.0', '参考实现：Aegis OS', 'Heurion Research'],
     tutorialHref: `${baseUrl}tutorial/`,
     roadmapHref: `${baseUrl}roadmap/`,
+    editorial: [
+      { label: '协议', text: '定义 Agent 如何声明范围、请求同意、续租与撤销。' },
+      { label: '执行', text: 'Aegis OS 用沙箱、策略、租约与可信审批把协议变成边界。' },
+    ],
     consent: {
-      label: '授权请求',
+      label: '同意请求',
       timer: '00:29:41',
       agent: 'Claude Desktop',
-      agentMeta: 'MCP 客户端',
+      agentMeta: 'MCP 客户端 · Aegis OS',
       badge: '只读',
       requested: '请求范围',
       allow: '读取',
@@ -35,7 +41,7 @@ const content = {
       dataValue: '留在本机',
       denyBtn: '拒绝',
       allowBtn: '允许 30 分钟',
-      preview: '授权流程示意',
+      preview: '同意流程示意',
     },
     audit: {
       title: '审计',
@@ -48,19 +54,19 @@ const content = {
     },
     status: {
       todayLabel: '今天',
-      today: '一条 connect：导入 + 授权 + 客户端配置 · 后台服务 · 浏览器审批 · 高敏逐 key · 撤销 · 审计',
+      today: '协议草案 · Agent 发起 · 范围与租约 · 本地审批 · 可撤销 · 审计',
       nextLabel: '下一步',
-      next: 'Claude Desktop / Cursor 验证 · 打包 CLI · 字段级执行',
+      next: 'Aegis OS 集成 · 独立 daemon · 沙箱隔离 · 打包参考 CLI',
     },
     how: {
-      kicker: '工作方式',
-      title: '三步，每次请求都检查。',
-      intro: 'UOMP 不把你的数据复制到另一个存储。它挡在你已有的数据前面，决定一个请求是否可以通过。',
+      kicker: '协议模型',
+      title: '三件事：声明、请求、执行。',
+      intro: 'UOMP 不复制你的数据。它定义 Agent 如何提出访问请求，以及运行时如何证明自己遵守了同意。',
       steps: [
         {
           n: '01',
           title: '声明',
-          body: 'Agent 在 manifest 里声明它需要的范围。按 tag、key、field 收窄，并明确写出不能读什么。',
+          body: 'Agent 在 manifest 里声明它需要的记忆范围。按 tag、key、field 收窄，并明确写出不能读什么。',
           codeLabel: 'uom.json',
           code: [
             '"requested_scopes": {',
@@ -73,88 +79,117 @@ const content = {
         },
         {
           n: '02',
-          title: '授权',
-          body: '你只授权一个会话，范围明确、时间有限。默认 30 分钟。',
-          codeLabel: 'terminal',
+          title: '请求同意',
+          body: 'Agent 通过运行时请求范围；UOMP 定义请求载荷，Aegis OS 打开本地审批页。用户只批准这次请求，默认 30 分钟。',
+          codeLabel: 'protocol',
           code: [
-            '$ uomp connect ./agent \\',
-            '    --vault ~/Obsidian/MyVault \\',
-            '    --scope notes/projects \\',
-            '    --duration 30',
+            'agent → runtime',
+            '{ "scope": ["notes/projects"],',
+            '  "ttl": "30m" }',
             '',
-            '✓ 128 items · session 7f3a · env file written',
+            'runtime → user',
+            'consent · notes/projects · 30m',
           ].join('\n'),
         },
         {
           n: '03',
           title: '执行',
-          body: 'Guard 在每次读取前检查范围、过期和撤销状态。撤销后，下一个请求立即失效。',
-          codeLabel: 'terminal',
+          body: '运行时在每次读取前检查范围、租约和撤销状态。撤销后，下一个请求立即失效。',
+          codeLabel: 'runtime',
           code: [
-            '$ uomp revoke 7f3a',
-            '✓ revoked',
+            'Aegis OS policy',
+            'scope ✓ · lease ✓ · revoke ✓',
             '',
-            'GET /v1/memory  →  403',
+            'audit → append-only',
           ].join('\n'),
         },
       ],
     },
     guarantees: {
-      kicker: '执行',
-      title: '返回任何数据之前，先过四道检查。',
-      intro: '这些保证在请求路径里执行，不是写在文档里。',
+      kicker: '执行边界',
+      title: '协议定义边界，运行时负责执行。',
+      intro: 'Aegis OS 在请求路径里执行这些约束：Agent 不直接接触数据，也不持有审批凭证。',
       rows: [
         { key: '范围', value: 'tag、key、field 白名单；deny 规则优先。' },
-        { key: '时间', value: '会话会过期，默认 30 分钟。' },
-        { key: '撤销', value: '每个请求都检查会话状态；revoke 或 close 立即生效。' },
+        { key: '时间', value: '租约到期即失效，默认 30 分钟。' },
+        { key: '撤销', value: '每个请求都检查租约状态；revoke 立即生效。' },
         { key: '审计', value: '每次允许和拒绝都记录 Agent、范围和时间。' },
+        { key: '隔离', value: 'Agent 在沙箱中运行，只通过受控接口访问记忆。' },
+        { key: '审批', value: '审批由可信 UI 完成；Agent 不能自己批准自己。' },
       ],
-      note: '默认本地优先：Guard 只监听 127.0.0.1，数据留在你已有的存储里。',
+      note: '本地优先：参考运行时在用户设备上执行策略，数据留在你已有的存储里。',
     },
     scope: {
       kicker: '边界',
-      title: '是访问的控制面，不是又一个记忆库。',
-      intro: 'UOMP 治理已经存在的数据，不试图成为数据存放的地方。',
+      title: '一个协议，不是又一个记忆库。',
+      intro: 'UOMP 定义访问方式；数据留在你已有的存储里。',
       isTitle: 'UOMP 是',
       is: [
-        '本地的授权、撤销与审计层',
-        '治理你已有数据的访问方式',
-        '开放协议 + 参考实现',
-        'MCP 的补充层',
+        'Agent 记忆同意的开放协议',
+        '范围、时效、撤销与审计的语义',
+        '与 MCP 互补的授权层',
+        '由 Heurion Research 维护',
       ],
       notTitle: 'UOMP 不是',
       not: [
         '记忆数据库或向量库',
         'Obsidian、Notion 或 Mem0 的替代品',
         '模型、Agent 框架或云服务',
-        '区块链或 FHE 产品',
+        '某个产品的私有接口',
       ],
       outTitle: '当前不在主线上',
       out: ['FHE', '链上审计', '新存储后端', 'Agent Registry', '写入流程'],
     },
+    protocol: {
+      kicker: '协议与实现',
+      title: 'UOMP 定义请求，Aegis OS 执行同意。',
+      intro: '协议保持开放，执行交给可信运行时。两者共同构成完整的记忆访问控制面。',
+      cards: [
+        {
+          label: 'UOMP · 协议',
+          title: '记忆同意的开放规范',
+          body: '定义 Agent 如何声明范围、请求同意、获得租约、撤销与审计。',
+          points: ['范围：tag / key / field', '租约：限时、可撤销', '审计：每次允许与拒绝'],
+          link: '阅读规范',
+          href: specHref,
+        },
+        {
+          label: 'Aegis OS · 参考实现',
+          title: '执行协议的内核运行时',
+          body: '把协议语义落到沙箱、策略、租约与可信审批上。',
+          points: ['内核沙箱与独立运行时', 'Policy + lease + escalation', '可信审批与审计记录'],
+          link: '了解 Aegis OS',
+          href: aegisHref,
+        },
+      ],
+    },
     cta: {
-      kicker: '设计伙伴',
-      title: '成为最早 10 个设计伙伴之一。',
-      body: '如果你的笔记在 Obsidian 或 Markdown 里，而且你在用不止一个 Agent，我们想了解你的工作流——不是收一张功能清单。',
-      primary: '成为设计伙伴',
+      kicker: '参与',
+      title: '一起定义记忆同意的标准。',
+      body: 'UOMP 还是草案。我们想和正在把 Agent 接入个人数据的团队一起，把范围、租约和审批语义定清楚。',
+      primary: '参与协议讨论',
       secondary: '阅读路线图',
     },
   },
   en: {
-    eyebrow: 'Consent and audit layer for AI agents',
-    h1a: 'Your data stays.',
-    h1b: 'Access is explicit.',
-    sub: 'UOMP sits between an agent and the data it wants. Every read is scoped, time-limited, and logged. Revocation takes effect on the next request — not the next day.',
-    ctaPrimary: 'See how it works',
-    ctaSecondary: 'Read the user guide',
-    meta: ['Local-first', 'No data upload', 'Open protocol', 'Apache 2.0'],
+    eyebrow: 'UOMP · MEMORY CONSENT PROTOCOL',
+    h1a: 'Agents ask for memory.',
+    h1b: 'Runtimes enforce consent.',
+    sub: 'UOMP defines how agents ask for personal memory: scope, duration, revocation, and audit. Aegis OS is the reference runtime that enforces it.',
+    ctaPrimary: 'Read the protocol',
+    ctaSecondary: 'Aegis OS reference',
+    meta: ['Open protocol draft', 'Apache 2.0', 'Reference runtime: Aegis OS', 'Heurion Research'],
     tutorialHref: `${baseUrl}en/tutorial/`,
     roadmapHref: `${baseUrl}en/roadmap/`,
+    editorial: [
+      { label: 'Protocol', text: 'Defines how an agent declares scope, requests consent, renews, and revokes.' },
+      { label: 'Enforcement', text: 'Aegis OS turns the protocol into a boundary with sandboxing, policy, leases, and trusted approval.' },
+    ],
     consent: {
-      label: 'Authorization request',
+      label: 'Consent request',
       timer: '00:29:41',
       agent: 'Claude Desktop',
-      agentMeta: 'MCP client',
+      agentMeta: 'MCP client · Aegis OS',
       badge: 'read-only',
       requested: 'Requested scope',
       allow: 'read',
@@ -167,7 +202,7 @@ const content = {
       dataValue: 'Stays on this device',
       denyBtn: 'Deny',
       allowBtn: 'Allow for 30 min',
-      preview: 'Authorization flow preview',
+      preview: 'Consent flow preview',
     },
     audit: {
       title: 'Audit',
@@ -180,19 +215,19 @@ const content = {
     },
     status: {
       todayLabel: 'Today',
-      today: 'One connect: import + authorize + client config · background server · browser consent · per-key high-sensitivity · revoke · audit',
+      today: 'Protocol draft · agent-initiated · scope & lease · local consent · revocable · audit',
       nextLabel: 'Next',
-      next: 'Claude Desktop / Cursor validation · packaged CLI · field-level enforcement',
+      next: 'Aegis OS integration · standalone daemon · sandbox isolation · packaged reference CLI',
     },
     how: {
-      kicker: 'How it works',
-      title: 'Three steps. Checked on every request.',
-      intro: 'UOMP does not copy your data into another store. It sits in front of the data you already have and decides whether a request is allowed.',
+      kicker: 'Protocol model',
+      title: 'Three moves: declare, request, enforce.',
+      intro: 'UOMP does not copy your data. It defines how an agent asks for access, and how a runtime proves that consent was respected.',
       steps: [
         {
           n: '01',
           title: 'Declare',
-          body: 'The agent ships a manifest with the scopes it needs. Narrow by tag, key, or field — and state what it must not read.',
+          body: 'The agent ships a manifest with the memory scopes it needs. Narrow by tag, key, or field — and state what it must not read.',
           codeLabel: 'uom.json',
           code: [
             '"requested_scopes": {',
@@ -205,70 +240,95 @@ const content = {
         },
         {
           n: '02',
-          title: 'Approve',
-          body: 'You grant one session with an explicit scope and a time limit. The default is 30 minutes.',
-          codeLabel: 'terminal',
+          title: 'Request consent',
+          body: 'The agent asks the runtime for a scope; UOMP defines the request payload and Aegis OS opens the local consent page. The user approves one request for 30 minutes by default.',
+          codeLabel: 'protocol',
           code: [
-            '$ uomp connect ./agent \\',
-            '    --vault ~/Obsidian/MyVault \\',
-            '    --scope notes/projects \\',
-            '    --duration 30',
+            'agent → runtime',
+            '{ "scope": ["notes/projects"],',
+            '  "ttl": "30m" }',
             '',
-            '✓ 128 items · session 7f3a · env file written',
+            'runtime → user',
+            'consent · notes/projects · 30m',
           ].join('\n'),
         },
         {
           n: '03',
           title: 'Enforce',
-          body: 'Guard checks scope, expiry, and revocation before every read. Revoking ends access on the next request.',
-          codeLabel: 'terminal',
+          body: 'The runtime checks scope, lease, and revocation before every read. Revoking ends access on the next request.',
+          codeLabel: 'runtime',
           code: [
-            '$ uomp revoke 7f3a',
-            '✓ revoked',
+            'Aegis OS policy',
+            'scope ✓ · lease ✓ · revoke ✓',
             '',
-            'GET /v1/memory  →  403',
+            'audit → append-only',
           ].join('\n'),
         },
       ],
     },
     guarantees: {
-      kicker: 'Enforcement',
-      title: 'Four checks before any data is returned.',
-      intro: 'The guarantees live in the request path, not in the documentation.',
+      kicker: 'Enforcement boundary',
+      title: 'The protocol defines the boundary. The runtime enforces it.',
+      intro: 'Aegis OS enforces these constraints in the request path: the agent never touches the data directly, and never holds the approval credential.',
       rows: [
         { key: 'Scope', value: 'Tag, key, and field allowlists. Deny rules win.' },
-        { key: 'Time', value: 'Sessions expire. 30 minutes by default.' },
-        { key: 'Revocation', value: 'Session state is checked on every request. Revoke or close takes effect immediately.' },
+        { key: 'Time', value: 'Leases expire. 30 minutes by default.' },
+        { key: 'Revocation', value: 'Lease state is checked on every request. Revoke takes effect immediately.' },
         { key: 'Audit', value: 'Every allow and deny is recorded with the agent, scope, and timestamp.' },
+        { key: 'Isolation', value: 'The agent runs in a sandbox and reaches memory only through a controlled interface.' },
+        { key: 'Approval', value: 'Approval happens in a trusted UI; the agent cannot approve itself.' },
       ],
-      note: 'Local-first by default: Guard binds to 127.0.0.1, and the data stays in the store you already use.',
+      note: 'Local-first: the reference runtime enforces policy on the user device, and the data stays in the store you already use.',
     },
     scope: {
-      kicker: 'Scope',
-      title: 'A control plane, not another memory store.',
-      intro: 'UOMP governs data that already exists. It does not try to become the place where that data lives.',
+      kicker: 'Boundary',
+      title: 'A protocol, not another memory store.',
+      intro: 'UOMP defines how access happens; the data stays in the store you already use.',
       isTitle: 'UOMP is',
       is: [
-        'A local consent, authorization, and audit layer',
-        'A way to govern access to data you already have',
-        'An open protocol with a reference implementation',
-        'Complementary to MCP',
+        'An open protocol for agent memory consent',
+        'Semantics for scope, duration, revocation, and audit',
+        'A consent layer complementary to MCP',
+        'Maintained by Heurion Research',
       ],
       notTitle: 'UOMP is not',
       not: [
         'A memory database or vector store',
         'A replacement for Obsidian, Notion, or Mem0',
         'A model, agent framework, or cloud',
-        'A blockchain or FHE product',
+        'A private interface for one product',
       ],
       outTitle: 'Not on the critical path',
       out: ['FHE', 'On-chain audit', 'New storage backends', 'Agent registry', 'Writes'],
     },
+    protocol: {
+      kicker: 'Protocol & implementation',
+      title: 'UOMP defines the request. Aegis OS enforces consent.',
+      intro: 'The protocol stays open; enforcement belongs to a trusted runtime. Together they form the full memory access control plane.',
+      cards: [
+        {
+          label: 'UOMP · Protocol',
+          title: 'The open memory consent spec',
+          body: 'Defines how an agent declares scope, requests consent, receives a lease, revokes, and audits.',
+          points: ['Scope: tag / key / field', 'Lease: time-limited, revocable', 'Audit: every allow and deny'],
+          link: 'Read the spec',
+          href: specHref,
+        },
+        {
+          label: 'Aegis OS · Reference runtime',
+          title: 'The kernel runtime that enforces it',
+          body: 'Turns protocol semantics into sandboxing, policy, leases, and trusted approval.',
+          points: ['Kernel sandbox & standalone runtime', 'Policy + lease + escalation', 'Trusted approval & audit records'],
+          link: 'Explore Aegis OS',
+          href: aegisHref,
+        },
+      ],
+    },
     cta: {
-      kicker: 'Design partners',
-      title: 'Become one of our first ten design partners.',
-      body: 'If you keep your notes in Obsidian or Markdown and use more than one agent, we want your workflow — not a feature request.',
-      primary: 'Become a design partner',
+      kicker: 'Participate',
+      title: 'Help define the standard for memory consent.',
+      body: 'UOMP is still a draft. We want to work with teams connecting agents to personal data to settle scope, lease, and approval semantics.',
+      primary: 'Join the protocol discussion',
       secondary: 'Read the roadmap',
     },
   },
@@ -285,12 +345,21 @@ const t = content[lang];
         <h1>{t.h1a}<span>{t.h1b}</span></h1>
         <p class="hero-sub">{t.sub}</p>
         <div class="hero-actions">
-          <a class="btn-solid" href="#how">{t.ctaPrimary}</a>
-          <a class="btn-line" href={t.tutorialHref}>{t.ctaSecondary}</a>
+          <a class="btn-solid" href={specHref}>{t.ctaPrimary} <span aria-hidden="true">→</span></a>
+          <a class="btn-line" href={aegisHref} target="_blank" rel="noopener">{t.ctaSecondary} <span aria-hidden="true">↗</span></a>
           <a class="link-quiet" href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener">GitHub</a>
         </div>
         <div class="hero-meta">
           {t.meta.map((m) => <span>{m}</span>)}
+        </div>
+
+        <div class="hero-editorial">
+          {t.editorial.map((row) => (
+            <div class="editorial-row">
+              <span class="editorial-label">{row.label}</span>
+              <p>{row.text}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -444,6 +513,34 @@ const t = content[lang];
     </div>
   </section>
 
+  <section class="section protocol-section">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">{t.protocol.kicker}</div>
+          <h2>{t.protocol.title}</h2>
+        </div>
+        <p>{t.protocol.intro}</p>
+      </div>
+
+      <div class="protocol-grid">
+        {t.protocol.cards.map((card) => (
+          <article class="protocol-card">
+            <div class="protocol-label">{card.label}</div>
+            <h3>{card.title}</h3>
+            <p>{card.body}</p>
+            <ul class="protocol-points">
+              {card.points.map((point) => <li>{point}</li>)}
+            </ul>
+            <a class="link-arrow" href={card.href} target={card.href.startsWith('http') ? '_blank' : undefined} rel={card.href.startsWith('http') ? 'noopener' : undefined}>
+              {card.link} <span aria-hidden="true">→</span>
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
   <section class="partner-cta">
     <div class="wrap cta-inner">
       <div>
@@ -461,18 +558,18 @@ const t = content[lang];
 
 <style>
   .home {
-    --paper: #fbfbf8;
-    --surface: #ffffff;
-    --ink: #111210;
-    --muted: #62655f;
-    --faint: #6f726a;
-    --line: #e3e3dc;
-    --line-strong: #cfcfc6;
-    --accent: #1f5f4a;
-    --accent-soft: #eef5f1;
-    --warn: #8a4b12;
-    --warn-soft: #fbf3ea;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --paper: #FAF8F4;
+    --surface: #FDFCF9;
+    --ink: #151C19;
+    --muted: #4A534E;
+    --faint: #646D68;
+    --line: #DFDAD0;
+    --line-strong: #C9C2B6;
+    --accent: #233E33;
+    --accent-soft: #E3ECE7;
+    --warn: #8F5638;
+    --warn-soft: #F3EAE3;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
 
     background: var(--paper);
     color: var(--ink);
@@ -483,8 +580,12 @@ const t = content[lang];
     background: transparent;
   }
 
+  .home .protocol-section {
+    background: var(--off2);
+  }
+
   .wrap {
-    width: min(1180px, calc(100% - 64px));
+    width: min(1220px, calc(100% - 7rem));
     margin: 0 auto;
   }
 
@@ -495,10 +596,10 @@ const t = content[lang];
 
   .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-    gap: 72px;
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+    gap: 4.25rem;
     align-items: center;
-    padding: 84px 0 56px;
+    padding: 4rem 0 4.5rem;
   }
 
   .kicker {
@@ -506,9 +607,9 @@ const t = content[lang];
     align-items: center;
     gap: 9px;
     font-family: var(--mono);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.13em;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
   }
@@ -518,39 +619,54 @@ const t = content[lang];
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--accent);
+    background: var(--heurion-mint);
     flex: none;
   }
 
   .home-hero h1 {
-    margin: 22px 0 0;
-    font-family: var(--font-sans);
-    font-size: clamp(40px, 4.9vw, 58px);
-    font-weight: 600;
-    line-height: 1.04;
-    letter-spacing: -0.045em;
+    margin: 1.4rem 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(2.35rem, 3.4vw, 3.1rem);
+    font-weight: 400;
+    line-height: 1.16;
+    letter-spacing: -0.022em;
     color: var(--ink);
   }
 
   .home-hero h1 span {
     display: block;
-    color: var(--muted);
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  :global(html[lang="zh-CN"]) .home-hero h1 {
+    font-size: clamp(2rem, 2.75vw, 2.55rem);
+    font-weight: 500;
+    line-height: 1.34;
+    letter-spacing: 0.01em;
+  }
+
+  :global(html[lang="zh-CN"]) .home-hero h1 span {
+    font-style: normal;
+    border-bottom: 1px solid rgba(35, 62, 51, 0.35);
+    padding-bottom: 0.04em;
   }
 
   .hero-sub {
-    max-width: 520px;
-    margin: 24px 0 0;
-    font-size: 16.5px;
-    line-height: 1.65;
-    color: var(--muted);
+    max-width: 34rem;
+    margin: 1.5rem 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--ink-secondary);
   }
 
   .hero-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 1.5rem;
     flex-wrap: wrap;
-    margin-top: 30px;
+    margin-top: 1.75rem;
+    padding-top: 0.5rem;
   }
 
   .btn-solid,
@@ -558,61 +674,69 @@ const t = content[lang];
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 42px;
-    padding: 0 18px;
-    border-radius: 8px;
-    font-size: 13.5px;
-    font-weight: 600;
+    gap: 0.55rem;
+    height: auto;
+    padding: 0.8rem 1.5rem;
+    border-radius: 2px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     text-decoration: none;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
 
   .btn-solid {
-    background: var(--ink);
-    color: #fff;
-    border: 1px solid var(--ink);
+    background: var(--accent);
+    color: var(--ink-light);
+    border: 1px solid var(--accent);
+    box-shadow: 0 8px 24px rgba(21, 28, 25, 0.12);
   }
 
   .btn-solid:hover {
-    background: #2a2c28;
+    background: var(--ink);
+    border-color: var(--ink);
   }
 
   .btn-line {
     background: transparent;
-    color: var(--ink);
-    border: 1px solid var(--line-strong);
+    color: var(--ink-secondary);
+    border: 1px solid var(--line);
   }
 
   .btn-line:hover {
-    border-color: var(--ink);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .link-quiet {
-    margin-left: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--muted);
+    margin-left: 0.25rem;
+    padding-bottom: 0.12rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--ink-secondary);
     text-decoration: none;
   }
 
   .link-quiet:hover {
-    color: var(--ink);
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   .hero-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 18px;
-    margin-top: 32px;
+    gap: 0.5rem 1.125rem;
+    margin-top: 2rem;
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: 0.68rem;
     letter-spacing: 0.04em;
     color: var(--faint);
   }
 
   .hero-meta span {
     position: relative;
-    padding-right: 18px;
+    padding-right: 1.125rem;
   }
 
   .hero-meta span:not(:last-child)::after {
@@ -627,6 +751,38 @@ const t = content[lang];
     transform: translateY(-50%);
   }
 
+  .hero-editorial {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 34rem;
+    margin-top: 2.25rem;
+  }
+
+  .editorial-row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 1.25rem;
+    align-items: baseline;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(21, 28, 25, 0.14);
+  }
+
+  .editorial-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .editorial-row p {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--ink-secondary);
+  }
+
   /* ── Consent mock ── */
   .hero-demo {
     min-width: 0;
@@ -634,9 +790,9 @@ const t = content[lang];
 
   .consent {
     border: 1px solid var(--line-strong);
-    border-radius: 12px;
+    border-radius: 2px;
     background: var(--surface);
-    box-shadow: 0 30px 60px -36px rgba(17, 18, 16, 0.35);
+    box-shadow: 0 22px 54px rgba(21, 28, 25, 0.08);
     overflow: hidden;
   }
 
@@ -675,7 +831,7 @@ const t = content[lang];
     place-items: center;
     width: 34px;
     height: 34px;
-    border-radius: 8px;
+    border-radius: 2px;
     background: var(--ink);
     color: #fff;
     font-family: var(--font-serif);
@@ -704,7 +860,7 @@ const t = content[lang];
     margin-left: auto;
     padding: 3px 7px;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: 2px;
     font-family: var(--mono);
     font-size: 9px;
     letter-spacing: 0.06em;
@@ -748,7 +904,7 @@ const t = content[lang];
   .pill {
     flex: none;
     padding: 2px 6px;
-    border-radius: 3px;
+    border-radius: 2px;
     font-family: var(--mono);
     font-size: 8.5px;
     font-weight: 600;
@@ -807,7 +963,7 @@ const t = content[lang];
     align-items: center;
     justify-content: center;
     height: 34px;
-    border-radius: 6px;
+    border-radius: 2px;
     font-size: 11.5px;
     font-weight: 600;
   }
@@ -836,7 +992,7 @@ const t = content[lang];
   .audit {
     margin-top: 14px;
     padding: 13px 16px 11px;
-    border-radius: 10px;
+    border-radius: 2px;
     background: var(--ink);
     color: #d4d7d0;
   }
@@ -928,7 +1084,7 @@ const t = content[lang];
 
   /* ── Sections ── */
   .section {
-    padding: 88px 0;
+    padding: 5.25rem 0;
     border-bottom: 1px solid var(--line);
   }
 
@@ -942,13 +1098,18 @@ const t = content[lang];
 
   .section-head h2,
   .partner-cta h2 {
-    margin: 14px 0 0;
-    font-family: var(--font-sans);
-    font-size: clamp(26px, 3.1vw, 38px);
-    font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: -0.035em;
+    margin: 0.9rem 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 2.5vw, 2.35rem);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
     color: var(--ink);
+  }
+
+  :global(html[lang="zh-CN"]) .section-head h2,
+  :global(html[lang="zh-CN"]) .partner-cta h2 {
+    font-weight: 500;
   }
 
   .section-head p {
@@ -982,10 +1143,15 @@ const t = content[lang];
   }
 
   .how-step h3 {
-    margin: 9px 0 7px;
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    margin: 0.6rem 0 0.45rem;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  :global(html[lang="zh-CN"]) .how-step h3 {
+    font-weight: 500;
   }
 
   .how-step p {
@@ -1009,8 +1175,8 @@ const t = content[lang];
     margin: 0;
     padding: 13px 14px;
     border: 1px solid var(--line);
-    border-radius: 8px;
-    background: #f4f4ef;
+    border-radius: 2px;
+    background: #F2EFE9;
     overflow-x: auto;
     font-size: 11px;
     line-height: 1.7;
@@ -1145,10 +1311,93 @@ const t = content[lang];
   .tags li {
     padding: 4px 8px;
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: 2px;
     font-family: var(--mono);
     font-size: 9.5px;
     color: var(--muted);
+  }
+
+  /* ── Protocol / implementation ── */
+  .protocol-section {
+    background: var(--off2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .protocol-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .protocol-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .protocol-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .protocol-card h3 {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+
+  :global(html[lang="zh-CN"]) .protocol-card h3 {
+    font-weight: 500;
+  }
+
+  .protocol-card p {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--ink-secondary);
+  }
+
+  .protocol-points {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .protocol-points li {
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+    line-height: 1.55;
+    color: var(--ink-secondary);
+  }
+
+  .link-arrow {
+    align-self: flex-start;
+    margin-top: auto;
+    padding-top: 0.9rem;
+    padding-bottom: 0.12rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.875rem;
+    color: var(--ink-secondary);
+  }
+
+  .link-arrow:hover {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
   }
 
   /* ── CTA ── */
@@ -1232,6 +1481,11 @@ const t = content[lang];
       flex-direction: row;
       flex-wrap: wrap;
     }
+
+    .protocol-grid {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
   }
 
   @media (max-width: 720px) {
@@ -1253,6 +1507,11 @@ const t = content[lang];
 
     .section {
       padding: 60px 0;
+    }
+
+    .section-head h2,
+    .partner-cta h2 {
+      font-size: 1.55rem;
     }
 
     .status-strip {
@@ -1280,7 +1539,12 @@ const t = content[lang];
     }
 
     .home-hero h1 {
-      font-size: clamp(36px, 10vw, 46px);
+      font-size: clamp(2rem, 9vw, 2.5rem);
+    }
+
+    .editorial-row {
+      grid-template-columns: 4.5rem 1fr;
+      gap: 1rem;
     }
   }
 </style>

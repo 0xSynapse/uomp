@@ -3,13 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import { baseUrl } from '../utils/base.ts';
 ---
 
-<Layout title="试用 - UOMP" description="一条 uomp connect 命令完成导入、授权、客户端配置和后台服务；MCP 客户端支持按需浏览器审批，打包 CLI 是下一个里程碑。" switchHref={`${baseUrl}en/try/`}>
+<Layout title="试用 - UOMP" description="一条 uomp setup 命令完成导入、客户端配置和后台服务；第一次工具调用由 Agent 发起，UOMP 打开本地审批页。打包 CLI 是下一个里程碑。" switchHref={`${baseUrl}en/try/`}>
   <section>
     <div class="container">
       <h1 style="margin-bottom:.25rem">试用 UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
-        今天，一条 <code>uomp connect</code> 就能导入 Markdown 笔记、启动后台服务、授权一个有范围限制的会话，并把配置写进 Claude Desktop / Cursor / OpenCode。
-        MCP 客户端还支持第一次工具调用时弹出本地审批页；打包 CLI 和更多客户端验证是下一步。
+        今天，一条 <code>uomp setup</code> 就能导入 Markdown 笔记、启动后台服务，并把配置写进 Claude Desktop / Cursor / OpenCode；它不会预先授权。
+        你在客户端里提出请求后，UOMP 打开本地审批页，批准后 Agent 继续。打包 CLI 和更多客户端验证是下一步。
         两者共享 <code style="font-size:.88rem">@uomp/sdk</code>、Token 体系、Guard 鉴权和审计日志。
       </p>
     </div>
@@ -24,18 +24,18 @@ import { baseUrl } from '../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP 客户端</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Claude Desktop、Cursor 或任何 MCP 客户端通过 stdio 连接，客户端配置由 <code>uomp connect</code> 写入；读取权限仍由本地会话控制。
+            Claude Desktop、Cursor 或任何 MCP 客户端通过 stdio 连接，客户端配置由 <code>uomp setup</code> 写入；读取权限由 Agent 发起请求、你在本地审批页批准。
           </p>
           <div style="background:var(--violet-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--violet)">
-            <strong>实验功能。</strong>已可用：<code>uomp connect claude</code>；加 <code>--on-demand</code> 可在第一次工具调用时弹出本地审批页。Claude Desktop / Cursor 验证还在进行。
+            <strong>实验功能。</strong>已可用：<code>uomp setup claude</code>；第一次工具调用会弹出本地审批页。Claude Desktop / Cursor 验证还在进行。
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">目标流程</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
-              1. 用 <code>uomp connect --vault</code> 指向 Obsidian 笔记库或 Markdown 目录<br/>
-              2. Agent 请求读取 <code>notes/projects/**</code>，默认 30 分钟<br/>
-              3. 在浏览器审批页或 CLI 里确认范围和时长（高敏数据逐 key）<br/>
-              4. 每次读取都被检查和记录<br/>
+              1. 用 <code>uomp setup claude --vault</code> 指向 Obsidian 笔记库<br/>
+              2. 在客户端里请求读取 <code>notes/projects/**</code><br/>
+              3. UOMP 打开审批页：确认范围、时长；高敏数据逐 key<br/>
+              4. 批准后 Agent 继续，每次读取都被检查和记录<br/>
               5. 撤销——下一个请求返回 <code>403</code>
             </div>
           </div>
@@ -56,16 +56,15 @@ import { baseUrl } from '../utils/base.ts';
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:.75rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">命令速览</div>
             <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>curl -fsSL https://www.uomp.org/install.sh | bash
-uomp demo
-uomp init
-uomp connect ./agent --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup claude --vault ~/Obsidian/MyVault
 uomp status
+uomp pending
 uomp revoke &lt;id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
-            <code>connect</code> 会先导入 <code>--vault</code> 指定的笔记，再在后台启动本地服务；MCP 客户端会同时写入客户端配置，Agent 包会把 token 写入 <code>~/.uomp/sessions/&lt;id&gt;.env</code>（0600），默认不打印 JWT。用 <code>status</code> / <code>stop</code> 管理后台服务。
+            <code>setup</code> 只做导入、后台服务和客户端配置，不授权任何范围。第一次客户端请求会打开审批页；<code>pending</code> / <code>approve</code> 是终端兜底。用 <code>status</code> / <code>stop</code> 管理后台服务。
           </p>
-          <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#2563EB;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
+          <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
             CLI 教程 →
           </a>
         </div>
@@ -77,7 +76,7 @@ uomp revoke &lt;id&gt;</code></pre>
       <div class="card" style="max-width:760px">
         <h2 style="font-size:1.15rem;margin-bottom:.75rem">共享基础设施</h2>
         <p style="color:var(--mid);font-size:.88rem;line-height:1.7">
-          CLI 和 MCP 是 <strong>同一套实现的两种交互界面</strong>。底层共享 <code>@uomp/sdk</code>、<code>@uomp/core</code>、Capability Token 体系、Guard 鉴权和审计日志。今天 <code>connect</code> 可以一条命令接入客户端，MCP 还支持按需浏览器审批；下一步是更多客户端验证和打包 CLI。
+          CLI 和 MCP 是 <strong>同一套实现的两种交互界面</strong>。底层共享 <code>@uomp/sdk</code>、<code>@uomp/core</code>、Capability Token 体系、Guard 鉴权和审计日志。今天 <code>setup</code> 负责一次性接入，Agent 在需要时发起审批请求；下一步是更多客户端验证和打包 CLI。
         </p>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Roadmap - UOMP"
-  description="What UOMP is building next: make one-command connect usable first, then validate MCP clients and package the CLI. Progress is measured by retained users, not shipped features."
+  description="What UOMP is building next: make the agent client the entry point, with UOMP as one-time setup and local consent. Progress is measured by retained users, not shipped features."
   lang="en"
   switchHref={`${baseUrl}roadmap/`}
 >
@@ -16,7 +16,7 @@ import { baseUrl } from '../../utils/base.ts';
 
       <div class="roadmap">
         <div class="note">
-          <strong>Current focus:</strong> make connecting a client one command — <code>connect</code> handles import, authorization, client config, and the background server; MCP supports browser consent on the first call. Claude Desktop / Cursor validation and packaged CLI come next.
+          <strong>Current focus:</strong> the user entry point is Claude / Cursor / an agent CLI, not <code>uomp</code>. The user runs <code>uomp setup</code> once; afterwards the agent requests data and UOMP opens the local consent page. Claude Desktop / Cursor validation and packaged CLI come next.
         </div>
 
         <h2>Milestone 1: The authorization loop <span class="status status-done">Done</span></h2>
@@ -29,10 +29,10 @@ import { baseUrl } from '../../utils/base.ts';
           <li><span class="status status-done">Done</span>Admin token required for session create, grant, and revoke</li>
           <li><span class="status status-done">Done</span><code>revoke</code> and <code>close</code> enforced on the next request</li>
           <li><span class="status status-done">Done</span>Audit log for every access decision</li>
-          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>connect</code> / <code>authorize</code> / <code>serve</code> / <code>start</code> / <code>status</code> / <code>stop</code> / <code>disconnect</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
-          <li><span class="status status-done">Done</span><code>connect --vault</code> imports, authorizes, configures, and starts the server in one command</li>
-          <li><span class="status status-done">Done</span>Background server lifecycle: <code>start</code> / <code>status</code> / <code>stop</code>, with logs in <code>~/.uomp/server.log</code></li>
-          <li><span class="status status-done">Done</span>On-demand consent: <code>connect --on-demand</code> + local browser approval / desktop notification / <code>pending</code> / <code>approve</code> / <code>deny</code></li>
+          <li><span class="status status-done">Done</span>CLI: <code>import</code> / <code>setup</code> / <code>connect</code> / <code>authorize</code> / <code>serve</code> / <code>start</code> / <code>status</code> / <code>stop</code> / <code>disconnect</code> / <code>sessions</code> / <code>revoke</code> / <code>audit</code></li>
+          <li><span class="status status-done">Done</span><code>setup --vault</code> imports, writes the client config, and starts the server without granting access</li>
+          <li><span class="status status-done">Done</span>Agent-initiated consent: MCP tool calls request a tag/key, then the local consent page asks the user</li>
+          <li><span class="status status-done">Done</span>On-demand consent: local browser approval / desktop notification / <code>pending</code> / <code>approve</code> / <code>deny</code></li>
           <li><span class="status status-done">Done</span>High-sensitivity tags are off by default and require per-key approval; <code>--allow-key</code> / <code>--allow-high</code> for scripts</li>
           <li><span class="status status-done">Done</span>Markdown / Obsidian folder import with path-derived scopes and <code>--dry-run</code></li>
           <li><span class="status status-done">Done</span><code>authorize</code> writes a 0600 session env file and does not print the JWT by default</li>

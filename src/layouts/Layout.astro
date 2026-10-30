@@ -8,42 +8,48 @@ export interface Props {
   switchHref?: string;
 }
 
-const { title, description = 'UOMP - 用户与 AI Agent 之间的授权、撤销与审计层', lang = 'zh', switchHref } = Astro.props;
+const { title, description = 'UOMP — Agent 记忆同意协议', lang = 'zh', switchHref } = Astro.props;
 
 const nav = {
   zh: {
     home: '首页',
     spec: '规范',
-    design: '实现',
+    design: '参考实现',
     tutorial: '教程',
     example: '试用',
     roadmap: '路线图',
     github: 'GitHub',
     switch: 'EN',
     brand: 'UOMP',
-    brandTagline: '你和 AI Agent 之间的授权、撤销与审计层',
+    brandParent: 'by Heurion Research',
+    brandTagline: 'Agent 记忆同意的开放协议',
+    aegis: 'Aegis OS',
     footerCols: {
-      protocol: { title: '协议', links: [{ t: '规范', h: `${baseUrl}spec/` }, { t: '实现设计', h: `${baseUrl}design/` }, { t: '教程', h: `${baseUrl}tutorial/` }, { t: '试用', h: `${baseUrl}try/` }, { t: '路线图', h: `${baseUrl}roadmap/` }] },
-      community: { title: '社区', links: [{ t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
+      protocol: { title: '协议', links: [{ t: '规范', h: `${baseUrl}spec/` }, { t: '实现设计', h: `${baseUrl}design/` }, { t: '路线图', h: `${baseUrl}roadmap/` }] },
+      implementation: { title: '实现', links: [{ t: 'Aegis OS 参考实现', h: 'https://heurion.org/#aegis-os' }, { t: '参考 CLI 教程', h: `${baseUrl}tutorial/` }, { t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
     },
-    footerBtm: '© UOMP 贡献者 · 开放协议草案',
+    footerNote: 'Aegis OS 是 UOMP 的参考实现。',
+    footerBtm: '© UOMP contributors · A protocol by Heurion Research · Apache 2.0',
   },
   en: {
     home: 'Home',
     spec: 'Spec',
-    design: 'Implementation',
+    design: 'Reference',
     tutorial: 'Tutorial',
     example: 'Try',
     roadmap: 'Roadmap',
     github: 'GitHub',
     switch: '中文',
     brand: 'UOMP',
-    brandTagline: 'The consent and audit layer between you and AI agents',
+    brandParent: 'by Heurion Research',
+    brandTagline: 'The open protocol for agent memory consent',
+    aegis: 'Aegis OS',
     footerCols: {
-      protocol: { title: 'Protocol', links: [{ t: 'Spec', h: `${baseUrl}en/spec/` }, { t: 'Implementation', h: `${baseUrl}en/design/` }, { t: 'Tutorial', h: `${baseUrl}en/tutorial/` }, { t: 'Try', h: `${baseUrl}en/try/` }, { t: 'Roadmap', h: `${baseUrl}en/roadmap/` }] },
-      community: { title: 'Community', links: [{ t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
+      protocol: { title: 'Protocol', links: [{ t: 'Spec', h: `${baseUrl}en/spec/` }, { t: 'Implementation', h: `${baseUrl}en/design/` }, { t: 'Roadmap', h: `${baseUrl}en/roadmap/` }] },
+      implementation: { title: 'Implementation', links: [{ t: 'Aegis OS reference runtime', h: 'https://heurion.org/#aegis-os' }, { t: 'Reference CLI tutorial', h: `${baseUrl}en/tutorial/` }, { t: 'GitHub', h: 'https://github.com/0xSynapse/uomp-core' }, { t: 'Issues', h: 'https://github.com/0xSynapse/uomp-core/issues' }] },
     },
-    footerBtm: '© UOMP contributors · Open protocol draft',
+    footerNote: 'Aegis OS is the reference implementation of UOMP.',
+    footerBtm: '© UOMP contributors · A protocol by Heurion Research · Apache 2.0',
   },
 };
 
@@ -96,21 +102,21 @@ const isRoadmap = pathname.startsWith(`${baseUrl}roadmap/`) || pathname.startsWi
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href={`${baseUrl}styles/global.css`} />
   </head>
   <body>
     <div class="nav-outer">
       <nav>
         <a href={homeHref} class="nav-logo" aria-label={t.brand}>
-          <div class="nav-lm">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <span>{t.brand}</span>
+          <svg class="nav-mark" viewBox="0 0 28 22" fill="none" aria-hidden="true">
+            <path d="M10 1H1v20h9" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M18 1h9v20h-9" stroke="currentColor" stroke-width="1.2"/>
+            <line x1="10" y1="11" x2="18" y2="11" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="14" cy="11" r="1.7" fill="var(--heurion-mint)"/>
+          </svg>
+          <span class="nav-word">{t.brand}</span>
+          <span class="nav-parent">{t.brandParent}</span>
         </a>
         <ul class="nav-links">
           <li><a href={homeHref} class={isHome ? 'active' : ''}>{t.home}</a></li>
@@ -125,7 +131,7 @@ const isRoadmap = pathname.startsWith(`${baseUrl}roadmap/`) || pathname.startsWi
             <span></span>
           </button>
           <a href={resolvedSwitchHref} class="btn-ng">{t.switch}</a>
-          <a href="https://github.com/0xSynapse/uomp-core" target="_blank" rel="noopener" class="btn-np">{t.github}</a>
+          <a href="https://heurion.org/#aegis-os" target="_blank" rel="noopener" class="btn-np">{t.aegis}</a>
         </div>
       </nav>
     </div>
@@ -136,16 +142,16 @@ const isRoadmap = pathname.startsWith(`${baseUrl}roadmap/`) || pathname.startsWi
       <div class="footer-top">
         <div class="footer-brand">
           <a href={homeHref} class="footer-logo">
-            <div class="footer-lm">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                <path d="M2 17l10 5 10-5"/>
-                <path d="M2 12l10 5 10-5"/>
-              </svg>
-            </div>
+            <svg class="footer-mark" viewBox="0 0 28 22" fill="none" aria-hidden="true">
+              <path d="M10 1H1v20h9" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M18 1h9v20h-9" stroke="currentColor" stroke-width="1.2"/>
+              <line x1="10" y1="11" x2="18" y2="11" stroke="currentColor" stroke-width="1.2"/>
+              <circle cx="14" cy="11" r="1.7" fill="var(--heurion-mint)"/>
+            </svg>
             <span>{t.brand}</span>
           </a>
           <p>{t.brandTagline}</p>
+          <p class="footer-note">{t.footerNote}</p>
         </div>
         <div class="footer-col">
           <h4>{t.footerCols.protocol.title}</h4>
@@ -156,16 +162,17 @@ const isRoadmap = pathname.startsWith(`${baseUrl}roadmap/`) || pathname.startsWi
           </ul>
         </div>
         <div class="footer-col">
-          <h4>{t.footerCols.community.title}</h4>
+          <h4>{t.footerCols.implementation.title}</h4>
           <ul>
-            {t.footerCols.community.links.map(l => (
-              <li><a href={l.h} target="_blank" rel="noopener">{l.t}</a></li>
+            {t.footerCols.implementation.links.map(l => (
+              <li><a href={l.h} target={l.h.startsWith('http') ? '_blank' : undefined} rel={l.h.startsWith('http') ? 'noopener' : undefined}>{l.t}</a></li>
             ))}
           </ul>
         </div>
       </div>
       <div class="footer-btm">
         <span>{t.footerBtm}</span>
+        <a href="https://heurion.org" target="_blank" rel="noopener">Heurion Research ↗</a>
       </div>
     </footer>
     <script>

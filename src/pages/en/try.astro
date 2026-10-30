@@ -5,7 +5,7 @@ import { baseUrl } from '../../utils/base.ts';
 
 <Layout
   title="Try - UOMP"
-  description="One uomp connect command imports notes, authorizes access, writes the client config, and starts the background server. MCP clients can also use on-demand browser consent; packaging the CLI is next."
+  description="One uomp setup command imports notes, writes the client config, and starts the background server. The first request comes from the agent, and UOMP opens a local approval page. Packaging the CLI is next."
   lang="en"
   switchHref={`${baseUrl}try/`}
 >
@@ -13,8 +13,8 @@ import { baseUrl } from '../../utils/base.ts';
     <div class="container">
       <h1 style="margin-bottom:.25rem">Try UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
-        Today one <code>uomp connect</code> command imports Markdown notes, starts the background server, grants a scoped session, and writes the Claude Desktop / Cursor / OpenCode config.
-        MCP clients can also open a local approval page on the first tool call. Packaging the CLI and broader client validation are next.
+        Today one <code>uomp setup</code> command imports Markdown notes, starts the background server, and writes the Claude Desktop / Cursor / OpenCode config. It does not pre-authorize anything.
+        When you ask the client for notes, the agent requests access and UOMP opens a local approval page. Packaging the CLI and broader client validation are next.
         Both share <code style="font-size:.88rem">@uomp/sdk</code>, the Token system, Guard auth, and audit logs.
       </p>
     </div>
@@ -29,18 +29,18 @@ import { baseUrl } from '../../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP Client</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>uomp connect</code> writes the client config, while read access stays bound to the local session.
+            Claude Desktop, Cursor, or any MCP client connects over stdio; <code>uomp setup</code> writes the client config, while read access is requested by the agent and approved on the local consent page.
           </p>
           <div style="background:var(--violet-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--violet)">
-            <strong>Experimental.</strong> Available now: <code>uomp connect claude</code>; add <code>--on-demand</code> for a local approval page on the first tool call. Claude Desktop / Cursor validation is still in progress.
+            <strong>Experimental.</strong> Available now: <code>uomp setup claude</code>; the first tool call opens the local approval page. Claude Desktop / Cursor validation is still in progress.
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Intended workflow</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
-              1. Point UOMP at an Obsidian vault with <code>uomp connect --vault</code><br/>
-              2. Agent requests <code>notes/projects/**</code> for 30 minutes<br/>
-              3. Approve scope and duration in the browser page or CLI (per key for high-sensitivity data)<br/>
-              4. Every read is checked and logged<br/>
+              1. Point UOMP at an Obsidian vault with <code>uomp setup claude --vault</code><br/>
+              2. Ask the client for <code>notes/projects/**</code><br/>
+              3. UOMP opens the approval page: scope, duration, per-key high-sensitivity<br/>
+              4. After approval the agent continues; every read is checked and logged<br/>
               5. Revoke — the next request returns <code>403</code>
             </div>
           </div>
@@ -61,16 +61,15 @@ import { baseUrl } from '../../utils/base.ts';
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:.75rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">Quick commands</div>
             <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>curl -fsSL https://www.uomp.org/install.sh | bash
-uomp demo
-uomp init
-uomp connect ./agent --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup claude --vault ~/Obsidian/MyVault
 uomp status
+uomp pending
 uomp revoke &lt;id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
-            <code>connect</code> imports the <code>--vault</code> notes first, then starts the local server in the background; MCP clients also get a client config, while agent packages get a token in <code>~/.uomp/sessions/&lt;id&gt;.env</code> (0600). The JWT is not printed by default. Use <code>status</code> / <code>stop</code> to manage the server.
+            <code>setup</code> only imports notes, starts the background server, and writes the client config; it grants nothing. The first client request opens the approval page; <code>pending</code> / <code>approve</code> are the terminal fallback. Use <code>status</code> / <code>stop</code> to manage the server.
           </p>
-          <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#2563EB;border-radius:8px;color:#fff;text-decoration:none;font-weight:600;font-size:.9rem">
+          <a href={`${baseUrl}en/tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
             CLI Tutorial →
           </a>
         </div>
@@ -82,7 +81,7 @@ uomp revoke &lt;id&gt;</code></pre>
       <div class="card" style="max-width:760px">
         <h2 style="font-size:1.15rem;margin-bottom:.75rem">Shared Infrastructure</h2>
         <p style="color:var(--mid);font-size:.88rem;line-height:1.7">
-          CLI and MCP are <strong>two interfaces to the same implementation</strong>. Both share <code>@uomp/sdk</code>, <code>@uomp/core</code>, the Capability Token system, Guard auth, and audit logs. Today <code>connect</code> wires a client in one command, and MCP supports on-demand browser consent; next comes broader client validation and a packaged CLI.
+          CLI and MCP are <strong>two interfaces to the same implementation</strong>. Both share <code>@uomp/sdk</code>, <code>@uomp/core</code>, the Capability Token system, Guard auth, and audit logs. Today <code>setup</code> handles one-time wiring, and the agent requests access when it needs data; next comes broader client validation and a packaged CLI.
         </p>
       </div>
     </div>

@@ -16,9 +16,10 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 ## 你将完成什么
 
 1. 安装 UOMP
-2. 用 `uomp connect` 导入笔记、启动本地服务、授权并写客户端配置（也可以按需审批）
-3. 在 Claude Desktop / Cursor / OpenCode 里读取笔记
-4. 查看审计，然后撤销
+2. 用 `uomp setup` 导入笔记、启动本地服务并写客户端配置（不授权）
+3. 在客户端里发起第一次请求，批准 UOMP 审批页
+4. 读取笔记
+5. 查看审计，然后撤销
 
 ---
 
@@ -67,13 +68,7 @@ export PATH="$HOME/.local/bin:$PATH"
 uomp --version
 ```
 
-然后初始化本地数据目录：
-
-```bash
-uomp init
-```
-
-这会创建 `~/.uomp`、管理员令牌和 `sessions/` 目录。数据库和 Ed25519 密钥会在首次导入或授权时创建。
+第一次运行 `uomp setup` 或 `uomp connect` 时会自动创建 `~/.uomp`、管理员令牌和 `sessions/` 目录。只有想提前准备数据目录时才需要单独运行 `uomp init`。
 
 ---
 
@@ -97,50 +92,63 @@ uomp doctor
 
 ---
 
-## 4. 导入并连接 MCP 客户端
+## 4. 一次性设置并开始使用
 
-### 4.1 一条命令接入
+### 4.1 设置客户端
 
 ```bash
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup claude --vault ~/Obsidian/MyVault
 ```
 
 这条命令会：
 
 - 导入 Markdown 笔记库（默认基础 tag 是 `notes`，可用 `--vault-tag` 修改）
 - 在后台启动本地 Auth + Guard 服务（`http://127.0.0.1:9374`）
-- 创建 30 分钟会话，把 token 写入 `~/.uomp/sessions/claude.env`（权限 `0600`）
 - 把 UOMP 条目合并进 Claude Desktop 配置（已有配置会先备份）
-- 打印到期时间、续期命令和撤销命令
+- **不授权任何访问**
 
-命令执行完会退出，服务继续在后台运行。用 `uomp status` 查看服务和活跃会话，用 `uomp stop` 停止服务。然后**重启 Claude Desktop**，让它加载新的 MCP 配置。
+命令执行完会退出，服务继续在后台运行。然后**重启 Claude Desktop**，让它加载新的 MCP 配置。
 
 Cursor / OpenCode 用同样的方式：
 
 ```bash
-uomp connect cursor --vault ~/Obsidian/MyVault --scope notes/projects
-uomp connect opencode --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup cursor --vault ~/Obsidian/MyVault
+uomp setup opencode --vault ~/Obsidian/MyVault
 ```
 
-常用选项：
+### 4.2 第一次请求
 
-- `--scope notes/projects`：只允许读取这个范围；`notes/journal` 等未授权范围会被拒绝
-- `--duration 15`：会话时长改为 15 分钟，默认 30 分钟
-- `--print-config`：只打印 JSON，不写客户端配置
-- `--skip-config`：只授权，不写客户端配置
-- `--foreground`：让 server 留在当前终端，方便看日志
+打开 Claude Desktop，直接问：
 
-### 4.2 高敏数据
+```text
+列出 notes/projects 下的笔记
+```
+
+Claude 会调用 UOMP 的 `list_memory(tag="notes/projects")`。这时 UOMP 会：
+
+1. 在本地创建待审批请求
+2. 自动打开审批页面（Linux/macOS 还会发桌面通知）
+3. 显示请求方、范围和时长
+4. 你点 Approve 后，**当前工具调用继续执行**
+5. 点 Deny 则拒绝；下一次调用会重新创建请求
+
+页面没有打开时，用终端兜底：
+
+```bash
+uomp pending
+uomp approve <request-id>
+uomp deny <request-id>
+```
+
+Token 过期后，下一次工具调用会自动创建新的请求，不需要重新运行 `setup`。
+
+### 4.3 高敏数据
 
 高敏 tag（例如 `portfolio:holdings`，或以 `sensitivity: high` 导入的数据）默认不会被选中，也不能只靠 tag 授权。
 
-不带 `--scope` 时会先列 tag，再为高敏 tag 列出具体 key。以仓库里的 stock-analyst 为例（先导入 `examples/stock-analyst` 的 sample 数据）：
+审批页会列出高敏 tag 下的具体 key，默认不勾选。你选中哪些 key，Agent 就只能读哪些。
 
-```bash
-uomp connect ./examples/stock-analyst
-```
-
-脚本里需要显式指定 key：
+如果你在脚本里需要预授权（跳过审批页）：
 
 ```bash
 uomp connect ./examples/stock-analyst \
@@ -156,32 +164,7 @@ uomp connect ./examples/stock-analyst \
   --allow-high portfolio:holdings
 ```
 
-优先级建议：能用 `--allow-key` 就不要用 `--allow-high`；能用交互选择就不要用批量覆盖。
-
-### 4.3 按需授权（可选）
-
-如果不想预先授权，加 `--on-demand`：
-
-```bash
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects --on-demand
-```
-
-此时不会立刻创建会话。第一次工具调用会：
-
-1. 在本地创建待审批请求
-2. 自动打开审批页面（Linux/macOS 还会发桌面通知）
-3. 在页面点 Approve 后，**当前工具调用继续执行**
-4. 点 Deny 则拒绝；下一次调用会重新创建请求
-
-页面没有打开时，用终端兜底：
-
-```bash
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
-```
-
-`--no-open` 关闭自动打开，`--no-notify` 关闭桌面通知，`--consent-timeout 120` 调整等待时间。按需授权的 token 过期后，下一次工具调用会创建新的请求。
+`uomp connect` 是高级入口；普通使用优先用 `uomp setup` + 审批页。
 
 ### 4.4 之后同步笔记
 
@@ -211,13 +194,13 @@ uomp import ~/Obsidian/MyVault
 > uomp mcp --session ~/.uomp/mcp-client.env --print-config --client claude
 > ```
 >
-> 把输出的 JSON 粘贴到客户端配置。`connect` 支持 Claude Desktop、Cursor、OpenCode；其他客户端用 `--print-config` 手动接入。
+> 把输出的 JSON 粘贴到客户端配置。`setup` 支持 Claude Desktop、Cursor、OpenCode；其他客户端用 `--print-config` 手动接入。
 
 ---
 
 ## 5. 在客户端里验证
 
-如果用了 `--on-demand`，第一次请求会先弹出审批页面；批准后当前请求继续，拒绝则工具返回审批提示。
+第一次请求会先弹出审批页面；批准后当前请求继续，拒绝则工具返回审批提示。
 
 在 Claude Desktop / Cursor / OpenCode 里直接说：
 
@@ -314,11 +297,13 @@ uomp disconnect claude
 
 它会删除 Claude Desktop 配置里的 `uomp` 条目、撤销当前会话，并清理对应的 env 文件。
 
-按需授权在批准前没有活动会话；批准后同样用 `uomp revoke` 或 `uomp disconnect` 收回。
+`setup` 模式在第一次请求批准前没有活动会话；批准后同样用 `uomp revoke` 或 `uomp disconnect` 收回。
 
 ### 会话过期后
 
-重新执行同一条连接命令即可：
+`setup` 模式下，下一次工具调用会自动创建新的审批请求，批准后继续，不需要重新运行 `setup`。
+
+如果你使用的是预授权模式（`uomp connect`），重新执行同一条命令即可：
 
 ```bash
 uomp connect claude --scope notes/projects
@@ -333,11 +318,11 @@ MCP server 会在每次工具调用前重新读取 env 文件。重新执行 `co
 | 问题 | 处理 |
 |---|---|
 | `uomp: command not found` | 把 `~/.local/bin` 加到 `PATH`，或重新打开终端 |
-| `uomp doctor` 提示数据目录不存在 | 运行 `uomp init` |
-| 端口 9374 被占用 | 先 `uomp stop`；或 `uomp start --port 9380` + `uomp connect ... --port 9380 --no-server` |
+| `uomp doctor` 提示数据目录不存在 | 运行 `uomp setup claude ...` 或 `uomp init` |
+| 端口 9374 被占用 | 先 `uomp stop`；或 `uomp setup claude --port 9380 ...` |
 | 客户端看不到 UOMP 工具 | `uomp status` 确认后台服务在运行；重启客户端；检查配置文件位置；OpenCode 等 `uomp connected` |
 | 工具提示 `UOMP approval required` | 按提示打开审批页，或运行 `uomp pending` / `uomp approve <request-id>` |
-| 工具报 `SESSION_NOT_ACTIVE` | 会话过期或被撤销；重新 `uomp connect claude --scope notes/projects`；`--on-demand` 模式会创建新请求 |
+| 工具报 `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `uomp connect claude --scope notes/projects` |
 | 工具报 `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 `--scope` 或查看 `uomp audit` |
 | 高敏数据读不到 | 高敏 key 必须显式授权；交互运行或使用 `--allow-key` / `--allow-high` |
 | 会话 env 权限告警 | `uomp doctor` 会提示；按建议 `chmod 600 ~/.uomp/sessions/*.env` |

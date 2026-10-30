@@ -16,9 +16,10 @@ Time: **5–10 minutes**. Your notes and tokens stay on your machine.
 ## What you will do
 
 1. Install UOMP
-2. Use `uomp connect` to import notes, start the local service, authorize, and write the client config (or use on-demand consent)
-3. Read notes from Claude Desktop / Cursor / OpenCode
-4. Inspect the audit log and revoke
+2. Use `uomp setup` to import notes, start the local service, and write the client config (no access yet)
+3. Make the first request from the client and approve the UOMP consent page
+4. Read notes
+5. Inspect the audit log and revoke
 
 ---
 
@@ -67,13 +68,7 @@ Open a new terminal and verify:
 uomp --version
 ```
 
-Initialize the local data directory:
-
-```bash
-uomp init
-```
-
-This creates `~/.uomp`, the admin token, and the `sessions/` directory. Databases and the Ed25519 key are created on the first import or authorization.
+The first `uomp setup` or `uomp connect` creates `~/.uomp`, the admin token, and the `sessions/` directory. Run `uomp init` separately only if you want to prepare the data directory in advance.
 
 ---
 
@@ -97,50 +92,63 @@ It checks Node, git, directory permissions, keys, databases, session files, and 
 
 ---
 
-## 4. Import and connect an MCP client
+## 4. Set up once and start using it
 
-### 4.1 One-command setup
+### 4.1 Set up the client
 
 ```bash
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup claude --vault ~/Obsidian/MyVault
 ```
 
 This command:
 
 - imports the Markdown vault (base tag `notes`; change it with `--vault-tag`)
 - starts the local Auth + Guard service in the background (`http://127.0.0.1:9374`)
-- creates a 30-minute session and writes the token to `~/.uomp/sessions/claude.env` (`0600`)
 - merges the UOMP entry into the Claude Desktop config (an existing file is backed up)
-- prints the expiry, renew command, and revoke command
+- **does not grant any access**
 
-The command exits and leaves the service running in the background. Use `uomp status` to inspect the server and active sessions, and `uomp stop` to stop it. Then **restart Claude Desktop** so it loads the new MCP config.
+The command exits and leaves the service running in the background. Then **restart Claude Desktop** so it loads the new MCP config.
 
 Cursor and OpenCode use the same command:
 
 ```bash
-uomp connect cursor --vault ~/Obsidian/MyVault --scope notes/projects
-uomp connect opencode --vault ~/Obsidian/MyVault --scope notes/projects
+uomp setup cursor --vault ~/Obsidian/MyVault
+uomp setup opencode --vault ~/Obsidian/MyVault
 ```
 
-Common options:
+### 4.2 The first request
 
-- `--scope notes/projects` allows only this scope; `notes/journal` and other scopes are denied
-- `--duration 15` changes the session length; the default is 30 minutes
-- `--print-config` prints the JSON without writing the client config
-- `--skip-config` grants the session without writing the client config
-- `--foreground` keeps the server in this terminal so you can see its logs
+Open Claude Desktop and ask:
 
-### 4.2 High-sensitivity data
+```text
+List notes under notes/projects
+```
+
+Claude calls UOMP's `list_memory(tag="notes/projects")`. UOMP then:
+
+1. creates a pending consent request
+2. opens a local approval page (Linux/macOS also show a desktop notification)
+3. shows who is asking, the scope, and the duration
+4. continues the same tool call after you click Approve
+5. creates a new request on the next call after Deny
+
+If the page does not open, use the terminal fallback:
+
+```bash
+uomp pending
+uomp approve <request-id>
+uomp deny <request-id>
+```
+
+When the token expires, the next tool call creates a new request; no need to re-run `setup`.
+
+### 4.3 High-sensitivity data
 
 High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are never selected by default, and cannot be granted by tag alone.
 
-In an interactive run (without `--scope`), UOMP lists the tags and then the keys under each high-sensitivity tag. Using the stock-analyst example (import its sample data first):
+The approval page lists the keys under each high-sensitivity tag and leaves them unchecked. The agent can only read the keys you select.
 
-```bash
-uomp connect ./examples/stock-analyst
-```
-
-In scripts, grant individual keys explicitly:
+For scripts, skip the page with `uomp connect`:
 
 ```bash
 uomp connect ./examples/stock-analyst \
@@ -156,32 +164,7 @@ uomp connect ./examples/stock-analyst \
   --allow-high portfolio:holdings
 ```
 
-Prefer `--allow-key` over `--allow-high`, and prefer the interactive picker over both.
-
-### 4.3 On-demand consent (optional)
-
-To defer authorization until the first tool call, add `--on-demand`:
-
-```bash
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects --on-demand
-```
-
-No session is created immediately. The first tool call:
-
-1. creates a pending consent request
-2. opens a local approval page (Linux/macOS also show a desktop notification)
-3. continues the same tool call after you click Approve
-4. creates a new request on the next call after Deny
-
-If the page does not open, use the terminal fallback:
-
-```bash
-uomp pending
-uomp approve <request-id>
-uomp deny <request-id>
-```
-
-`--no-open` disables auto-open, `--no-notify` disables notifications, and `--consent-timeout 120` changes the wait time. When an on-demand token expires, the next tool call creates a new request.
+`uomp connect` is the advanced pre-authorize path; normal use is `uomp setup` + the approval page.
 
 ### 4.4 Sync notes later
 
@@ -217,7 +200,7 @@ Import rules:
 
 ## 5. Verify inside the client
 
-If you used `--on-demand`, the first request opens the approval page; approve it to let the same request continue. If you deny it, the tool returns an approval-required message.
+The first request opens the approval page; approve it to let the same request continue. If you deny it, the tool returns an approval-required message.
 
 In Claude Desktop / Cursor / OpenCode, ask:
 
@@ -314,11 +297,13 @@ uomp disconnect claude
 
 This removes the `uomp` entry from the Claude Desktop config, revokes the current session, and deletes the matching env file.
 
-An on-demand request has no active session until it is approved; after approval, use `uomp revoke` or `uomp disconnect` the same way.
+In `setup` mode there is no active session until the first request is approved; after approval, use `uomp revoke` or `uomp disconnect` the same way.
 
 ### After the session expires
 
-Run the same connect command again:
+In `setup` mode, the next tool call creates a new approval request; approve it and the call continues. No need to re-run `setup`.
+
+If you are using the pre-authorize path (`uomp connect`), run it again:
 
 ```bash
 uomp connect claude --scope notes/projects
@@ -333,13 +318,13 @@ The MCP server re-reads the env file before every tool call. Re-running `connect
 | Problem | Fix |
 |---|---|
 | `uomp: command not found` | Add `~/.local/bin` to `PATH`, or open a new terminal |
-| `uomp doctor` says the data directory is missing | Run `uomp init` |
-| Port 9374 is occupied | Run `uomp stop` first; or `uomp start --port 9380` + `uomp connect ... --port 9380 --no-server` |
+| `uomp doctor` says the data directory is missing | Run `uomp setup claude ...` or `uomp init` |
+| Port 9374 is occupied | Run `uomp stop` first; or `uomp setup claude --port 9380 ...` |
 | The client does not show UOMP tools | Use `uomp status` to confirm the background server is running; restart the client; check the config path; for OpenCode wait for `uomp connected` |
 | The tool says `UOMP approval required` | Open the approval page from the message, or run `uomp pending` / `uomp approve <request-id>` |
-| `SESSION_NOT_ACTIVE` | The session expired or was revoked; run `uomp connect claude --scope notes/projects` again; on-demand mode creates a new request |
-| `ACCESS_DENIED` | The key/tag is outside the granted scope; check `--scope` or `uomp audit` |
-| High-sensitivity data is unreadable | High-sensitivity keys must be granted explicitly; use the interactive picker or `--allow-key` / `--allow-high` |
+| `SESSION_NOT_ACTIVE` | The session expired or was revoked; make a new request from the client, or run `uomp connect claude --scope notes/projects` |
+| `ACCESS_DENIED` | The key/tag is outside the granted scope; check the approval page, `--scope`, or `uomp audit` |
+| High-sensitivity data is unreadable | High-sensitivity keys must be granted explicitly; select them on the approval page or use `--allow-key` / `--allow-high` |
 | Env-file permission warning | `uomp doctor` suggests the fix, usually `chmod 600 ~/.uomp/sessions/*.env` |
 | Reset all local data | Run `uomp stop`, then remove `~/.uomp`; use `pkill -f "uomp serve"` if needed. This deletes notes, keys, and audit data |
 | Running on Windows | Windows is not supported; use macOS or Linux |

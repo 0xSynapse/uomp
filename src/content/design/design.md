@@ -5,9 +5,9 @@ description: 'UOMP 参考实现 uomp-mvp 的架构与实现说明：组件职责
 
 # UOMP 实现设计
 
-> **实现状态（2026-10）：** 当前主线是本地 CLI + MCP 闭环。远程 Gateway、Cloud Relay、S3/IPFS 和链上部分是研究或预览能力，不应视为已交付。当前使用方式见 [README](https://github.com/0xSynapse/uomp-core#quick-start) 和 [教程](/tutorial/)。本文档其余部分保留原始实现设计。
+> **实现状态（2026-10）：** 当前主线是本地 CLI + MCP 闭环；Aegis OS 是执行协议的参考运行时。远程 Gateway、Cloud Relay、S3/IPFS 和链上部分是研究或预览能力，不应视为已交付。当前使用方式见 [README](https://github.com/0xSynapse/uomp-core#quick-start) 和 [教程](/tutorial/)。本文档其余部分保留原始实现设计。
 
-本文档说明 UOMP 的**参考实现** [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) 如何将[协议规范](/spec/)落地为可运行的代码。
+UOMP 是开放协议，Aegis OS 是参考运行时；本仓库的 [`uomp-mvp`](https://github.com/0xSynapse/uomp-core) 是参考 CLI 和本地实现。本文档说明它如何将[协议规范](/spec/)落地为可运行的代码。协议到 Aegis OS 的字段映射见 [UOMP → Aegis OS 记忆同意映射](https://github.com/heurion-org/aegis-os/blob/main/docs/UOMP_MEMORY_CONSENT_MAPPING.md)。
 
 ---
 
@@ -48,12 +48,20 @@ UOMP 支持三种部署模式，按用户负担从低到高排列：
 启动方式：
 
 ```bash
-# MCP 客户端（推荐）：授权 + 写客户端配置 + 后台启动本地服务
-uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
+# MCP 客户端（推荐）：一次性设置，不授权
+uomp setup claude --vault ~/Obsidian/MyVault
+
+# Agent 在客户端里发起请求，UOMP 打开审批页；终端兜底：
+uomp pending
+uomp approve <request-id>
+
+# 管理
 uomp status
-uomp start
 uomp stop
 uomp disconnect claude
+
+# 高级：预授权 / 脚本
+uomp connect claude --vault ~/Obsidian/MyVault --scope notes/projects
 
 # Agent 包：授权 + 写 env 文件
 uomp connect ./my-agent --scope notes/projects --output ~/.uomp/my-agent.env
@@ -243,7 +251,7 @@ Agent 在 `uom.json` 中声明 `requested_scopes`、`data_retention_policy`、`e
 |------|------|------|
 | Agent 读取 | ✅ | 按 tag/key/field 授权 |
 | Agent 写入 | ❌ | Guard 返回 `503 WRITE_NOT_AVAILABLE` |
-| 本地 CLI | ✅ | import / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
+| 本地 CLI | ✅ | import / setup / connect / authorize / serve / start / status / stop / disconnect / pending / approve / deny / mcp / sessions / audit / revoke |
 | Markdown 导入 | ✅ | Obsidian/Markdown 目录，路径生成范围 |
 | MCP | ✅ 实验 | stdio `list_memory` / `search_memory` / `read_memory` |
 | 远程 Gateway | ⚠️ 高级/预览 | mTLS + Cloudflare Tunnel |
