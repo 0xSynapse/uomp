@@ -7,8 +7,12 @@ export interface Props {
 
 const { lang = 'zh' } = Astro.props;
 const specHref = lang === 'zh' ? `${baseUrl}spec/` : `${baseUrl}en/spec/`;
-const aegisHref = 'https://heurion.org/aegis-os/';
-const aegisTutorialHref = 'https://heurion.org/aegis-os/tutorial/';
+const aegisHref = lang === 'zh'
+  ? 'https://heurion.org/aegis-os/'
+  : 'https://heurion.org/en/aegis-os/';
+const aegisTutorialHref = lang === 'zh'
+  ? 'https://heurion.org/aegis-os/tutorial/'
+  : 'https://heurion.org/en/aegis-os/tutorial/';
 
 const content = {
   zh: {

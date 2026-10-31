@@ -9,7 +9,7 @@ This guide is for a first-time UOMP user. By the end you will have a local notes
 
 Estimated time: **5–10 minutes**. All notes and tokens stay on your machine.
 
-> Product overview: [Aegis OS overview](https://heurion.org/aegis-os/) · [Aegis OS tutorial](https://heurion.org/aegis-os/tutorial/)
+> Product overview: [Aegis OS overview](https://heurion.org/en/aegis-os/) · [Aegis OS tutorial](https://heurion.org/en/aegis-os/tutorial/)
 
 > **Supported environment:** macOS or Linux terminal; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. **Windows is not supported.**
 
@@ -239,7 +239,7 @@ When bound:
 - a terminal task makes the gateway revoke its sessions
 - `memory revoke` moves the bound task to `input-required`
 
-See the [Aegis OS tutorial](https://heurion.org/aegis-os/tutorial/#a2a) for the full A2A flow.
+See the [Aegis OS tutorial](https://heurion.org/en/aegis-os/tutorial/#a2a) for the full A2A flow.
 
 ---
 
@@ -372,7 +372,7 @@ Do not commit `~/.uomp` to git, and do not share session env files publicly.
 ## 13. Advanced
 
 - Protocol and token format: [Draft-00 specification](/en/spec/)
-- Aegis OS install and multi-agent tutorial: [Aegis OS Tutorial](https://heurion.org/aegis-os/tutorial/)
+- Aegis OS install and multi-agent tutorial: [Aegis OS Tutorial](https://heurion.org/en/aegis-os/tutorial/)
 - Build your own agent: [Aegis OS UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - MCP clients: `aegis-os memory mcp` (see the module README)
 - Remote agents / Gateway are advanced preview features, not required for the local workflow
