@@ -9,6 +9,8 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 
 预计时间：**5–10 分钟**。所有笔记和 Token 都留在你的电脑上。
 
+> 安装与产品概览：[Aegis OS 概览](https://heurion.org/aegis-os/) · [Aegis OS 教程](https://heurion.org/aegis-os/tutorial/)
+
 > **适用环境**：macOS 或 Linux 终端；Claude Desktop、Cursor 或 OpenCode；本地 Obsidian / Markdown 笔记库。**不支持 Windows。**
 
 ---
@@ -45,6 +47,8 @@ aegis-os memory --help
 ## 2. 安装
 
 ```bash
+brew tap heurion-org/aegis-os https://github.com/heurion-org/aegis-os.git
+brew trust heurion-org/aegis-os
 brew install aegis-os
 ```
 
@@ -52,6 +56,7 @@ brew install aegis-os
 
 ```bash
 aegis-os --version
+aegis-os doctor
 aegis-os memory --help
 ```
 
@@ -208,17 +213,48 @@ ACCESS_DENIED: key is outside the token scope
 
 ---
 
-## 8. 查看审计
+## 8. 在多 Agent 任务中使用 UOMP
+
+Aegis OS 用 Google A2A 组织多 Agent 协作。UOMP consent/session 可以绑定到 A2A task：
+
+```bash
+# 1. 创建 A2A task
+aegis-os ipc request --to worker --subject "Review auth" --message "Read the auth module"
+
+# 2. 查看 task id
+aegis-os a2a board
+aegis-os a2a show <task-id>
+
+# 3. 让 MCP bridge 带上 task 上下文（客户端环境变量）
+export UOMP_TASK_ID=<task-id>
+
+# 4. 批准后按 task 查看 session
+aegis-os memory sessions --task-id <task-id>
+```
+
+绑定后：
+
+- `memory pending` 会显示 task id
+- consent 批准后 session 继承 task 归属
+- task 进入终态时，gateway 会自动撤销绑定 session
+- `memory revoke` 会把绑定的 task 转为 `input-required`
+
+完整的 A2A / 多 Agent 流程见 [Aegis OS 教程](https://heurion.org/aegis-os/tutorial/#a2a)。
+
+---
+
+## 9. 查看审计
 
 回到终端：
 
 ```bash
 aegis-os memory status
 aegis-os memory sessions
+aegis-os memory sessions --task-id <task-id>
 aegis-os memory audit --limit 20
 ```
 
-`status` 显示本地 store 的条目数和 tag；`sessions` 显示 session 状态；`audit` 显示最近的 allow/deny 事件，包括 Agent、session、资源和原因。
+`status` 显示本地 store 的条目数和 tag；`sessions` 显示 session 状态；`sessions --task-id` 只看绑定到某个 A2A task 的 session；`audit` 显示最近的 allow/deny 事件，包括 Agent、session、task、资源和原因。
 
 检查服务是否在运行：
 
@@ -228,7 +264,7 @@ curl -s http://127.0.0.1:9374/health
 
 ---
 
-## 9. 撤销与停止
+## 10. 撤销与停止
 
 查看会话：
 
@@ -242,7 +278,7 @@ aegis-os memory sessions
 aegis-os memory revoke <session-id>
 ```
 
-撤销后，下一个请求立即返回 `401 SESSION_NOT_ACTIVE`。
+撤销后，下一个请求立即返回 `401 SESSION_NOT_ACTIVE`。如果 session 绑定了 A2A task，task 会转为 `input-required`（`a2a board` 标记 `BLOCKED`）。自定义 `--runtime-dir` 时，`memory revoke` 也要传同一个 runtime 目录。
 
 连同客户端配置一起移除：
 
@@ -274,7 +310,7 @@ MCP server 会在每次工具调用前检查 Token；重新 `connect` 后，下�
 
 ---
 
-## 10. 常见问题
+## 11. 常见问题
 
 | 问题 | 处理 |
 |---|---|
@@ -284,6 +320,7 @@ MCP server 会在每次工具调用前检查 Token；重新 `connect` 后，下�
 | `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 consent request 的 scope，或查看 `aegis-os memory audit` |
 | 高敏数据读不到 | 高敏 item 必须按 key 请求并单独批准；tag scope 不会覆盖 |
+| 自定义 runtime 下 task 没变化 | `a2a` / `memory revoke` 命令补上同一个 `--runtime-dir` |
 | 想清空所有本地数据 | 先 `aegis-os memory stop`，再删除 `~/.uomp`。这会删除笔记库、密钥和审计 |
 | 在 Windows 上运行 | 不支持 Windows；请使用 macOS 或 Linux |
 
@@ -309,7 +346,7 @@ rm -rf ~/.uomp
 
 ---
 
-## 11. 安全边界
+## 12. 安全边界
 
 UOMP 能做到：
 
@@ -332,9 +369,10 @@ UOMP 不能防止：
 
 ---
 
-## 12. 进阶
+## 13. 进阶
 
 - 想了解协议和 Token 格式：[规范 Draft-00](/spec/)
+- Aegis OS 安装与多 Agent 教程：[Aegis OS Tutorial](https://heurion.org/aegis-os/tutorial/)
 - 想写自己的 Agent：[Aegis OS UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - 想接 MCP 客户端：`aegis-os memory mcp`（见 module README）
 - 远程 Agent / Gateway 属于高级预览，不是本地流程的必需部分

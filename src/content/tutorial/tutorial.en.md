@@ -9,6 +9,8 @@ This guide is for a first-time UOMP user. By the end you will have a local notes
 
 Estimated time: **5–10 minutes**. All notes and tokens stay on your machine.
 
+> Product overview: [Aegis OS overview](https://heurion.org/aegis-os/) · [Aegis OS tutorial](https://heurion.org/aegis-os/tutorial/)
+
 > **Supported environment:** macOS or Linux terminal; Claude Desktop, Cursor, or OpenCode; a local Obsidian / Markdown vault. **Windows is not supported.**
 
 ---
@@ -45,6 +47,8 @@ aegis-os memory --help
 ## 2. Install
 
 ```bash
+brew tap heurion-org/aegis-os https://github.com/heurion-org/aegis-os.git
+brew trust heurion-org/aegis-os
 brew install aegis-os
 ```
 
@@ -52,6 +56,7 @@ Verify:
 
 ```bash
 aegis-os --version
+aegis-os doctor
 aegis-os memory --help
 ```
 
@@ -208,17 +213,48 @@ This proves scope enforcement is working, and the denial is audited.
 
 ---
 
-## 8. Review the audit
+## 8. UOMP in multi-agent A2A tasks
+
+Aegis OS uses Google A2A for multi-agent collaboration. A UOMP consent/session can be bound to an A2A task:
+
+```bash
+# 1. Create an A2A task
+aegis-os ipc request --to worker --subject "Review auth" --message "Read the auth module"
+
+# 2. Read the task id
+aegis-os a2a board
+aegis-os a2a show <task-id>
+
+# 3. Give the MCP bridge task context (client environment)
+export UOMP_TASK_ID=<task-id>
+
+# 4. After approval, inspect sessions by task
+aegis-os memory sessions --task-id <task-id>
+```
+
+When bound:
+
+- `memory pending` shows the task id
+- the approved session inherits the task ownership
+- a terminal task makes the gateway revoke its sessions
+- `memory revoke` moves the bound task to `input-required`
+
+See the [Aegis OS tutorial](https://heurion.org/aegis-os/tutorial/#a2a) for the full A2A flow.
+
+---
+
+## 9. Review the audit
 
 Back in the terminal:
 
 ```bash
 aegis-os memory status
 aegis-os memory sessions
+aegis-os memory sessions --task-id <task-id>
 aegis-os memory audit --limit 20
 ```
 
-`status` shows the local store count and tags; `sessions` shows session state; `audit` shows recent allow/deny events with Agent, session, resource, and reason.
+`status` shows the local store count and tags; `sessions` shows session state; `sessions --task-id` shows only sessions bound to one A2A task; `audit` shows recent allow/deny events with Agent, session, task, resource, and reason.
 
 Check that the server is running:
 
@@ -228,7 +264,7 @@ curl -s http://127.0.0.1:9374/health
 
 ---
 
-## 9. Revoke and stop
+## 10. Revoke and stop
 
 List sessions:
 
@@ -242,7 +278,7 @@ Revoke one session:
 aegis-os memory revoke <session-id>
 ```
 
-The next request immediately returns `401 SESSION_NOT_ACTIVE`.
+The next request immediately returns `401 SESSION_NOT_ACTIVE`. If the session is bound to an A2A task, the task moves to `input-required` (marked `BLOCKED` on `a2a board`). If you use a custom `--runtime-dir`, pass the same runtime directory to `memory revoke`.
 
 Remove the client config as well:
 
@@ -274,7 +310,7 @@ The MCP server checks the token before each tool call, so the next call uses the
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Problem | Fix |
 |---|---|
@@ -284,6 +320,7 @@ The MCP server checks the token before each tool call, so the next call uses the
 | `SESSION_NOT_ACTIVE` | Session expired or was revoked; make a new request, or run `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | The key/tag is outside the granted scope; inspect the consent request scope or `aegis-os memory audit` |
 | High-sensitivity data is unreadable | High-sensitivity items require a per-key request and approval; a tag scope does not cover them |
+| Task does not change with a custom runtime | Pass the same `--runtime-dir` to `a2a` / `memory revoke` |
 | Reset all local data | `aegis-os memory stop`, then delete `~/.uomp`. This removes notes, keys, and audit |
 | Run on Windows | Not supported; use macOS or Linux |
 
@@ -309,7 +346,7 @@ If setup wrote a client config, run `aegis-os memory disconnect <client>` or rem
 
 ---
 
-## 11. Security boundary
+## 12. Security boundary
 
 UOMP provides:
 
@@ -332,9 +369,10 @@ Do not commit `~/.uomp` to git, and do not share session env files publicly.
 
 ---
 
-## 12. Advanced
+## 13. Advanced
 
 - Protocol and token format: [Draft-00 specification](/en/spec/)
+- Aegis OS install and multi-agent tutorial: [Aegis OS Tutorial](https://heurion.org/aegis-os/tutorial/)
 - Build your own agent: [Aegis OS UOMP module](https://github.com/heurion-org/aegis-os/tree/main/modules/uomp)
 - MCP clients: `aegis-os memory mcp` (see the module README)
 - Remote agents / Gateway are advanced preview features, not required for the local workflow
