@@ -7,7 +7,8 @@ export interface Props {
 
 const { lang = 'zh' } = Astro.props;
 const specHref = lang === 'zh' ? `${baseUrl}spec/` : `${baseUrl}en/spec/`;
-const aegisHref = 'https://heurion.org/#aegis-os';
+const aegisHref = 'https://heurion.org/aegis-os/';
+const aegisTutorialHref = 'https://heurion.org/aegis-os/tutorial/';
 
 const content = {
   zh: {
@@ -16,7 +17,8 @@ const content = {
     h1b: '让运行时执行同意。',
     sub: 'UOMP 定义 Agent 如何请求个人记忆：范围、时效、撤销与审计。它是 Aegis OS 的 memory module，由 Aegis 原生执行。',
     ctaPrimary: '阅读协议',
-    ctaSecondary: 'Aegis OS 原生实现',
+    ctaSecondary: 'Aegis OS 概览',
+    ctaTutorial: 'Aegis OS 安装教程',
     meta: ['开放协议草案', 'Apache 2.0', 'Aegis OS memory module', 'Heurion Research'],
     tutorialHref: `${baseUrl}tutorial/`,
     roadmapHref: `${baseUrl}roadmap/`,
@@ -56,7 +58,7 @@ const content = {
       todayLabel: '今天',
       today: '协议草案 · Agent 发起 · 范围与租约 · 本地审批 · 可撤销 · 审计',
       nextLabel: '下一步',
-      next: 'Aegis OS 原生运行时 · 统一 Web Trusted UI · 远程 Agent · conformance suite',
+      next: 'Aegis OS 原生实现已完成 · 统一 Web Trusted UI · 远程 Agent · conformance suite',
     },
     how: {
       kicker: '协议模型',
@@ -108,7 +110,7 @@ const content = {
     guarantees: {
       kicker: '执行边界',
       title: '协议定义边界，运行时负责执行。',
-      intro: 'Aegis OS 在请求路径里执行这些约束：Agent 不直接接触数据，也不持有审批凭证。',
+      intro: 'Aegis OS 在请求路径里执行这些约束：Agent 通过受控接口访问记忆，不持有审批凭证。',
       rows: [
         { key: '范围', value: 'tag、key、field 白名单；deny 规则优先。' },
         { key: '时间', value: '租约到期即失效，默认 30 分钟。' },
@@ -177,7 +179,8 @@ const content = {
     h1b: 'Runtimes enforce consent.',
     sub: 'UOMP defines how agents ask for personal memory: scope, duration, revocation, and audit. It is the memory module of Aegis OS, enforced natively by Aegis.',
     ctaPrimary: 'Read the protocol',
-    ctaSecondary: 'Aegis OS native module',
+    ctaSecondary: 'Aegis OS overview',
+    ctaTutorial: 'Aegis OS install tutorial',
     meta: ['Open protocol draft', 'Apache 2.0', 'Aegis OS memory module', 'Heurion Research'],
     tutorialHref: `${baseUrl}en/tutorial/`,
     roadmapHref: `${baseUrl}en/roadmap/`,
@@ -217,7 +220,7 @@ const content = {
       todayLabel: 'Today',
       today: 'Protocol draft · agent-initiated · scope & lease · local consent · revocable · audit',
       nextLabel: 'Next',
-      next: 'Aegis OS native runtime · unified web trusted UI · remote Agent · conformance suite',
+      next: 'Native Aegis OS runtime complete · unified web trusted UI · remote Agent · conformance suite',
     },
     how: {
       kicker: 'Protocol model',
@@ -269,7 +272,7 @@ const content = {
     guarantees: {
       kicker: 'Enforcement boundary',
       title: 'The protocol defines the boundary. The runtime enforces it.',
-      intro: 'Aegis OS enforces these constraints in the request path: the agent never touches the data directly, and never holds the approval credential.',
+      intro: 'Aegis OS enforces these constraints in the request path: the agent reaches memory through a controlled interface and never holds the approval credential.',
       rows: [
         { key: 'Scope', value: 'Tag, key, and field allowlists. Deny rules win.' },
         { key: 'Time', value: 'Leases expire. 30 minutes by default.' },
@@ -347,6 +350,7 @@ const t = content[lang];
         <div class="hero-actions">
           <a class="btn-solid" href={specHref}>{t.ctaPrimary} <span aria-hidden="true">→</span></a>
           <a class="btn-line" href={aegisHref} target="_blank" rel="noopener">{t.ctaSecondary} <span aria-hidden="true">↗</span></a>
+          <a class="link-quiet" href={aegisTutorialHref} target="_blank" rel="noopener">{t.ctaTutorial} <span aria-hidden="true">↗</span></a>
           <a class="link-quiet" href="https://github.com/heurion-org/aegis-os/tree/main/modules/uomp" target="_blank" rel="noopener">GitHub</a>
         </div>
         <div class="hero-meta">
