@@ -27,15 +27,16 @@ brew install aegis-os
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
 # 在 Claude / Cursor / OpenCode 里请求读取
-# 第一次 tool call 会创建 consent request；批准后 Agent 继续
+# 第一次 tool call 会创建 consent request；本地同意页自动打开
 
-aegis-os memory pending
+aegis-os memory ui          # 通常不需要手动运行
+aegis-os memory pending     # CLI fallback
 aegis-os memory approve <request-id>
 aegis-os memory audit
 aegis-os memory disconnect claude
 ```
 
-浏览器审批页暂缓；当前原生审批路径是 CLI。Agent 不能批准自己的请求，高敏条目不会进入 Agent scope。
+本地 trusted consent UI 默认监听 `127.0.0.1:9375`；MCP bridge 会在有 pending request 时自动打开浏览器。Agent 不能批准自己的请求，高敏条目必须逐 key 勾选。
 
 本地路径：
 

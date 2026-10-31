@@ -35,7 +35,7 @@ aegis-os memory audit
 aegis-os memory disconnect claude
 ```
 
-The browser consent page is deferred; CLI approval is the native path for now. An Agent cannot approve its own request, and high-sensitivity items stay outside Agent scopes.
+The local trusted consent UI listens on `127.0.0.1:9375`; the MCP bridge opens it automatically when a request is pending. An Agent cannot approve its own request, and high-sensitivity items require per-key selection.
 
 Local path:
 
@@ -112,7 +112,7 @@ Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heur
 - Native consent server, sessions, Ed25519 JWT, revocation, audit: done
 - `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` are all native
 - `uomp-core` / `uomp-mvp` reference: archived, no longer vendored or invoked at runtime
-- Unified web trusted UI: pending (CLI approval today)
+- Unified local trusted consent UI: loopback page at `127.0.0.1:9375`; MCP bridge opens it automatically (CLI remains a fallback)
 
 ## 7. Links
 

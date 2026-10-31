@@ -30,7 +30,7 @@ The User-Owned Memory Protocol (UOMP) defines a user-sovereign authorization pro
 
 This document is the UOMP protocol draft (Draft-00). It describes the protocol design intent, data formats, HTTP API, and security requirements. It is intended to evolve into a formal standard through public discussion. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-> **Reference implementation status (2026-10):** Aegis OS is the reference implementation. The user runs `aegis-os memory setup` once to import notes, write the client config, and start the background server without pre-authorizing. The first MCP tool call creates a consent request; the user approves it with `aegis-os memory pending` / `approve` (CLI approval; the browser page is deferred), and the call continues. `connect` is the advanced pre-authorize path; `serve` and `mcp` are manual/script paths. The MCP stdio bridge is native. Remote Agent Profile is optional; Aegis OS uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. UOMP is the protocol; Aegis OS is the native implementation.
+> **Reference implementation status (2026-10):** Aegis OS is the reference implementation. The user runs `aegis-os memory setup` once to import notes, write the client config, and start the background server without pre-authorizing. The first MCP tool call creates a consent request; Aegis OS opens the local trusted consent UI automatically (`aegis-os memory ui`, default `127.0.0.1:9375`), the user selects the scope, and the call continues; CLI `pending` / `approve` remain a fallback. `connect` is the advanced pre-authorize path; `serve` and `mcp` are manual/script paths. The MCP stdio bridge is native. Remote Agent Profile is optional; Aegis OS uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. UOMP is the protocol; Aegis OS is the native implementation.
 
 ## 3. Introduction
 
@@ -1377,7 +1377,11 @@ Deletion proofs can be recorded on-chain via the `AuditAnchor` contract (§18.4)
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 # Restart Claude Desktop, then ask it to read notes
 
-# On the Agent's first request, approve the consent request from the terminal:
+# On the Agent's first request, Aegis OS opens the local consent UI automatically.
+# Manual open (usually not needed):
+aegis-os memory ui
+
+# CLI fallback:
 aegis-os memory pending
 aegis-os memory approve <request-id>
 aegis-os memory deny <request-id>

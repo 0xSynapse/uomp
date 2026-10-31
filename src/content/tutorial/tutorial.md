@@ -19,7 +19,7 @@ description: '从安装、导入笔记到在 Claude Desktop / Cursor 中连接�
 
 1. 安装 Aegis OS
 2. 用 `aegis-os memory setup` 导入笔记、启动本地服务并写客户端配置（不授权）
-3. 在客户端里发起第一次请求，用 CLI 批准 consent request
+3. 在客户端里发起第一次请求，在本地同意页批准 consent request
 4. 读取笔记
 5. 查看审计，然后撤销
 
@@ -106,29 +106,32 @@ aegis-os memory setup opencode --vault ~/Obsidian/MyVault
 Claude 会调用 UOMP 的 `list_memory(tag="notes/projects")`。MCP bridge 会：
 
 1. 通过 `UOMP_BRIDGE_FILE` 在本地创建 consent request
-2. 把请求 id 和批准命令写到 stderr
-3. 等待你批准（默认最多 120 秒）
+2. 自动启动本地 trusted consent UI，并打开浏览器同意页
+3. 等待你在页面上批准（默认最多 120 秒）
 
-在终端运行：
+同意页会显示 Agent、task id（如果有）、session id、过期时间，以及请求的 tag / key。勾选要授予的范围，然后点 **Allow selected**。批准后，**当前工具调用继续执行**；拒绝则返回错误，下一次调用会重新创建请求。
+
+如果浏览器没有自动打开，手动启动：
+
+```bash
+aegis-os memory ui
+```
+
+CLI 仍然保留为 fallback：
 
 ```bash
 aegis-os memory pending
 aegis-os memory approve <request-id>
-```
-
-`pending` 会显示 request id、Agent、session id 和过期时间。批准后，**当前工具调用继续执行**；拒绝则返回错误，下一次调用会重新创建请求。
-
-```bash
 aegis-os memory deny <request-id>
 ```
 
-浏览器审批页暂缓；当前原生审批路径就是 CLI。Agent 不能批准自己的请求。
+Agent 不能批准自己的请求；`memory approve`、`memory deny`、`memory ui` 和 `memory connect` 对 Agent 的 shell 是禁止的。
 
 Token 过期或被撤销后，下一次工具调用会自动创建新的 consent request，不需要重新运行 `setup`。
 
 ### 高敏数据
 
-高敏 tag（例如 `portfolio:holdings`，或以 `sensitivity: high` 导入的数据）不会被 tag scope 覆盖。Agent 必须按具体 key 发起 `read_memory`，consent request 会带上该 key；你在 `pending` 里看到后批准，Agent 才能读这一条。
+高敏 tag（例如 `portfolio:holdings`，或以 `sensitivity: high` 导入的数据）不会被 tag scope 覆盖。Agent 必须按具体 key 发起 `read_memory`，consent request 会带上该 key；同意页会把 key 单独列出，你必须逐 key 勾选，Agent 才能读这一条。
 
 不要用 tag scope 批量放开高敏数据。
 
@@ -173,7 +176,7 @@ aegis-os memory setup my-client --no-server --config /path/to/mcp.json
 aegis-os memory connect claude --scope notes/projects
 ```
 
-`connect` 会立即创建并批准一个 30 分钟会话，把 Token 写入 `~/.uomp/sessions/claude.env`，并在客户端配置里使用 `UOMP_TOKEN_FILE`。它适合脚本和 CI；日常使用优先 `setup` + CLI 审批。
+`connect` 会立即创建并批准一个 30 分钟会话，把 Token 写入 `~/.uomp/sessions/claude.env`，并在客户端配置里使用 `UOMP_TOKEN_FILE`。它适合脚本和 CI；日常使用优先 `setup` + 本地同意页。
 
 ---
 
@@ -316,7 +319,7 @@ MCP server 会在每次工具调用前检查 Token；重新 `connect` 后，下�
 |---|---|
 | 客户端看不到 UOMP 工具 | 检查客户端配置里的 `uomp` 条目；重启客户端；`curl -s http://127.0.0.1:9374/health` 确认服务在运行 |
 | 端口 9374 被占用 | `aegis-os memory stop`；或 `aegis-os memory setup claude --listen 127.0.0.1:9380 ...` |
-| 工具一直等待审批 | 另开终端运行 `aegis-os memory pending`，再 `approve` / `deny` |
+| 工具一直等待审批 | 先看是否已自动打开同意页；没有就运行 `aegis-os memory ui`。CLI fallback：`aegis-os memory pending`，再 `approve` / `deny` |
 | `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 consent request 的 scope，或查看 `aegis-os memory audit` |
 | 高敏数据读不到 | 高敏 item 必须按 key 请求并单独批准；tag scope 不会覆盖 |
@@ -353,7 +356,7 @@ UOMP 能做到：
 - 本地优先，笔记默认不离开你的机器
 - 按 tag/key 限定范围
 - 高敏 item 只能按 key 授权
-- 首次 tool call 创建 consent request，用户在本地 CLI 批准
+- 首次 tool call 创建 consent request，用户在本地 trusted consent UI 批准（CLI 为 fallback）
 - 会话过期和立即撤销
 - 每一次允许/拒绝都有审计
 - bridge profile 不含 Token；预授权 Token 存在 `0600` 文件里，默认不打印 JWT

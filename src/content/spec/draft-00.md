@@ -30,7 +30,7 @@ User-Owned Memory Protocol（UOMP）定义了一种用户主权型授权协议�
 
 本文档为 UOMP 协议草案（Draft-00），描述协议设计意图、数据格式、HTTP API 和安全要求。本文档旨在通过公开讨论后演进为正式标准。本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"MAY"、"OPTIONAL" 按照 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) 解释。
 
-> **参考实现状态（2026-10）：** Aegis OS 是参考实现。用户运行一次 `aegis-os memory setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次 MCP tool call 创建 consent request，用户通过 `aegis-os memory pending` / `approve` 批准（CLI 审批；浏览器审批页暂缓），调用继续。`connect` 是高级预授权入口，`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为原生能力。Remote Agent Profile 是可选能力，Aegis OS 使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。UOMP 是协议，Aegis OS 是原生实现。
+> **参考实现状态（2026-10）：** Aegis OS 是参考实现。用户运行一次 `aegis-os memory setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次 MCP tool call 创建 consent request，Aegis OS 自动打开本地 trusted consent UI（`aegis-os memory ui`，默认 `127.0.0.1:9375`），用户勾选范围后调用继续；CLI `pending` / `approve` 保留为 fallback。`connect` 是高级预授权入口，`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为原生能力。Remote Agent Profile 是可选能力，Aegis OS 使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。UOMP 是协议，Aegis OS 是原生实现。
 
 ## 3. Introduction
 

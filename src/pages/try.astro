@@ -3,13 +3,13 @@ import Layout from '../layouts/Layout.astro';
 import { baseUrl } from '../utils/base.ts';
 ---
 
-<Layout title="通过 Aegis OS 试用 UOMP" description="通过 aegis-os memory setup 完成导入、客户端配置和后台服务；第一次工具调用由 Agent 发起，你在终端批准 consent request。" switchHref={`${baseUrl}en/try/`}>
+<Layout title="通过 Aegis OS 试用 UOMP" description="通过 aegis-os memory setup 完成导入、客户端配置和后台服务；第一次工具调用由 Agent 发起，Aegis OS 自动打开本地同意页。" switchHref={`${baseUrl}en/try/`}>
   <section>
     <div class="container">
       <h1 style="margin-bottom:.25rem">通过 Aegis OS 试用 UOMP</h1>
       <p style="color:var(--mid);max-width:620px;line-height:1.65">
         今天，一条 <code>aegis-os memory setup</code> 就能导入 Markdown 笔记、启动后台服务，并把配置写进 Claude Desktop / Cursor / OpenCode；它不会预先授权。UOMP 是 Aegis OS 的 memory module，审批、租约和审计都由 Aegis 执行。
-        你在客户端里提出请求后，MCP bridge 创建 consent request；你在终端用 <code>memory pending</code> / <code>approve</code> 批准，Agent 继续。浏览器审批页暂缓。
+        你在客户端里提出请求后，MCP bridge 创建 consent request；Aegis OS 自动打开本地 trusted consent UI，你勾选范围后 Agent 继续。不需要另开终端，CLI 仍作为 fallback。
         UOMP 负责协议语义；Aegis OS 负责 policy、lease、sandbox、gateway 和 audit。
       </p>
     </div>
@@ -24,17 +24,17 @@ import { baseUrl } from '../utils/base.ts';
             <h2 style="margin:0;font-size:1.35rem">MCP 客户端</h2>
           </div>
           <p style="color:var(--mid);margin-bottom:.75rem;max-width:420px">
-            Claude Desktop、Cursor 或任何 MCP 客户端通过 stdio 连接，客户端配置由 <code>aegis-os memory setup</code> 写入；读取权限由 Agent 发起请求、你在终端批准。
+            Claude Desktop、Cursor 或任何 MCP 客户端通过 stdio 连接，客户端配置由 <code>aegis-os memory setup</code> 写入；读取权限由 Agent 发起请求、你在本地同意页批准。
           </p>
           <div style="background:var(--accent-soft);border:1px solid var(--border);border-radius:2px;padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--accent)">
-            <strong>原生可用。</strong><code>aegis-os memory setup claude</code> 写入 bridge profile；第一次工具调用创建 consent request，终端 <code>pending</code> / <code>approve</code> 完成审批。
+            <strong>原生可用。</strong><code>aegis-os memory setup claude</code> 写入 bridge profile；第一次工具调用创建 consent request，本地同意页自动打开并完成审批。
           </div>
           <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
             <div style="font-size:.8rem;color:var(--mid);margin-bottom:.4rem;font-weight:600">目标流程</div>
             <div style="font-size:.85rem;color:var(--mid);line-height:1.8">
               1. 用 <code>aegis-os memory setup claude --vault</code> 指向 Obsidian 笔记库<br/>
               2. 在客户端里请求读取 <code>notes/projects/**</code><br/>
-              3. 终端 <code>memory pending</code> / <code>approve</code>：确认范围、时长；高敏数据逐 key<br/>
+              3. 本地同意页：勾选 tag / key、确认范围；高敏数据逐 key<br/>
               4. 批准后 Agent 继续，每次读取都被检查和记录<br/>
               5. 撤销——下一个请求返回 <code>401 SESSION_NOT_ACTIVE</code>
             </div>
@@ -58,13 +58,14 @@ import { baseUrl } from '../utils/base.ts';
             <pre style="font-size:.8rem;color:var(--mid);line-height:1.75;overflow-x:auto;background:transparent;margin:0"><code>brew install aegis-os
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 aegis-os memory status
+aegis-os memory ui
 aegis-os memory pending
 aegis-os memory approve &lt;request-id&gt;
 aegis-os memory sessions
 aegis-os memory revoke &lt;session-id&gt;</code></pre>
           </div>
           <p style="color:var(--mid);font-size:.82rem;line-height:1.6;margin-bottom:1.25rem">
-            <code>setup</code> 只做导入、后台服务和客户端配置，不授权任何范围。第一次客户端请求会创建 consent request；<code>pending</code> / <code>approve</code> 是审批路径。用 <code>sessions</code> / <code>revoke</code> 撤销会话，<code>stop</code> 停止后台服务。
+            <code>setup</code> 只做导入、后台服务和客户端配置，不授权任何范围。第一次客户端请求会创建 consent request；本地同意页会自动打开（也可运行 <code>memory ui</code>），CLI <code>pending</code> / <code>approve</code> 仍可用。用 <code>sessions</code> / <code>revoke</code> 撤销会话，<code>stop</code> 停止后台服务。
           </p>
           <a href={`${baseUrl}tutorial/`} style="display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.5rem;background:#233E33;border-radius:2px;color:#fff;text-decoration:none;font-weight:500;font-size:.9rem">
             CLI 教程 →

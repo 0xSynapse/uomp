@@ -19,7 +19,7 @@ Estimated time: **5–10 minutes**. All notes and tokens stay on your machine.
 
 1. Install Aegis OS
 2. Run `aegis-os memory setup` to import notes, start the local server, and write the client config (no access granted)
-3. Make the first request from the client and approve the consent request in the CLI
+3. Make the first request from the client and approve it in the local consent UI
 4. Read notes
 5. Review the audit and revoke access
 
@@ -106,29 +106,32 @@ List the notes under notes/projects
 Claude calls UOMP's `list_memory(tag="notes/projects")`. The MCP bridge will:
 
 1. create a consent request through `UOMP_BRIDGE_FILE`
-2. print the request id and approval command to stderr
+2. start the local trusted consent UI and open the consent page in your browser
 3. wait for your approval (120 seconds by default)
 
-In a terminal:
+The page shows the Agent, task id (if any), session id, expiry, and the requested tags / keys. Select the scope to grant, then click **Allow selected**. After approval the **current tool call continues**; a denial returns an error and the next call creates a new request.
+
+If the browser did not open automatically, start the UI manually:
+
+```bash
+aegis-os memory ui
+```
+
+The CLI remains available as a fallback:
 
 ```bash
 aegis-os memory pending
 aegis-os memory approve <request-id>
-```
-
-`pending` shows the request id, Agent, session id, and expiry. After approval the **current tool call continues**; a denial returns an error and the next call creates a new request.
-
-```bash
 aegis-os memory deny <request-id>
 ```
 
-The browser consent page is deferred; CLI approval is the native path for now. An Agent cannot approve its own request.
+An Agent cannot approve its own request; `memory approve`, `memory deny`, `memory ui`, and `memory connect` are blocked for Agent shells.
 
 After the token expires or is revoked, the next tool call creates a new consent request; you do not need to rerun `setup`.
 
 ### High-sensitivity data
 
-High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are not covered by a tag scope. The Agent must call `read_memory` for a specific key; the consent request carries that key, and you approve it in `pending`.
+High-sensitivity tags (for example `portfolio:holdings`, or items imported with `sensitivity: high`) are not covered by a tag scope. The Agent must call `read_memory` for a specific key; the consent page lists that key separately, and you must select each key before the Agent can read it.
 
 Do not grant high-sensitivity data with a blanket tag scope.
 
@@ -173,7 +176,7 @@ For scripts that need to skip approval, use `connect`:
 aegis-os memory connect claude --scope notes/projects
 ```
 
-`connect` immediately creates and approves a 30-minute session, writes the token to `~/.uomp/sessions/claude.env`, and configures the client with `UOMP_TOKEN_FILE`. It is intended for scripts and CI; prefer `setup` + CLI approval for daily use.
+`connect` immediately creates and approves a 30-minute session, writes the token to `~/.uomp/sessions/claude.env`, and configures the client with `UOMP_TOKEN_FILE`. It is intended for scripts and CI; prefer `setup` + the local consent UI for daily use.
 
 ---
 
@@ -316,7 +319,7 @@ The MCP server checks the token before each tool call, so the next call uses the
 |---|---|
 | Client does not show UOMP tools | Check the `uomp` entry in the client config; restart the client; confirm the server with `curl -s http://127.0.0.1:9374/health` |
 | Port 9374 is in use | `aegis-os memory stop`; or `aegis-os memory setup claude --listen 127.0.0.1:9380 ...` |
-| Tool waits for approval forever | In another terminal run `aegis-os memory pending`, then `approve` / `deny` |
+| Tool waits for approval forever | Check whether the consent page opened automatically; if not, run `aegis-os memory ui`. CLI fallback: `aegis-os memory pending`, then `approve` / `deny` |
 | `SESSION_NOT_ACTIVE` | Session expired or was revoked; make a new request, or run `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | The key/tag is outside the granted scope; inspect the consent request scope or `aegis-os memory audit` |
 | High-sensitivity data is unreadable | High-sensitivity items require a per-key request and approval; a tag scope does not cover them |
@@ -353,7 +356,7 @@ UOMP provides:
 - local-first storage; notes do not leave your machine by default
 - tag/key scope limits
 - high-sensitivity items require explicit key approval
-- the first tool call creates a consent request; the user approves it in the local CLI
+- the first tool call creates a consent request; the user approves it in the local trusted consent UI (CLI is a fallback)
 - session expiry and immediate revocation
 - an audit record for every allow/deny decision
 - the bridge profile holds no token; pre-authorized tokens live in `0600` files, with no JWT printed by default
