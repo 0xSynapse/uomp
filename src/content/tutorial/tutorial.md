@@ -50,6 +50,9 @@ aegis-os memory --help
 brew tap heurion-org/aegis-os https://github.com/heurion-org/aegis-os.git
 brew trust heurion-org/aegis-os
 brew install aegis-os
+
+# 接入 AGY / Claude Code / Codex（运行一次）
+aegis-os install
 ```
 
 确认：
@@ -319,6 +322,7 @@ MCP server 会在每次工具调用前检查 Token；重新 `connect` 后，下�
 |---|---|
 | 客户端看不到 UOMP 工具 | 检查客户端配置里的 `uomp` 条目；重启客户端；`curl -s http://127.0.0.1:9374/health` 确认服务在运行 |
 | 端口 9374 被占用 | `aegis-os memory stop`；或 `aegis-os memory setup claude --listen 127.0.0.1:9380 ...` |
+| 同意页 9375 端口被占用 | 运行 `aegis-os memory ui --listen 127.0.0.1:9376 --url http://127.0.0.1:9374`，或关闭占用 9375 的进程 |
 | 工具一直等待审批 | 先看是否已自动打开同意页；没有就运行 `aegis-os memory ui`。CLI fallback：`aegis-os memory pending`，再 `approve` / `deny` |
 | `SESSION_NOT_ACTIVE` | 会话过期或被撤销；在客户端重新发起请求，或运行 `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | 该 key/tag 不在授权范围；检查 consent request 的 scope，或查看 `aegis-os memory audit` |

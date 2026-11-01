@@ -22,6 +22,7 @@ description: 'UOMP 作为 Aegis OS memory module 的原生实现：aos-memory、
 
 ```bash
 brew install aegis-os
+aegis-os install
 
 # 一次性设置：导入 + 客户端配置 + 后台服务，不预先授权
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
@@ -111,9 +112,9 @@ POST /v1/payload
 - staged writes、payload、remote device flow：完成
 - 原生 SQLite store、Markdown importer、staged writes、payload：完成
 - 原生 consent server、session、Ed25519 JWT、撤销、audit：完成
-- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` 全部原生
+- `aegis-os memory` 原生命令：`status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `ui` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` 全部原生
 - `uomp-core` / `uomp-mvp` reference：已归档，不再 vendored，也不在运行时调用
-- 统一 Web trusted UI：待完成（当前为 CLI 审批）
+- 统一本地 trusted consent UI：loopback 页面 `127.0.0.1:9375`，MCP bridge 在有待审批请求时自动打开（CLI 为 fallback）
 
 ## 7. 相关链接
 

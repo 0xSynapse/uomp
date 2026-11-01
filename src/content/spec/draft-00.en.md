@@ -90,7 +90,7 @@ UOMP's complete architecture includes the following components:
 | **Memory Store** | User's machine | Persistent memory data storage. Supports pluggable backends (SQLite, encrypted object/S3, IPFS) via the `IMemoryStore` interface. |
 | **Auth Service** | User's machine | Session management, token issuance, identity verification. Combined with Memory Guard as `aegis-os memory serve` in the reference implementation. |
 | **Memory Guard** | User's machine | Token validation, scope filtering, aggregate queries, audit logging. |
-| **CLI** | User's machine | User interaction: setup, import, pending/approve/deny, audit, connect/disconnect, stop. |
+| **CLI / local consent page** | User's machine | User interaction: setup, import, local consent page (`memory ui`), CLI fallback, audit, connect/disconnect, stop. |
 | **MCP bridge** | User's machine (optional) | Native stdio MCP adapter (`aegis-os memory mcp`): Claude Desktop / Cursor / OpenCode → HTTP server, with on-demand consent. |
 | **Aegis Memory Gateway** | User's machine (optional) | mTLS/tunnel entry point that forwards validated remote Agent requests to local Guard; reference implementation provided by Aegis OS. |
 | **Agent** | Anywhere | Independent process carrying a Capability Token to read data via Guard or Gateway. |
@@ -106,7 +106,7 @@ The Local Profile and its MCP adapter are the current reference implementation p
 ### 5.2 Flow
 
 1. The Agent runs as an independent process and provides a `uom.json` declaring its identity and default requested memory scope.
-2. The user runs `aegis-os memory setup` once. When the Agent first requests data, the native server creates a Session and a ConsentRequest in the `pending` state; the user reviews it with `aegis-os memory pending` and approves or denies it. The Auth Service may run on the same machine as the Memory Store.
+2. The user runs `aegis-os memory setup` once. When the Agent first requests data, the native server creates a Session and a ConsentRequest in the `pending` state; Aegis OS opens the local trusted consent UI automatically (`aegis-os memory ui`, default `127.0.0.1:9375`); the user selects the scope and approves or denies it. CLI `pending` / `approve` remain a fallback. The Auth Service may run on the same machine as the Memory Store.
 3. After approval, the Auth Service issues a short-lived Capability Token. The MCP bridge polls `/v1/consent/requests/:id/status` and receives it once; `memory connect` writes a `0600` session env file (`UOMP_TOKEN` + `UOMP_BASE_URL` + `UOMP_SESSION_ID`) for pre-authorized scripts.
 4. The Session enters the `active` state, and the Agent or MCP bridge loads the env file.
 5. The Agent or MCP bridge calls Memory Guard via the HTTP API with the Token.
@@ -917,7 +917,7 @@ export UOMP_PUBLIC_KEY='<path-to-ed25519-public.jwk>'
 - `UOMP_BRIDGE_FILE`: The on-demand consent profile written by `memory setup`.
 - The CLI does not print the full JWT by default; `memory approve` returns status only, and the bridge receives the token through the status endpoint.
 
-The user UI (CLI) runs on the same host as the Memory Store / server, performs identity verification and authorization, issues the Token, and only then hands the Token to the Agent. The Agent itself does not participate in authorization decisions. The MCP bridge re-checks the token before each tool call so re-authorization takes effect without a client restart.
+The user UI (local consent page, with the CLI as a fallback) runs on the same host as the Memory Store / server, performs identity verification and authorization, issues the Token, and only then hands the Token to the Agent. The Agent itself does not participate in authorization decisions. The MCP bridge re-checks the token before each tool call so re-authorization takes effect without a client restart.
 
 ## 15. Remote Agent Profile (optional)
 

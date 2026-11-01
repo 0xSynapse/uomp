@@ -50,6 +50,9 @@ aegis-os memory --help
 brew tap heurion-org/aegis-os https://github.com/heurion-org/aegis-os.git
 brew trust heurion-org/aegis-os
 brew install aegis-os
+
+# Wire AGY / Claude Code / Codex (run once)
+aegis-os install
 ```
 
 Verify:
@@ -319,6 +322,7 @@ The MCP server checks the token before each tool call, so the next call uses the
 |---|---|
 | Client does not show UOMP tools | Check the `uomp` entry in the client config; restart the client; confirm the server with `curl -s http://127.0.0.1:9374/health` |
 | Port 9374 is in use | `aegis-os memory stop`; or `aegis-os memory setup claude --listen 127.0.0.1:9380 ...` |
+| Port 9375 for the consent page is in use | Run `aegis-os memory ui --listen 127.0.0.1:9376 --url http://127.0.0.1:9374`, or stop the process using 9375 |
 | Tool waits for approval forever | Check whether the consent page opened automatically; if not, run `aegis-os memory ui`. CLI fallback: `aegis-os memory pending`, then `approve` / `deny` |
 | `SESSION_NOT_ACTIVE` | Session expired or was revoked; make a new request, or run `aegis-os memory connect claude --scope notes/projects` |
 | `ACCESS_DENIED` | The key/tag is outside the granted scope; inspect the consent request scope or `aegis-os memory audit` |

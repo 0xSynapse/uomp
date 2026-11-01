@@ -22,14 +22,16 @@ description: 'UOMP as the native Aegis OS memory module: aos-memory, aos-memory-
 
 ```bash
 brew install aegis-os
+aegis-os install
 
 # one-time setup: import + client config + background server, no access granted
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 
 # ask Claude / Cursor / OpenCode for notes
-# the first tool call creates a consent request; the agent continues after approval
+# the first tool call creates a consent request; the local consent page opens automatically
 
-aegis-os memory pending
+aegis-os memory ui          # usually not needed
+aegis-os memory pending     # CLI fallback
 aegis-os memory approve <request-id>
 aegis-os memory audit
 aegis-os memory disconnect claude
@@ -110,7 +112,7 @@ Full mapping: [UOMP → Aegis OS memory consent mapping](https://github.com/heur
 - Staged writes, payloads, remote device flow: done
 - Native SQLite store, Markdown importer, staged writes, payloads: done
 - Native consent server, sessions, Ed25519 JWT, revocation, audit: done
-- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` are all native
+- `aegis-os memory` native commands: `status` / `import` / `read` / `list` / `search` / `serve` / `setup` / `ui` / `pending` / `approve` / `deny` / `connect` / `disconnect` / `sessions` / `revoke` / `audit` / `approvals` / `stop` / `staged` / `payload` / `mcp` are all native
 - `uomp-core` / `uomp-mvp` reference: archived, no longer vendored or invoked at runtime
 - Unified local trusted consent UI: loopback page at `127.0.0.1:9375`; MCP bridge opens it automatically (CLI remains a fallback)
 

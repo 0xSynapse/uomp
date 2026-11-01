@@ -90,7 +90,7 @@ UOMP 的完整架构包含以下组件：
 | **Memory Store** | 用户本机 | 持久化存储记忆数据。支持可插拔后端（SQLite、加密对象/S3、IPFS），通过 `IMemoryStore` 接口抽象。 |
 | **Auth Service** | 用户本机 | 会话管理、Token 签发、身份验证。参考实现中与 Memory Guard 组合为 `aegis-os memory serve`。 |
 | **Memory Guard** | 用户本机 | Token 校验、scope 过滤、聚合查询、审计日志记录。 |
-| **CLI** | 用户本机 | 用户交互：setup、导入、pending/approve/deny、审计、connect/disconnect、stop。 |
+| **CLI / 本地同意页** | 用户本机 | 用户交互：setup、导入、本地同意页（`memory ui`）、CLI fallback、审计、connect/disconnect、stop。 |
 | **MCP bridge** | 用户本机（可选） | 原生 stdio MCP 适配器（`aegis-os memory mcp`）：Claude Desktop / Cursor / OpenCode → HTTP server，支持按需审批。 |
 | **Aegis Memory Gateway** | 用户本机（可选） | mTLS/Tunnel 入口，把远程 Agent 的已校验请求转发给本地 Guard；参考实现由 Aegis OS 提供。 |
 | **Agent** | 任意位置 | 独立进程，携带 Capability Token 通过 Guard 或 Gateway 读取数据。 |
@@ -106,7 +106,7 @@ Local Profile 和它的 MCP 适配器是当前参考实现的主路径；Remote 
 ### 5.2 Flow
 
 1. Agent 作为独立进程运行，提供 `uom.json` 声明其身份和默认请求的记忆范围。
-2. 用户运行一次 `aegis-os memory setup`。Agent 第一次请求数据时，native server 创建 Session 与 `pending` 状态的 ConsentRequest；用户通过 `aegis-os memory pending` 查看并批准或拒绝。Auth Service 可以与 Memory Store 位于同一机器。
+2. 用户运行一次 `aegis-os memory setup`。Agent 第一次请求数据时，native server 创建 Session 与 `pending` 状态的 ConsentRequest；Aegis OS 自动打开本地 trusted consent UI（`aegis-os memory ui`，默认 `127.0.0.1:9375`），用户勾选范围并批准或拒绝；CLI `pending` / `approve` 仍可作为 fallback。Auth Service 可以与 Memory Store 位于同一机器。
 3. 批准后，Auth Service 签发短期 Capability Token。MCP bridge 轮询 `/v1/consent/requests/:id/status` 并一次性领取；`memory connect` 为预授权脚本写入 `0600` 会话 env 文件（`UOMP_TOKEN` + `UOMP_BASE_URL` + `UOMP_SESSION_ID`）。
 4. Session 进入 `active` 状态，Agent 或 MCP bridge 加载该 env 文件。
 5. Agent 或 MCP bridge 通过 HTTP API 携带 Token 访问 Memory Guard。
@@ -928,7 +928,7 @@ export UOMP_PUBLIC_KEY='<path-to-ed25519-public.jwk>'
 - `UOMP_BRIDGE_FILE`：`memory setup` 写入的按需审批 profile。
 - CLI 默认不把完整 JWT 打印到终端；`memory approve` 只返回状态，bridge 通过 status 端点领取 Token。
 
-用户 UI（CLI）运行在 Memory Store / server 所在主机上，负责完成身份验证、授权、Token 签发，再把 Token 交给 Agent。Agent 本身不参与授权决策。MCP bridge 在每次工具调用前重新检查 Token，以支持重新授权后自动生效。
+用户 UI（本地同意页，CLI 为 fallback）运行在 Memory Store / server 所在主机上，负责完成身份验证、授权、Token 签发，再把 Token 交给 Agent。Agent 本身不参与授权决策。MCP bridge 在每次工具调用前重新检查 Token，以支持重新授权后自动生效。
 
 ## 15. Remote Agent Profile (optional)
 
@@ -1388,7 +1388,11 @@ Auth Service 或 Gateway 收到后：
 aegis-os memory setup claude --vault ~/Obsidian/MyVault
 # 重启 Claude Desktop，然后在客户端里请求数据
 
-# Agent 第一次请求时，从终端批准 consent request：
+# Agent 第一次请求时，Aegis OS 自动打开本地同意页。
+# 手动打开（通常不需要）：
+aegis-os memory ui
+
+# CLI fallback：
 aegis-os memory pending
 aegis-os memory approve <request-id>
 aegis-os memory deny <request-id>
