@@ -8,7 +8,7 @@ description: 'User-Owned Memory Protocol 协议草案'
 **版本**：Draft-00<br>
 **状态**：草案（Draft）<br>
 **发布日期**：2026-07-12<br>
-**最后更新**：2026-10-29<br>
+**最后更新**：2026-11-01<br>
 **目标**：作为公开 RFC 草案征求意见
 
 ### Version History
@@ -19,6 +19,7 @@ description: 'User-Owned Memory Protocol 协议草案'
 | 2026-07-23 | Added Cloud Relay (§15.7), Store abstraction (§0), Payload API (§15.6). Updated `uom.json` schema (§6.2-6.4) with `fields`, `purposes`, `external_data_sources`, `package`. Updated the architecture diagram to include Gateway and Relay. Added FHE to Future Work (§22). Marked on-chain audit as Phase 4. |
 | 2026-10-29 | Local-first reference implementation: CLI + stdio MCP path, 0600 session env delivery, Auth + Guard combined service. Reworked §5 architecture and diagrams; Remote remains optional/preview. |
 | 2026-10-30 | Remote Agent Profile aligned with Aegis OS: remote Agent runs on Aegis Cloud, local entry is Aegis Memory Gateway. Standalone UOMP Cloud Relay retired. |
+| 2026-11-01 | Local trusted consent UI: loopback page (`memory ui`, default `127.0.0.1:9375`), automatically opened by the MCP bridge; CLI remains a fallback. |
 
 ---
 
@@ -30,7 +31,7 @@ User-Owned Memory Protocol（UOMP）定义了一种用户主权型授权协议�
 
 本文档为 UOMP 协议草案（Draft-00），描述协议设计意图、数据格式、HTTP API 和安全要求。本文档旨在通过公开讨论后演进为正式标准。本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"MAY"、"OPTIONAL" 按照 [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119) 解释。
 
-> **参考实现状态（2026-10）：** Aegis OS 是参考实现。用户运行一次 `aegis-os memory setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次 MCP tool call 创建 consent request，Aegis OS 自动打开本地 trusted consent UI（`aegis-os memory ui`，默认 `127.0.0.1:9375`），用户勾选范围后调用继续；CLI `pending` / `approve` 保留为 fallback。`connect` 是高级预授权入口，`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为原生能力。Remote Agent Profile 是可选能力，Aegis OS 使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。UOMP 是协议，Aegis OS 是原生实现。
+> **参考实现状态（2026-11）：** Aegis OS 是参考实现。用户运行一次 `aegis-os memory setup` 完成导入、客户端配置和后台服务，不预先授权；Agent 第一次 MCP tool call 创建 consent request，Aegis OS 自动打开本地 trusted consent UI（`aegis-os memory ui`，默认 `127.0.0.1:9375`），用户勾选范围后调用继续；CLI `pending` / `approve` 保留为 fallback。`connect` 是高级预授权入口，`serve`、`mcp` 是手动/脚本路径。stdio MCP bridge 为原生能力。Remote Agent Profile 是可选能力，Aegis OS 使用 Aegis Cloud + Aegis Memory Gateway；独立 Cloud Relay 已退役。UOMP 是协议，Aegis OS 是原生实现。
 
 ## 3. Introduction
 

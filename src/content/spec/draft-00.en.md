@@ -8,7 +8,7 @@ description: 'User-Owned Memory Protocol Specification Draft'
 **Version**: Draft-00<br>
 **Status**: Draft<br>
 **Published**: 2026-07-12<br>
-**Last Updated**: 2026-10-29<br>
+**Last Updated**: 2026-11-01<br>
 **Goal**: Public RFC draft for community review
 
 ### Version History
@@ -19,6 +19,7 @@ description: 'User-Owned Memory Protocol Specification Draft'
 | 2026-07-23 | Added Cloud Relay (§15.7), Store abstraction (§0), Payload API (§15.6). Updated `uom.json` schema (§6.2-6.4) with `fields`, `purposes`, `external_data_sources`, `package`. Updated the architecture diagram to include Gateway and Relay. Added FHE to Future Work (§22). Marked on-chain audit as Phase 4. |
 | 2026-10-29 | Local-first reference implementation: CLI + stdio MCP path, 0600 session env delivery, Auth + Guard combined service. Reworked §5 architecture and diagrams; Remote remains optional/preview. |
 | 2026-10-30 | Remote Agent Profile aligned with Aegis OS: remote Agent runs on Aegis Cloud, local entry is Aegis Memory Gateway. Standalone UOMP Cloud Relay retired. |
+| 2026-11-01 | Local trusted consent UI: loopback page (`memory ui`, default `127.0.0.1:9375`), automatically opened by the MCP bridge; CLI remains a fallback. |
 
 ---
 
@@ -30,7 +31,7 @@ The User-Owned Memory Protocol (UOMP) defines a user-sovereign authorization pro
 
 This document is the UOMP protocol draft (Draft-00). It describes the protocol design intent, data formats, HTTP API, and security requirements. It is intended to evolve into a formal standard through public discussion. The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
-> **Reference implementation status (2026-10):** Aegis OS is the reference implementation. The user runs `aegis-os memory setup` once to import notes, write the client config, and start the background server without pre-authorizing. The first MCP tool call creates a consent request; Aegis OS opens the local trusted consent UI automatically (`aegis-os memory ui`, default `127.0.0.1:9375`), the user selects the scope, and the call continues; CLI `pending` / `approve` remain a fallback. `connect` is the advanced pre-authorize path; `serve` and `mcp` are manual/script paths. The MCP stdio bridge is native. Remote Agent Profile is optional; Aegis OS uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. UOMP is the protocol; Aegis OS is the native implementation.
+> **Reference implementation status (2026-11):** Aegis OS is the reference implementation. The user runs `aegis-os memory setup` once to import notes, write the client config, and start the background server without pre-authorizing. The first MCP tool call creates a consent request; Aegis OS opens the local trusted consent UI automatically (`aegis-os memory ui`, default `127.0.0.1:9375`), the user selects the scope, and the call continues; CLI `pending` / `approve` remain a fallback. `connect` is the advanced pre-authorize path; `serve` and `mcp` are manual/script paths. The MCP stdio bridge is native. Remote Agent Profile is optional; Aegis OS uses Aegis Cloud + Aegis Memory Gateway. The standalone Cloud Relay is retired. UOMP is the protocol; Aegis OS is the native implementation.
 
 ## 3. Introduction
 
